@@ -11,26 +11,23 @@ import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { rigsAndKnots } from "@/src/data/rigs";
-import { RigOrKnot } from "@/src/data/types";
 import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 
 type Builder = {
-  water: "Lake" | "River" | "Saltwater";
-  access: "Shore" | "Dock" | "Boat";
-  fish: "Trout" | "Bass" | "Panfish" | "Salmon";
-  bait: "Worms" | "PowerBait" | "Soft plastics" | "Jigs";
-  rod: "Spinning" | "Baitcaster" | "Trolling";
-  level: "Beginner" | "Intermediate" | "Advanced";
+  water: "Lake" | "River" | "Saltwater" | "Dock" | "Shore" | "Boat";
+  fish: "Trout" | "Bass" | "Perch" | "Salmon" | "Not sure";
+  bait: "Worms" | "PowerBait" | "Spinners" | "Jigs" | "Soft plastics" | "None";
+  rod: "Spinning rod" | "Baitcaster" | "Unknown";
+  level: "Beginner" | "Intermediate";
 };
 
 const defaults: Builder = {
   water: "Lake",
-  access: "Shore",
   fish: "Trout",
   bait: "Worms",
-  rod: "Spinning",
+  rod: "Spinning rod",
   level: "Beginner"
 };
 
@@ -57,12 +54,11 @@ export default function RigsScreen() {
 
       <Card style={styles.builderCard}>
         <SectionHeader title="Build my setup" eyebrow="Local recommendation" />
-        <BuilderGroup label="Where are you fishing?" value={builder.water} options={["Lake", "River", "Saltwater"]} onSelect={(water) => setBuilder({ ...builder, water })} />
-        <BuilderGroup label="Access" value={builder.access} options={["Shore", "Dock", "Boat"]} onSelect={(access) => setBuilder({ ...builder, access })} />
-        <BuilderGroup label="Target fish" value={builder.fish} options={["Trout", "Bass", "Panfish", "Salmon"]} onSelect={(fish) => setBuilder({ ...builder, fish })} />
-        <BuilderGroup label="Available bait or lure" value={builder.bait} options={["Worms", "PowerBait", "Soft plastics", "Jigs"]} onSelect={(bait) => setBuilder({ ...builder, bait })} />
-        <BuilderGroup label="Rod type" value={builder.rod} options={["Spinning", "Baitcaster", "Trolling"]} onSelect={(rod) => setBuilder({ ...builder, rod })} />
-        <BuilderGroup label="Experience" value={builder.level} options={["Beginner", "Intermediate", "Advanced"]} onSelect={(level) => setBuilder({ ...builder, level })} />
+        <BuilderGroup label="Where are you fishing?" value={builder.water} options={["Lake", "River", "Saltwater", "Dock", "Shore", "Boat"]} onSelect={(water) => setBuilder({ ...builder, water })} />
+        <BuilderGroup label="What are you targeting?" value={builder.fish} options={["Trout", "Bass", "Perch", "Salmon", "Not sure"]} onSelect={(fish) => setBuilder({ ...builder, fish })} />
+        <BuilderGroup label="What bait/lures do you have?" value={builder.bait} options={["Worms", "PowerBait", "Spinners", "Jigs", "Soft plastics", "None"]} onSelect={(bait) => setBuilder({ ...builder, bait })} />
+        <BuilderGroup label="What rod do you have?" value={builder.rod} options={["Spinning rod", "Baitcaster", "Unknown"]} onSelect={(rod) => setBuilder({ ...builder, rod })} />
+        <BuilderGroup label="Experience level" value={builder.level} options={["Beginner", "Intermediate"]} onSelect={(level) => setBuilder({ ...builder, level })} />
       </Card>
 
       <Card style={styles.recommendation}>
@@ -78,6 +74,7 @@ export default function RigsScreen() {
         </View>
         <AppText>{recommendation.explanation}</AppText>
         <AppText>Recommended knot: {recommendation.knot.name}</AppText>
+        <AppText>Bait/lure recommendation: {recommendation.baitAdvice}</AppText>
         <RigDiagram parts={recommendation.rig.parts} />
         <Stack>
           {recommendation.rig.steps.slice(0, 4).map((step, index) => (
@@ -177,22 +174,33 @@ function buildRigRecommendation(builder: Builder) {
       ? "texas-rig"
       : builder.fish === "Bass"
         ? "carolina-rig"
-        : builder.fish === "Panfish"
+        : builder.fish === "Perch" || builder.fish === "Not sure"
           ? "bobber-rig"
           : builder.fish === "Salmon"
             ? "jig"
             : builder.bait === "PowerBait"
               ? "trout-powerbait-rig"
+              : builder.bait === "Spinners"
+                ? "basic-spinner-setup"
               : builder.water === "River"
                 ? "split-shot-rig"
                 : "bobber-rig";
   const rig = rigsAndKnots.find((item) => item.id === rigId) ?? rigsAndKnots.find((item) => item.type === "rig") ?? rigsAndKnots[0];
-  const estimatedSuccess = Math.max(42, 82 - (builder.fish === "Salmon" ? 20 : 0) - (builder.water === "Saltwater" ? 10 : 0) + (builder.level === "Beginner" ? 4 : 0));
+  const baitAdvice =
+    builder.bait === "None"
+      ? "Start with worms or PowerBait for trout/perch, or one small spinner if you want to cast and move."
+      : builder.bait === "Jigs"
+        ? "Use a small jig around docks, rocks, or deeper edges. Pause often."
+        : builder.bait === "Spinners"
+          ? "Use a small inline spinner and retrieve just fast enough for the blade to turn."
+          : `Use ${builder.bait.toLowerCase()} and keep the presentation small.`;
+  const estimatedSuccess = Math.max(42, 84 - (builder.fish === "Salmon" ? 22 : 0) - (builder.water === "Saltwater" ? 10 : 0) + (builder.level === "Beginner" ? 4 : 0) + (builder.fish === "Not sure" ? 3 : 0));
   return {
     knot,
     rig,
+    baitAdvice,
     estimatedSuccess,
-    explanation: `${builder.access} ${builder.water.toLowerCase()} fishing for ${builder.fish.toLowerCase()} with ${builder.bait.toLowerCase()} pairs best with a ${rig.name.toLowerCase()}. It keeps the presentation simple, matches your ${builder.rod.toLowerCase()} rod, and gives you a clear next cast.`
+    explanation: `${builder.water} fishing for ${builder.fish.toLowerCase()} with ${builder.bait.toLowerCase()} pairs best with a ${rig.name.toLowerCase()}. It keeps the presentation simple, works with your ${builder.rod.toLowerCase()}, and gives you a clear next cast.`
   };
 }
 

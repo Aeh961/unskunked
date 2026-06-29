@@ -45,6 +45,16 @@ export function answerLocalQuestion(question: string) {
     text.includes(item)
   );
 
+  if (text.includes("skunked")) {
+    return "If you got skunked, change one variable at a time: downsize the hook, slow the retrieve, fish shade or structure, move after 15-20 quiet minutes, and try worms under a bobber or a small spinner. Log the trip so the pattern is not lost.";
+  }
+
+  if (text.includes("near seattle") || text.includes("seattle")) {
+    const waters = waterbodies.filter((water) => water.region.toLowerCase().includes("seattle") || water.name.toLowerCase().includes("lake washington"));
+    const easyFish = fishSpecies.filter((fish) => fish.difficulty === "Easy").slice(0, 4);
+    return `Near Seattle, start with ${waters.map((water) => water.name).join(", ")} and target ${easyFish.map((fish) => fish.name).join(", ")}. Beginner plan: bobber rig, worms or PowerBait, small hooks, and verify the specific waterbody rules before keeping fish.`;
+  }
+
   if (water) {
     const names = water.speciesIds
       .map((id) => fishSpecies.find((fish) => fish.id === id)?.name)

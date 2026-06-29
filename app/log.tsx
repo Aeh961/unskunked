@@ -9,12 +9,14 @@ import { SectionHeader } from "@/src/components/SectionHeader";
 import { TripLog, TripResult, getTrips, saveTrip } from "@/src/utils/localStore";
 import { colors, radii, spacing } from "@/src/theme";
 
-const results: TripResult[] = ["Skunked", "Caught One", "Great Day", "Limited Out"];
+const results: TripResult[] = ["Skunked", "Unskunked", "Great Day", "Limited Out"];
 
 const blankTrip = {
   location: "",
+  date: new Date().toISOString().slice(0, 10),
   weather: "",
   speciesCaught: "",
+  numberCaught: "0",
   bait: "",
   rig: "",
   notes: "",
@@ -35,17 +37,20 @@ export default function TripLogScreen() {
       total: trips.length,
       caughtTrips,
       skunked: trips.filter((trip) => trip.result === "Skunked").length,
-      best: trips.filter((trip) => trip.result === "Great Day" || trip.result === "Limited Out").length
+      best: trips.filter((trip) => trip.result === "Great Day" || trip.result === "Limited Out").length,
+      bait: mostCommon(trips.filter((trip) => trip.result !== "Skunked").map((trip) => trip.bait)),
+      location: mostCommon(trips.filter((trip) => trip.result !== "Skunked").map((trip) => trip.location))
     };
   }, [trips]);
 
   async function submit() {
     const trip: TripLog = {
       id: `${Date.now()}`,
-      date: new Date().toISOString().slice(0, 10),
+      date: form.date.trim() || new Date().toISOString().slice(0, 10),
       location: form.location.trim() || "Unknown spot",
       weather: form.weather.trim() || "Not logged",
       speciesCaught: form.speciesCaught.trim() || "None",
+      numberCaught: Number.parseInt(form.numberCaught, 10) || 0,
       bait: form.bait.trim() || "Not logged",
       rig: form.rig.trim() || "Not logged",
       notes: form.notes.trim() || "No notes yet",
@@ -69,14 +74,26 @@ export default function TripLogScreen() {
         <Stat label="Skunked" value={`${stats.skunked}`} />
         <Stat label="Great+" value={`${stats.best}`} />
       </View>
+      <View style={styles.insightGrid}>
+        <Card style={styles.insightCard}>
+          <AppText variant="caption" style={styles.insightLabel}>Most successful bait</AppText>
+          <AppText variant="subheading">{stats.bait}</AppText>
+        </Card>
+        <Card style={styles.insightCard}>
+          <AppText variant="caption" style={styles.insightLabel}>Most successful location</AppText>
+          <AppText variant="subheading">{stats.location}</AppText>
+        </Card>
+      </View>
 
       <Card style={styles.form}>
         <SectionHeader title="Log a trip" eyebrow="Saved locally" />
         <Field label="Location" value={form.location} onChangeText={(location) => setForm({ ...form, location })} placeholder="Green Lake" />
+        <Field label="Date" value={form.date} onChangeText={(date) => setForm({ ...form, date })} placeholder="2026-06-29" />
         <Field label="Weather" value={form.weather} onChangeText={(weather) => setForm({ ...form, weather })} placeholder="Cool, cloudy, light wind" />
         <Field label="Species caught" value={form.speciesCaught} onChangeText={(speciesCaught) => setForm({ ...form, speciesCaught })} placeholder="Rainbow Trout" />
-        <Field label="Bait" value={form.bait} onChangeText={(bait) => setForm({ ...form, bait })} placeholder="Worms" />
-        <Field label="Rig" value={form.rig} onChangeText={(rig) => setForm({ ...form, rig })} placeholder="Bobber rig" />
+        <Field label="Number caught" value={form.numberCaught} onChangeText={(numberCaught) => setForm({ ...form, numberCaught })} placeholder="1" keyboardType="number-pad" />
+        <Field label="Bait/lure used" value={form.bait} onChangeText={(bait) => setForm({ ...form, bait })} placeholder="Worms" />
+        <Field label="Rig used" value={form.rig} onChangeText={(rig) => setForm({ ...form, rig })} placeholder="Bobber rig" />
         <Field label="Notes" value={form.notes} onChangeText={(notes) => setForm({ ...form, notes })} placeholder="Bites near weeds at sunset" multiline />
 
         <AppText variant="subheading">Trip result</AppText>
@@ -112,6 +129,7 @@ export default function TripLogScreen() {
             </View>
             <Stack>
               <AppText>Species: {trip.speciesCaught}</AppText>
+              <AppText>Number caught: {trip.numberCaught ?? 0}</AppText>
               <AppText>Bait/Rig: {trip.bait} · {trip.rig}</AppText>
               <AppText variant="caption">{trip.notes}</AppText>
               <View style={styles.photoPlaceholder}>
@@ -127,7 +145,7 @@ export default function TripLogScreen() {
   );
 }
 
-function Field({ label, ...props }: { label: string; value: string; placeholder: string; onChangeText: (text: string) => void; multiline?: boolean }) {
+function Field({ label, ...props }: { label: string; value: string; placeholder: string; onChangeText: (text: string) => void; multiline?: boolean; keyboardType?: "default" | "number-pad" }) {
   return (
     <View style={styles.field}>
       <AppText variant="caption" style={styles.fieldLabel}>
@@ -136,6 +154,16 @@ function Field({ label, ...props }: { label: string; value: string; placeholder:
       <TextInput placeholderTextColor={colors.muted} style={[styles.input, props.multiline && styles.textArea]} {...props} />
     </View>
   );
+}
+
+function mostCommon(values: string[]) {
+  const clean = values.map((value) => value.trim()).filter((value) => value && value !== "Not logged" && value !== "Unknown spot");
+  if (clean.length === 0) return "Not enough data";
+  const counts = clean.reduce<Record<string, number>>((memo, value) => {
+    memo[value] = (memo[value] ?? 0) + 1;
+    return memo;
+  }, {});
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -163,6 +191,19 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: "row",
     gap: spacing.sm
+  },
+  insightGrid: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  insightCard: {
+    flex: 1,
+    gap: spacing.xs
+  },
+  insightLabel: {
+    color: colors.river,
+    fontWeight: "900",
+    textTransform: "uppercase"
   },
   stat: {
     alignItems: "center",

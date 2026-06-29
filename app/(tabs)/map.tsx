@@ -132,7 +132,10 @@ export default function MapScreen() {
             </AppText>
           </View>
           <StatusBadge status={selected.status} />
-          <FavoriteButton active={isFavorite("location", selected.id)} onPress={() => toggle("location", selected.id)} label={`Favorite ${selected.name}`} />
+          <View style={styles.saveWrap}>
+            <FavoriteButton active={isFavorite("location", selected.id)} onPress={() => toggle("location", selected.id)} label={`Save ${selected.name}`} />
+            <AppText variant="caption" style={styles.saveText}>Save</AppText>
+          </View>
         </View>
 
         <Stack>
@@ -329,6 +332,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     flexDirection: "row",
     gap: spacing.sm
+  },
+  saveWrap: {
+    alignItems: "center",
+    gap: spacing.xxs
+  },
+  saveText: {
+    color: colors.pine,
+    fontWeight: "900"
   },
   flex: {
     flex: 1

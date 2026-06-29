@@ -66,9 +66,11 @@ tests/
 
 Requirements:
 
-- Node.js 20+
+- Node.js 22+
 - npm
 - Expo Go, iOS Simulator, or Android Emulator
+
+Node 22 is the expected local development runtime for this repo. If Expo or Metro behaves differently across machines, check `node --version` first.
 
 Install dependencies:
 
@@ -117,6 +119,14 @@ npx expo export --platform android --output-dir /private/tmp/unskunked-export-an
 
 Add demo screenshots here:
 
+- iOS Home / Start Here: `screenshots/ios-home-start.png`
+- iOS Interactive Map: `screenshots/ios-map.png`
+- iOS Rig Builder: `screenshots/ios-rig-builder.png`
+- iOS Trip Log: `screenshots/ios-trip-log.png`
+- Android Home / Start Here: `screenshots/android-home-start.png`
+- Android Fish Detail: `screenshots/android-fish-detail.png`
+- Android Ask Unskunked: `screenshots/android-ask.png`
+- Android Learning Center: `screenshots/android-learn.png`
 - Phase 1 Design System: `screenshots/phase-1-design-system.png`
 - Phase 2 Interactive Map: `screenshots/phase-2-map.png`
 - Phase 3 Fish Database: `screenshots/phase-3-fish.png`
@@ -135,6 +145,8 @@ Next product milestones:
 
 - Real WDFW regulation integration with timestamps and source links
 - Real map provider and geolocation
+- Real waterbody search backed by official datasets
+- Regulation detail pages with emergency rule alerts
 - Weather and pressure context
 - Offline location packs
 - Fish ID by photo

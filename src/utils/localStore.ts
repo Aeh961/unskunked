@@ -6,7 +6,7 @@ export type Favorite = {
   type: FavoriteType;
 };
 
-export type TripResult = "Skunked" | "Caught One" | "Great Day" | "Limited Out";
+export type TripResult = "Skunked" | "Unskunked" | "Great Day" | "Limited Out";
 
 export type TripLog = {
   id: string;
@@ -14,6 +14,7 @@ export type TripLog = {
   date: string;
   weather: string;
   speciesCaught: string;
+  numberCaught: number;
   bait: string;
   rig: string;
   notes: string;

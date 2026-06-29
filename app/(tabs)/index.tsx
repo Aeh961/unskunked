@@ -2,10 +2,12 @@ import { Href, Link } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
+import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
+import { SectionHeader } from "@/src/components/SectionHeader";
 import { Screen, Stack } from "@/src/components/Screen";
-import { colors, spacing } from "@/src/theme";
+import { colors, radii, spacing } from "@/src/theme";
 
 const quickLinks = [
   { label: "Find Water", href: "/map", icon: "navigate", hint: "Search nearby-style demo spots" },
@@ -13,7 +15,8 @@ const quickLinks = [
   { label: "Tie a Rig", href: "/rigs", icon: "git-branch", hint: "Simple steps and diagrams" },
   { label: "Ask", href: "/ask", icon: "chatbubble-ellipses", hint: "Local beginner answers" },
   { label: "Log Trip", href: "/log", icon: "journal", hint: "Track catches and patterns" },
-  { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" }
+  { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" },
+  { label: "Favorites", href: "/favorites", icon: "heart", hint: "Saved fish, waters, rigs" }
 ] as const;
 
 const beginnerPlan = [
@@ -27,16 +30,39 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <View style={styles.heroBadge}>
-          <Ionicons name="sparkles" size={16} color={colors.ink} />
-          <AppText variant="caption" style={styles.heroBadgeText}>
-            Local demo data, no paid APIs
-          </AppText>
+        <View style={styles.heroTop}>
+          <View style={styles.heroBadge}>
+            <Ionicons name="sparkles" size={16} color={colors.ink} />
+            <AppText variant="caption" style={styles.heroBadgeText}>
+              V2 local-first demo
+            </AppText>
+          </View>
+          <View style={styles.weatherBadge}>
+            <Ionicons name="partly-sunny" size={16} color={colors.forest} />
+            <AppText variant="caption" style={styles.weatherText}>
+              Dawn bite window
+            </AppText>
+          </View>
         </View>
-        <AppText variant="title">Unskunked</AppText>
-        <AppText style={styles.tagline}>A local-first fishing copilot for deciding where to go, what to target, how to rig up, and what to learn next.</AppText>
+        <AppText variant="hero" style={styles.heroTitle}>Unskunked</AppText>
+        <AppText style={styles.tagline}>Beginner-friendly fishing plans: pick water, choose a target, build a rig, and log what worked.</AppText>
+        <Link href={"/start" as Href} asChild>
+          <Button icon="compass" style={styles.startButton}>Start here</Button>
+        </Link>
       </View>
 
+      <View style={styles.statusGrid}>
+        <Card style={styles.statusCard}>
+          <AppText variant="caption" style={styles.statusLabel}>Best first target</AppText>
+          <AppText variant="subheading">Trout or perch</AppText>
+        </Card>
+        <Card style={styles.statusCard}>
+          <AppText variant="caption" style={styles.statusLabel}>Default rig</AppText>
+          <AppText variant="subheading">Bobber + worm</AppText>
+        </Card>
+      </View>
+
+      <SectionHeader title="Choose your next move" eyebrow="Product flow" />
       <View style={styles.quickGrid}>
         {quickLinks.map((item) => (
             <Link key={item.label} href={item.href as Href} asChild>
@@ -99,10 +125,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   hero: {
-    backgroundColor: colors.pine,
-    borderRadius: 8,
+    backgroundColor: colors.forest,
+    borderRadius: radii.md,
     gap: spacing.sm,
     padding: spacing.lg
+  },
+  heroTop: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "space-between"
   },
   heroBadge: {
     alignItems: "center",
@@ -118,10 +150,44 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontWeight: "900"
   },
+  weatherBadge: {
+    alignItems: "center",
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    flexDirection: "row",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  weatherText: {
+    color: colors.forest,
+    fontWeight: "900"
+  },
+  heroTitle: {
+    color: "#fff"
+  },
   tagline: {
     color: "#eef7ef",
     fontSize: 18,
     fontWeight: "600"
+  },
+  startButton: {
+    alignSelf: "flex-start",
+    marginTop: spacing.sm
+  },
+  statusGrid: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  statusCard: {
+    flex: 1,
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  statusLabel: {
+    color: colors.river,
+    fontWeight: "900",
+    textTransform: "uppercase"
   },
   quickGrid: {
     flexDirection: "row",

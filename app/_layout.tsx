@@ -19,6 +19,8 @@ export default function RootLayout() {
         <Stack.Screen name="fish/[id]" options={{ title: "Fish details" }} />
         <Stack.Screen name="log" options={{ title: "Trip Log" }} />
         <Stack.Screen name="learn" options={{ title: "Learning Center" }} />
+        <Stack.Screen name="start" options={{ title: "Start Here" }} />
+        <Stack.Screen name="favorites" options={{ title: "Favorites" }} />
       </Stack>
     </>
   );

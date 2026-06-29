@@ -16,9 +16,10 @@ type Message = {
 
 const examples = [
   "I have worms and a spinning rod, what can I catch?",
-  "What fish bite in July?",
+  "What should I use at Lake Washington?",
   "What knot should I use?",
-  "Can I fish Lake Washington today?"
+  "I got skunked, what should I change?",
+  "What can beginners fish for near Seattle?"
 ];
 
 export default function AskScreen() {
