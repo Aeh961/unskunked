@@ -4,15 +4,19 @@ import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
+import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { Screen, Stack } from "@/src/components/Screen";
+import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
-import { colors, spacing } from "@/src/theme";
+import { useFavorites } from "@/src/hooks/useFavorites";
+import { colors, radii, spacing } from "@/src/theme";
 
 export default function FishDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const fish = fishSpecies.find((item) => item.id === id);
+  const { isFavorite, toggle } = useFavorites();
 
   if (!fish) {
     return (
@@ -28,28 +32,55 @@ export default function FishDetailScreen() {
 
   return (
     <Screen>
-      <View style={styles.imagePlaceholder}>
-        <AppText style={styles.placeholderText}>{fish.name}</AppText>
-      </View>
-      <View style={styles.row}>
-        <AppText variant="title" style={styles.title}>
-          {fish.name}
-        </AppText>
-        <StatusBadge status={fish.status} />
+      <View style={styles.header}>
+        <View style={styles.imagePlaceholder}>
+          <AppText style={styles.placeholderText}>{fish.name}</AppText>
+        </View>
+        <View style={styles.headerRow}>
+          <View style={styles.titleBlock}>
+            <AppText variant="title" style={styles.lightText}>
+              {fish.name}
+            </AppText>
+            <AppText style={styles.headerSubtitle}>
+              {fish.difficulty} · Best {fish.bestTimeOfDay.toLowerCase()}
+            </AppText>
+          </View>
+          <StatusBadge status={fish.status} />
+          <FavoriteButton active={isFavorite("fish", fish.id)} onPress={() => toggle("fish", fish.id)} label={`Favorite ${fish.name}`} />
+        </View>
       </View>
       <Disclaimer />
 
       <Card>
-        <AppText variant="heading">Quick read</AppText>
-        <Stack>
-          <AppText>Difficulty: {fish.difficulty}</AppText>
-          <AppText>Start with: {fish.bestBait[0]} or {fish.bestLures[0]}</AppText>
-          <AppText>Beginner line: {fish.line}</AppText>
-        </Stack>
+        <SectionHeader title="Quick read" eyebrow="Target plan" />
+        <View style={styles.grid}>
+          <Fact label="Season" value={fish.bestSeason} />
+          <Fact label="Weather" value={fish.bestWeather} />
+          <Fact label="Time" value={fish.bestTimeOfDay} />
+          <Fact label="Difficulty" value={fish.difficulty} />
+        </View>
       </Card>
 
       <Card>
-        <AppText variant="heading">Rules snapshot</AppText>
+        <SectionHeader title="Recommended setup" eyebrow="Gear" />
+        <Stack>
+          <AppText>Rod: {fish.rodSetup}</AppText>
+          <AppText>Reel: {fish.reel}</AppText>
+          <AppText>Line: {fish.line}</AppText>
+          <AppText>Hook sizes: {fish.hook}</AppText>
+          <AppText>Best bait: {fish.bestBait.join(", ")}</AppText>
+          <AppText>Artificial lures: {fish.bestLures.join(", ")}</AppText>
+          <AppText>Knots: {fish.knots.join(", ")}</AppText>
+          <AppText>Rigs: {fish.rigs.join(", ")}</AppText>
+        </Stack>
+      </Card>
+
+      <InfoList title="Where to find them" eyebrow="Habitat" items={fish.whereToFind} />
+      <InfoList title="Casting tips" eyebrow="Technique" items={fish.castingTips} />
+      <InfoList title="Common mistakes" eyebrow="Avoid this" items={fish.commonMistakes} danger />
+
+      <Card>
+        <SectionHeader title="Rules snapshot" eyebrow="Verify before keeping" />
         <Stack>
           <AppText>Legal status: {fish.regulation.status}</AppText>
           <AppText>Season: {fish.regulation.season}</AppText>
@@ -63,29 +94,7 @@ export default function FishDetailScreen() {
       </Card>
 
       <Card>
-        <AppText variant="heading">Setup</AppText>
-        <Stack>
-          <AppText>Best bait: {fish.bestBait.join(", ")}</AppText>
-          <AppText>Best lures: {fish.bestLures.join(", ")}</AppText>
-          <AppText>Rod/reel: {fish.rodSetup}</AppText>
-          <AppText>Line: {fish.line}</AppText>
-          <AppText>Hook: {fish.hook}</AppText>
-          <AppText>Best knots: {fish.knots.join(", ")}</AppText>
-        </Stack>
-      </Card>
-
-      <Card>
-        <AppText variant="heading">Beginner tips</AppText>
-        {fish.tips.map((tip) => (
-          <View key={tip} style={styles.tipRow}>
-            <View style={styles.tipDot} />
-            <AppText style={styles.tipText}>{tip}</AppText>
-          </View>
-        ))}
-      </Card>
-
-      <Card>
-        <AppText variant="heading">Watch and Learn</AppText>
+        <SectionHeader title="Watch on YouTube" eyebrow="External searches" />
         {fish.youtubeSearches.map((query) => (
           <YoutubeLink key={query} query={query} />
         ))}
@@ -94,30 +103,93 @@ export default function FishDetailScreen() {
   );
 }
 
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.fact}>
+      <AppText variant="caption" style={styles.factLabel}>
+        {label}
+      </AppText>
+      <AppText style={styles.factValue}>{value}</AppText>
+    </View>
+  );
+}
+
+function InfoList({ title, eyebrow, items, danger = false }: { title: string; eyebrow: string; items: string[]; danger?: boolean }) {
+  return (
+    <Card>
+      <SectionHeader title={title} eyebrow={eyebrow} />
+      <Stack>
+        {items.map((item) => (
+          <View key={item} style={styles.tipRow}>
+            <View style={[styles.tipDot, danger && styles.dangerDot]} />
+            <AppText style={styles.tipText}>{item}</AppText>
+          </View>
+        ))}
+      </Stack>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  header: {
+    backgroundColor: colors.forest,
+    borderRadius: radii.md,
+    gap: spacing.md,
+    padding: spacing.md
+  },
   imagePlaceholder: {
     alignItems: "center",
     backgroundColor: colors.river,
-    borderRadius: 8,
-    height: 170,
+    borderRadius: radii.md,
+    height: 178,
     justifyContent: "center"
   },
   placeholderText: {
     color: "#fff",
     fontSize: 28,
-    fontWeight: "800"
+    fontWeight: "900",
+    textAlign: "center"
   },
-  row: {
+  headerRow: {
     alignItems: "flex-start",
     flexDirection: "row",
-    gap: spacing.md
+    gap: spacing.sm
   },
-  title: {
+  titleBlock: {
     flex: 1
+  },
+  lightText: {
+    color: "#fff"
+  },
+  headerSubtitle: {
+    color: colors.mist,
+    fontWeight: "800"
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  fact: {
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexBasis: "48%",
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  factLabel: {
+    color: colors.river,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  factValue: {
+    fontWeight: "800"
   },
   warning: {
     color: colors.danger,
-    fontWeight: "700"
+    fontWeight: "800"
   },
   tipRow: {
     alignItems: "flex-start",
@@ -126,10 +198,13 @@ const styles = StyleSheet.create({
   },
   tipDot: {
     backgroundColor: colors.river,
-    borderRadius: 999,
+    borderRadius: radii.pill,
     height: 8,
     marginTop: 7,
     width: 8
+  },
+  dangerDot: {
+    backgroundColor: colors.danger
   },
   tipText: {
     flex: 1
