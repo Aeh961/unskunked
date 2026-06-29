@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Unskunked logo placeholder">
+  <rect width="1200" height="420" rx="32" fill="#123b30"/>
+  <path d="M0 286 C160 222 260 342 420 280 S700 224 850 292 1080 304 1200 236 V420 H0 Z" fill="#277f95"/>
+  <circle cx="980" cy="98" r="46" fill="#efb45a"/>
+  <text x="90" y="190" fill="#fffaf1" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800">Unskunked</text>
+  <text x="94" y="252" fill="#d9edf0" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Beginner fishing plans, rigs, and trip logs</text>
+</svg>

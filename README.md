@@ -1,76 +1,45 @@
 # Unskunked
 
-Unskunked is a local-first Expo React Native fishing assistant for iOS and Android. It helps beginner anglers choose where to fish, what species to target, what bait or lure to use, how to rig up, what to learn next, and how to track trips over time.
+![Unskunked logo placeholder](screenshots/logo-placeholder.svg)
 
-The current MVP uses mock Washington fishing data only. It does not use paid APIs, a backend, live maps, or official live regulations yet.
+Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
-## Features
+The current app is a polished V2/Phase 4 demo using mock Washington fishing data, local storage, and no paid APIs or backend.
 
-- Premium outdoor-inspired UI system with reusable cards, buttons, badges, list items, section headers, empty states, loading states, and error states
-- Interactive mock map with search, water-type filters, faux map pins, bottom-sheet details, favorites, directions placeholder, and YouTube search links
-- Expanded fish database for trout, bass, panfish, kokanee, salmon, and steelhead
-- Fish detail pages with season, weather, time of day, bait, lures, rod, reel, line, hooks, knots, rigs, casting tips, habitat, mistakes, regulations, and YouTube links
-- Guided Rig Builder that recommends a setup, knot, SVG diagram, explanation, and success estimate
-- Rig and knot library with labeled SVG diagrams and step-by-step instructions
-- Trip Log with locally persisted trips, outcomes, notes, photo placeholder, and simple statistics
-- Local favorites for locations, fish, rigs, and knots
-- Ask Unskunked rule-based assistant powered by local data
-- Learning Center for basics, casting, knots, rigs, fish behavior, mistakes, glossary, and FAQ
+## Feature Overview
 
-## Tech Stack
-
-- Expo SDK 54
-- React Native
-- TypeScript
-- Expo Router
-- React Native SVG
-- AsyncStorage for local favorites and trip logs
-- Vitest for local helper tests
+- Demo Mode that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history
+- Professional Home dashboard with today’s recommendation, continue-trip prompt, favorite lakes, quick actions, beginner tips, recent catches, weather placeholder, and regulation reminder
+- Interactive mock map with search suggestions, filters, markers, recently viewed waterbodies, favorites, and a polished selected-water detail card
+- Plan My Fishing Trip generator with month, waterbody, access, experience, and target fish inputs
+- Fish database and detail pages with season, weather, time of day, bait, lures, gear, rigs, knots, mistakes, habitat, regulation warnings, and YouTube learning links
+- Guided Rig Builder with a confidence estimate, bait recommendation, knot recommendation, and labeled SVG rig diagrams
+- Trip Log with local history, skunked versus unskunked stats, most successful bait, and most successful location
+- Favorites for fish, waterbodies, rigs, and knots
+- Ask Unskunked rule-based local assistant
+- Learning Center with beginner, species, rod, reel, line, hook, lure, safety, etiquette, and Washington basics articles
+- Screenshot automation for iOS and Android
 
 ## Architecture
 
-Unskunked keeps app state and data intentionally simple for the MVP:
+- `app/`: Expo Router screens and routes
+- `app/(tabs)/`: primary tab experience
+- `src/components/`: reusable UI system
+- `src/data/`: mock fish, waterbody, rig, and learning data
+- `src/hooks/`: reusable hooks such as favorites
+- `src/utils/`: local storage, recommendations, search, and YouTube helpers
+- `scripts/`: automation utilities
+- `screenshots/`: generated iOS and Android screenshots
 
-- Screens live under `app/` using Expo Router.
-- Shared UI components live in `src/components/`.
-- Mock domain data lives in `src/data/`.
-- Search, recommendations, YouTube links, and local storage utilities live in `src/utils/`.
-- Reusable hooks live in `src/hooks/`.
-- Design tokens live in `src/theme.ts`.
+The app is intentionally local-first. Future real-data integrations should replace or augment `src/data/*` through typed service adapters while preserving the current screen contracts.
 
-Future API integration should start by replacing or augmenting the local data modules with service adapters while keeping screens pointed at typed domain models.
-
-## Folder Structure
-
-```text
-app/
-  (tabs)/
-    index.tsx
-    map.tsx
-    fish.tsx
-    rigs.tsx
-    ask.tsx
-  fish/[id].tsx
-  learn.tsx
-  log.tsx
-src/
-  components/
-  data/
-  hooks/
-  utils/
-  theme.ts
-tests/
-```
-
-## Installation
+## Development Setup
 
 Requirements:
 
 - Node.js 22+
 - npm
 - Expo Go, iOS Simulator, or Android Emulator
-
-Node 22 is the expected local development runtime for this repo. If Expo or Metro behaves differently across machines, check `node --version` first.
 
 Install dependencies:
 
@@ -96,68 +65,99 @@ Run Android:
 npm run android
 ```
 
-Run tests:
+## Testing
 
 ```bash
 npm test
-```
-
-Run TypeScript:
-
-```bash
 npm run typecheck
 ```
 
-Verify native bundles compile:
+Compile bundle checks:
 
 ```bash
 npx expo export --platform ios --output-dir /private/tmp/unskunked-export-ios
 npx expo export --platform android --output-dir /private/tmp/unskunked-export-android
 ```
 
+## Screenshot Automation
+
+Create screenshots after the app is running on a simulator/emulator.
+
+For standalone or development builds that register `unskunked://`:
+
+```bash
+npm run screenshots:ios
+npm run screenshots:android
+```
+
+For Expo Go, pass the dev-server URL printed by Expo:
+
+```bash
+EXPO_URL=exp://YOUR_LOCAL_IP:8081 npm run screenshots:ios
+EXPO_URL=exp://YOUR_LOCAL_IP:8081 npm run screenshots:android
+```
+
+The script navigates to each route and captures:
+
+- Home
+- Map
+- Waterbody Detail
+- Fish List
+- Fish Detail
+- Rig Builder
+- Rig Diagram
+- Ask Unskunked
+- Trip Log
+- Favorites
+- Learning Center
+- Settings
+
 ## Screenshots
 
-Add demo screenshots here:
+### iOS
 
-- iOS Home / Start Here: `screenshots/ios-home-start.png`
-- iOS Interactive Map: `screenshots/ios-map.png`
-- iOS Rig Builder: `screenshots/ios-rig-builder.png`
-- iOS Trip Log: `screenshots/ios-trip-log.png`
-- Android Home / Start Here: `screenshots/android-home-start.png`
-- Android Fish Detail: `screenshots/android-fish-detail.png`
-- Android Ask Unskunked: `screenshots/android-ask.png`
-- Android Learning Center: `screenshots/android-learn.png`
-- Phase 1 Design System: `screenshots/phase-1-design-system.png`
-- Phase 2 Interactive Map: `screenshots/phase-2-map.png`
-- Phase 3 Fish Database: `screenshots/phase-3-fish.png`
-- Phase 4 Rig Builder: `screenshots/phase-4-rig-builder.png`
-- Phase 5 Trip Log: `screenshots/phase-5-trip-log.png`
-- Phase 6 Ask and Learn: `screenshots/phase-6-ask-learn.png`
+![iOS Home](screenshots/ios/ios-home.png)
+![iOS Map](screenshots/ios/ios-map.png)
+![iOS Waterbody Detail](screenshots/ios/ios-waterbody-detail.png)
+![iOS Fish List](screenshots/ios/ios-fish-list.png)
+![iOS Fish Detail](screenshots/ios/ios-fish-detail.png)
+![iOS Rig Builder](screenshots/ios/ios-rig-builder.png)
+![iOS Rig Diagram](screenshots/ios/ios-rig-diagram.png)
+![iOS Ask Unskunked](screenshots/ios/ios-ask-unskunked.png)
+![iOS Trip Log](screenshots/ios/ios-trip-log.png)
+![iOS Favorites](screenshots/ios/ios-favorites.png)
+![iOS Learning Center](screenshots/ios/ios-learning-center.png)
+![iOS Settings](screenshots/ios/ios-settings.png)
 
-## Roadmap
+### Android
 
-Two-week MVP:
+![Android Home](screenshots/android/android-home.png)
+![Android Map](screenshots/android/android-map.png)
+![Android Waterbody Detail](screenshots/android/android-waterbody-detail.png)
+![Android Fish List](screenshots/android/android-fish-list.png)
+![Android Fish Detail](screenshots/android/android-fish-detail.png)
+![Android Rig Builder](screenshots/android/android-rig-builder.png)
+![Android Rig Diagram](screenshots/android/android-rig-diagram.png)
+![Android Ask Unskunked](screenshots/android/android-ask-unskunked.png)
+![Android Trip Log](screenshots/android/android-trip-log.png)
+![Android Favorites](screenshots/android/android-favorites.png)
+![Android Learning Center](screenshots/android/android-learning-center.png)
+![Android Settings](screenshots/android/android-settings.png)
 
-- Week 1: polish design system, mock data, map, fish pages, rig builder, learning content, and trip logging
-- Week 2: device QA, screenshots, onboarding, accessibility review, dark mode pass, animation polish, and demo script
+## Roadmap To Real Data
 
-Next product milestones:
-
-- Real WDFW regulation integration with timestamps and source links
-- Real map provider and geolocation
-- Real waterbody search backed by official datasets
-- Regulation detail pages with emergency rule alerts
-- Weather and pressure context
-- Offline location packs
-- Fish ID by photo
-- Catch photo attachments
-- Camera-based fish measurement
-- Community reports
-- Optional AI coach using a paid API only after clear user consent
+- Integrate official WDFW regulation datasets with source timestamps
+- Add real map provider and GPS search
+- Add waterbody detail pages with emergency rule alerts
+- Add weather, tide, and pressure context
+- Add offline map/location packs
+- Add real catch photo attachments
+- Add fish ID by photo
+- Add optional AI coach only after explicit user consent
 
 ## Contributing
 
-Keep the app Expo-compatible and local-first. Prefer typed data models, reusable components, and small focused commits. All regulation-related copy must clearly state when it is mock data and should never imply official legal guidance.
+Keep Unskunked Expo-compatible, TypeScript-clean, beginner-friendly, and local-first unless a feature explicitly requires integration. Regulation-related content must clearly distinguish mock guidance from official legal guidance.
 
 ## GitHub
 

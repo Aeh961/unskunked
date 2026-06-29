@@ -31,7 +31,12 @@ function run(command, args) {
 }
 
 function openRoute(platform, route) {
-  const url = route ? `unskunked://${route}` : "unskunked://";
+  const expoUrl = process.env.EXPO_URL;
+  const url = expoUrl
+    ? `${expoUrl.replace(/\/$/, "")}/--/${route}`
+    : route
+      ? `unskunked://${route}`
+      : "unskunked://";
   if (platform === "ios") {
     run("xcrun", ["simctl", "openurl", "booted", url]);
     return;
