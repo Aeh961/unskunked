@@ -6,7 +6,7 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen } from "@/src/components/Screen";
-import { colors, spacing } from "@/src/theme";
+import { colors, radii, spacing } from "@/src/theme";
 import { answerLocalQuestion } from "@/src/utils/recommendations";
 
 type Message = {
@@ -16,7 +16,7 @@ type Message = {
 
 const examples = [
   "I have worms and a spinning rod, what can I catch?",
-  "What rig should I use for trout?",
+  "What fish bite in July?",
   "What knot should I use?",
   "Can I fish Lake Washington today?"
 ];
@@ -43,8 +43,10 @@ export default function AskScreen() {
 
   return (
     <Screen>
-      <AppText variant="title">Ask Unskunked</AppText>
-      <AppText>Ask about the local mock catalog. Answers are rule-based, offline, and beginner-focused for the demo.</AppText>
+      <View style={styles.hero}>
+        <AppText variant="title">Ask Unskunked</AppText>
+        <AppText style={styles.heroText}>Rule-based, offline answers from the local fish, rig, and waterbody catalog.</AppText>
+      </View>
       <Disclaimer />
       <View style={styles.examples}>
         {examples.map((example) => (
@@ -84,14 +86,27 @@ export default function AskScreen() {
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    backgroundColor: colors.deepWater,
+    borderRadius: radii.md,
+    gap: spacing.sm,
+    padding: spacing.lg
+  },
+  heroText: {
+    color: colors.mist,
+    fontWeight: "700"
+  },
   examples: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm
   },
   exampleButton: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
+    flexBasis: "48%",
     padding: spacing.md
   },
   exampleText: {
@@ -99,16 +114,17 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   chatCard: {
+    backgroundColor: "#fbf6ea",
     gap: spacing.sm
   },
   bubble: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     maxWidth: "92%",
-    padding: spacing.sm
+    padding: spacing.md
   },
   assistant: {
     alignSelf: "flex-start",
-    backgroundColor: "#eef6ef"
+    backgroundColor: colors.mist
   },
   user: {
     alignSelf: "flex-end",
@@ -123,9 +139,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm
   },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     color: colors.ink,
     flex: 1,
@@ -137,7 +153,7 @@ const styles = StyleSheet.create({
   sendButton: {
     alignItems: "center",
     backgroundColor: colors.pine,
-    borderRadius: 8,
+    borderRadius: radii.md,
     height: 54,
     justifyContent: "center",
     width: 54
