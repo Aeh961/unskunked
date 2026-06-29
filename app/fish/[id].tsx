@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
+import { EmptyState } from "@/src/components/EmptyState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
@@ -11,7 +12,19 @@ import { colors, spacing } from "@/src/theme";
 
 export default function FishDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const fish = fishSpecies.find((item) => item.id === id) ?? fishSpecies[0];
+  const fish = fishSpecies.find((item) => item.id === id);
+
+  if (!fish) {
+    return (
+      <Screen>
+        <EmptyState
+          icon="fish"
+          title="Fish not found"
+          body="That species is not in the local MVP catalog yet. Head back to the Fish tab and pick one from the list."
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -25,6 +38,15 @@ export default function FishDetailScreen() {
         <StatusBadge status={fish.status} />
       </View>
       <Disclaimer />
+
+      <Card>
+        <AppText variant="heading">Quick read</AppText>
+        <Stack>
+          <AppText>Difficulty: {fish.difficulty}</AppText>
+          <AppText>Start with: {fish.bestBait[0]} or {fish.bestLures[0]}</AppText>
+          <AppText>Beginner line: {fish.line}</AppText>
+        </Stack>
+      </Card>
 
       <Card>
         <AppText variant="heading">Rules snapshot</AppText>
@@ -55,7 +77,10 @@ export default function FishDetailScreen() {
       <Card>
         <AppText variant="heading">Beginner tips</AppText>
         {fish.tips.map((tip) => (
-          <AppText key={tip}>- {tip}</AppText>
+          <View key={tip} style={styles.tipRow}>
+            <View style={styles.tipDot} />
+            <AppText style={styles.tipText}>{tip}</AppText>
+          </View>
         ))}
       </Card>
 
@@ -93,5 +118,20 @@ const styles = StyleSheet.create({
   warning: {
     color: colors.danger,
     fontWeight: "700"
+  },
+  tipRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  tipDot: {
+    backgroundColor: colors.river,
+    borderRadius: 999,
+    height: 8,
+    marginTop: 7,
+    width: 8
+  },
+  tipText: {
+    flex: 1
   }
 });

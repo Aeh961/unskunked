@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
+import { EmptyState } from "@/src/components/EmptyState";
 import { Screen } from "@/src/components/Screen";
 import { colors, spacing } from "@/src/theme";
 import { answerLocalQuestion } from "@/src/utils/recommendations";
@@ -43,6 +44,7 @@ export default function AskScreen() {
   return (
     <Screen>
       <AppText variant="title">Ask Unskunked</AppText>
+      <AppText>Ask about the local mock catalog. Answers are rule-based, offline, and beginner-focused for the demo.</AppText>
       <Disclaimer />
       <View style={styles.examples}>
         {examples.map((example) => (
@@ -53,11 +55,15 @@ export default function AskScreen() {
       </View>
 
       <Card style={styles.chatCard}>
-        {messages.map((message, index) => (
-          <View key={`${message.role}-${index}`} style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
-            <AppText style={message.role === "user" ? styles.userText : undefined}>{message.text}</AppText>
-          </View>
-        ))}
+        {messages.length > 0 ? (
+          messages.map((message, index) => (
+            <View key={`${message.role}-${index}`} style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
+              <AppText style={message.role === "user" ? styles.userText : undefined}>{message.text}</AppText>
+            </View>
+          ))
+        ) : (
+          <EmptyState icon="chatbubble-ellipses" title="No messages yet" body="Tap an example or ask about bait, rigs, knots, or water." />
+        )}
       </Card>
 
       <View style={styles.inputRow}>

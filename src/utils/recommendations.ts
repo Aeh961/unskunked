@@ -39,18 +39,18 @@ export function answerLocalQuestion(question: string) {
   const water = waterbodies.find((item) => text.includes(item.name.toLowerCase()));
 
   if (water) {
-    return `${water.name}: ${water.regulationSummary} Good beginner setup: ${water.beginnerSetup}`;
+    return `${water.name}: ${water.regulationSummary} Beginner setup: ${water.beginnerSetup} Suggested bait or lures: ${water.suggestedBait.join(", ")}. Verify official rules before keeping fish.`;
   }
 
   if (text.includes("knot")) {
     const knot = rigsAndKnots.find((item) => item.type === "knot" && text.includes(item.name.toLowerCase().split(" ")[0]));
     const pick = knot ?? rigsAndKnots.find((item) => item.id === "palomar-knot");
-    return `${pick?.name}: ${pick?.beginnerExplanation} ${pick?.steps.slice(0, 3).join(" ")}`;
+    return `${pick?.name}: ${pick?.beginnerExplanation} First steps: ${pick?.steps.slice(0, 3).join(" ")} Wet the knot before tightening.`;
   }
 
   if (text.includes("rig") || text.includes("setup")) {
     const rig = findBestRig(question);
-    return `${rig.name}: ${rig.beginnerExplanation} Start with: ${rig.steps.slice(0, 3).join(" ")}`;
+    return `${rig.name}: ${rig.beginnerExplanation} Best for: ${rig.worksFor.join(", ")}. Start with: ${rig.steps.slice(0, 3).join(" ")}`;
   }
 
   const recommendations = recommendSpeciesFromGear(question)

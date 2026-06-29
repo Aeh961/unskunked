@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
+import { EmptyState } from "@/src/components/EmptyState";
 import { Screen } from "@/src/components/Screen";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { fishSpecies } from "@/src/data/fish";
@@ -12,8 +13,9 @@ export default function FishScreen() {
   return (
     <Screen>
       <AppText variant="title">Fish</AppText>
+      <AppText>Pick one target species and keep the setup simple. Each page includes bait, lures, knots, rules notes, and videos to search.</AppText>
       <Disclaimer />
-      {fishSpecies.map((fish) => (
+      {fishSpecies.length > 0 ? fishSpecies.map((fish) => (
         <Link key={fish.id} href={`/fish/${fish.id}`} asChild>
           <Pressable>
             <Card>
@@ -31,7 +33,9 @@ export default function FishScreen() {
             </Card>
           </Pressable>
         </Link>
-      ))}
+      )) : (
+        <EmptyState icon="fish" title="No fish loaded" body="The local mock fish catalog is empty. Add species in src/data/fish.ts." />
+      )}
     </Screen>
   );
 }

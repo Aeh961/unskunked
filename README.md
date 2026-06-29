@@ -1,8 +1,8 @@
 # Unskunked
 
-Unskunked is a beginner-friendly fishing assistant for iOS and Android. It helps new anglers decide what they can fish for, where to try, what bait or lures to use, what knot or rig to tie, and what YouTube search to open for a visual lesson.
+Unskunked is a beginner-friendly fishing assistant for iOS and Android. It helps new anglers decide where to try, what fish to target, what bait or lures to use, what knot or rig to tie, and what YouTube search to open for a visual lesson.
 
-This MVP uses local mock Washington data only. It does not use paid APIs or a backend.
+This MVP uses local mock Washington data only. It does not use paid APIs, a backend, or official live regulations yet.
 
 ## Important Disclaimer
 
@@ -17,6 +17,12 @@ This app is for guidance only. Always verify current regulations with official f
 - Vitest for helper tests
 
 ## Getting Started
+
+Requirements:
+
+- Node.js 20+
+- npm
+- Expo Go on your iOS or Android device, or a configured simulator/emulator
 
 Install dependencies:
 
@@ -36,11 +42,15 @@ Run on iOS:
 npm run ios
 ```
 
+This opens the iOS simulator when Xcode tooling is installed. You can also start Expo with `npm start` and press `i`.
+
 Run on Android:
 
 ```bash
 npm run android
 ```
+
+This opens an Android emulator when Android Studio tooling is installed. You can also start Expo with `npm start` and press `a`.
 
 Run tests:
 
@@ -52,6 +62,12 @@ Typecheck:
 
 ```bash
 npm run typecheck
+```
+
+Verify the Expo app compiles:
+
+```bash
+npx expo start
 ```
 
 ## MVP Features
@@ -75,6 +91,10 @@ Add demo screenshots here:
 - Rigs: `screenshots/rigs.png`
 - Ask: `screenshots/ask.png`
 
+## GitHub
+
+Repository: `https://github.com/Aeh961/unskunked`
+
 ## 2-Week MVP Roadmap
 
 Week 1:
@@ -92,6 +112,7 @@ Week 2:
 - Tune mock recommendations with real beginner scenarios
 - Improve accessibility labels and touch target review
 - Prepare GitHub README, roadmap, and demo build notes
+- Create a public GitHub repository and push the MVP
 
 ## Future Features
 

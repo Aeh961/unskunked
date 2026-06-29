@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
+import { EmptyState } from "@/src/components/EmptyState";
 import { RigDiagram } from "@/src/components/RigDiagram";
 import { Screen, Stack } from "@/src/components/Screen";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
@@ -21,6 +22,7 @@ export default function RigsScreen() {
   return (
     <Screen>
       <AppText variant="title">Rigs & Knots</AppText>
+      <AppText>Search simple knots and rigs by fish, bait, or technique. Each card includes a labeled diagram, steps, and a YouTube search.</AppText>
       <Disclaimer />
       <View style={styles.segment}>
         {(["all", "knot", "rig"] as const).map((item) => (
@@ -39,30 +41,43 @@ export default function RigsScreen() {
         style={styles.search}
       />
 
-      {filtered.map((item) => (
-        <Card key={item.id}>
-          <View style={styles.row}>
-            <AppText variant="heading" style={styles.flex}>
-              {item.name}
-            </AppText>
-            <AppText variant="caption" style={styles.type}>
-              {item.type.toUpperCase()}
-            </AppText>
-          </View>
-          <AppText>{item.beginnerExplanation}</AppText>
-          <AppText>When to use: {item.whenToUse}</AppText>
-          <AppText>Works for: {item.worksFor.join(", ")}</AppText>
-          <RigDiagram parts={item.parts} />
-          <Stack>
-            {item.steps.map((step, index) => (
-              <AppText key={step}>
-                {index + 1}. {step}
+      {filtered.length > 0 ? (
+        filtered.map((item) => (
+          <Card key={item.id}>
+            <View style={styles.row}>
+              <AppText variant="heading" style={styles.flex}>
+                {item.name}
               </AppText>
-            ))}
-          </Stack>
-          <YoutubeLink query={item.youtubeSearch} />
-        </Card>
-      ))}
+              <AppText variant="caption" style={styles.type}>
+                {item.type.toUpperCase()}
+              </AppText>
+            </View>
+            <AppText>{item.beginnerExplanation}</AppText>
+            <AppText>When to use: {item.whenToUse}</AppText>
+            <AppText>Works for: {item.worksFor.join(", ")}</AppText>
+            <RigDiagram parts={item.parts} />
+            <Stack>
+              {item.steps.map((step, index) => (
+                <View key={step} style={styles.stepRow}>
+                  <View style={styles.stepBadge}>
+                    <AppText variant="caption" style={styles.stepNumber}>
+                      {index + 1}
+                    </AppText>
+                  </View>
+                  <AppText style={styles.stepText}>{step}</AppText>
+                </View>
+              ))}
+            </Stack>
+            <YoutubeLink query={item.youtubeSearch} />
+          </Card>
+        ))
+      ) : (
+        <EmptyState
+          icon="git-branch"
+          title="No rigs or knots found"
+          body="Try searching for trout, bass, bobber, spinner, Palomar, or clear the search."
+        />
+      )}
     </Screen>
   );
 }
@@ -113,5 +128,25 @@ const styles = StyleSheet.create({
   type: {
     color: colors.pine,
     fontWeight: "900"
+  },
+  stepRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  stepBadge: {
+    alignItems: "center",
+    backgroundColor: colors.pine,
+    borderRadius: 999,
+    height: 24,
+    justifyContent: "center",
+    width: 24
+  },
+  stepNumber: {
+    color: "#fff",
+    fontWeight: "900"
+  },
+  stepText: {
+    flex: 1
   }
 });

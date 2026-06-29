@@ -6,9 +6,14 @@ import { AppText } from "./AppText";
 
 export function YoutubeLink({ query }: { query: string }) {
   return (
-    <Pressable style={styles.link} onPress={() => openYoutubeSearch(query)}>
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`Search YouTube for ${query}`}
+      style={styles.link}
+      onPress={() => openYoutubeSearch(query)}
+    >
       <Ionicons name="logo-youtube" size={18} color={colors.danger} />
-      <AppText style={styles.text}>{query}</AppText>
+      <AppText style={styles.text}>Search YouTube: {query}</AppText>
     </Pressable>
   );
 }
