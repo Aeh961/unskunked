@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Href, Link } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
@@ -11,7 +11,9 @@ const quickLinks = [
   { label: "Find Water", href: "/map", icon: "navigate", hint: "Search nearby-style demo spots" },
   { label: "Pick a Fish", href: "/fish", icon: "fish", hint: "Choose bait and gear" },
   { label: "Tie a Rig", href: "/rigs", icon: "git-branch", hint: "Simple steps and diagrams" },
-  { label: "Ask", href: "/ask", icon: "chatbubble-ellipses", hint: "Local beginner answers" }
+  { label: "Ask", href: "/ask", icon: "chatbubble-ellipses", hint: "Local beginner answers" },
+  { label: "Log Trip", href: "/log", icon: "journal", hint: "Track catches and patterns" },
+  { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" }
 ] as const;
 
 const beginnerPlan = [
@@ -32,12 +34,12 @@ export default function HomeScreen() {
           </AppText>
         </View>
         <AppText variant="title">Unskunked</AppText>
-        <AppText style={styles.tagline}>A beginner fishing copilot for deciding where to go, what to target, and how to rig up.</AppText>
+        <AppText style={styles.tagline}>A local-first fishing copilot for deciding where to go, what to target, how to rig up, and what to learn next.</AppText>
       </View>
 
       <View style={styles.quickGrid}>
         {quickLinks.map((item) => (
-          <Link key={item.label} href={item.href} asChild>
+            <Link key={item.label} href={item.href as Href} asChild>
             <Pressable style={styles.quickButton}>
               <Ionicons name={item.icon} size={22} color="#fff" />
               <View style={styles.quickCopy}>
@@ -54,7 +56,12 @@ export default function HomeScreen() {
       <Disclaimer />
 
       <Card>
-        <AppText variant="heading">Demo game plan</AppText>
+        <View style={styles.cardHeader}>
+          <Ionicons name="compass" size={22} color={colors.pine} />
+          <AppText variant="heading" style={styles.stepText}>
+            Demo game plan
+          </AppText>
+        </View>
         <Stack>
           {beginnerPlan.map((step, index) => (
             <View key={step} style={styles.stepRow}>
@@ -69,11 +76,21 @@ export default function HomeScreen() {
         </Stack>
       </Card>
       <Card>
-        <AppText variant="heading">Keep it simple</AppText>
+        <View style={styles.cardHeader}>
+          <Ionicons name="leaf" size={22} color={colors.pine} />
+          <AppText variant="heading" style={styles.stepText}>
+            Keep it simple
+          </AppText>
+        </View>
         <AppText>Start with easy targets like stocked trout or perch, use small hooks, and fish the first or last hour of daylight.</AppText>
       </Card>
       <Card>
-        <AppText variant="heading">Rules first</AppText>
+        <View style={styles.cardHeader}>
+          <Ionicons name="warning" size={22} color={colors.danger} />
+          <AppText variant="heading" style={styles.stepText}>
+            Rules first
+          </AppText>
+        </View>
         <AppText>Unskunked shows friendly mock summaries. Always check the official waterbody, season, limit, size, and closure rules before you cast.</AppText>
       </Card>
     </Screen>
@@ -152,5 +169,10 @@ const styles = StyleSheet.create({
   },
   stepText: {
     flex: 1
+  },
+  cardHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm
   }
 });
