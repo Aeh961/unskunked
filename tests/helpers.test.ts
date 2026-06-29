@@ -17,8 +17,8 @@ describe("regulation helpers", () => {
 describe("species recommendations", () => {
   it("recommends worm-friendly species", () => {
     const names = recommendSpeciesFromGear("I have worms and a spinning rod").map((fish) => fish.name);
-    expect(names).toContain("Rainbow trout");
-    expect(names).toContain("Yellow perch");
+    expect(names).toContain("Rainbow Trout");
+    expect(names).toContain("Yellow Perch");
   });
 
   it("answers waterbody questions from local data", () => {

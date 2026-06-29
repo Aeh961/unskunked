@@ -14,26 +14,43 @@ export type FishSpecies = {
   name: string;
   status: Status;
   difficulty: "Easy" | "Moderate" | "Advanced";
+  bestSeason: string;
+  bestWeather: string;
+  bestTimeOfDay: string;
   bestBait: string[];
   bestLures: string[];
   rodSetup: string;
+  reel: string;
   line: string;
   hook: string;
   knots: string[];
+  rigs: string[];
+  castingTips: string[];
+  whereToFind: string[];
+  commonMistakes: string[];
   tips: string[];
   regulation: Regulation;
   youtubeSearches: string[];
 };
 
+export type WaterType = "Lake" | "River" | "Saltwater" | "Park" | "Pier";
+
 export type Waterbody = {
   id: string;
   name: string;
   region: string;
+  waterType: WaterType;
+  latitude: number;
+  longitude: number;
   speciesIds: string[];
   status: Status;
   regulationSummary: string;
   suggestedBait: string[];
+  recommendedRigs: string[];
   beginnerSetup: string;
+  beginnerDifficulty: "Easy" | "Moderate" | "Advanced";
+  notes: string;
+  todayRecommendation: string;
   youtubeSearch: string;
 };
 

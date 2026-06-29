@@ -1,8 +1,8 @@
 import { PropsWithChildren } from "react";
 import { StyleSheet, Text, TextProps } from "react-native";
-import { colors } from "@/src/theme";
+import { colors, typography } from "@/src/theme";
 
-type Props = PropsWithChildren<TextProps & { variant?: "title" | "heading" | "body" | "caption" }>;
+type Props = PropsWithChildren<TextProps & { variant?: "hero" | "title" | "heading" | "subheading" | "body" | "caption" }>;
 
 export function AppText({ variant = "body", style, children, ...props }: Props) {
   return (
@@ -15,24 +15,25 @@ export function AppText({ variant = "body", style, children, ...props }: Props) 
 const styles = StyleSheet.create({
   base: {
     color: colors.ink,
-    lineHeight: 22
+    letterSpacing: 0
+  },
+  hero: {
+    ...typography.hero
   },
   title: {
-    fontSize: 34,
-    fontWeight: "800",
-    lineHeight: 40
+    ...typography.title
   },
   heading: {
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 26
+    ...typography.heading
+  },
+  subheading: {
+    ...typography.subheading
   },
   body: {
-    fontSize: 16
+    ...typography.body
   },
   caption: {
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18
+    ...typography.caption
   }
 });
