@@ -15,8 +15,10 @@ const quickLinks = [
   { label: "Tie a Rig", href: "/rigs", icon: "git-branch", hint: "Simple steps and diagrams" },
   { label: "Ask", href: "/ask", icon: "chatbubble-ellipses", hint: "Local beginner answers" },
   { label: "Log Trip", href: "/log", icon: "journal", hint: "Track catches and patterns" },
+  { label: "Plan Trip", href: "/plan", icon: "calendar", hint: "Generate a trip checklist" },
   { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" },
-  { label: "Favorites", href: "/favorites", icon: "heart", hint: "Saved fish, waters, rigs" }
+  { label: "Favorites", href: "/favorites", icon: "heart", hint: "Saved fish, waters, rigs" },
+  { label: "Settings", href: "/settings", icon: "settings", hint: "Demo mode and data" }
 ] as const;
 
 const beginnerPlan = [
@@ -62,6 +64,41 @@ export default function HomeScreen() {
         </Card>
       </View>
 
+      <Card style={styles.recommendationCard}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="sunny" size={24} color={colors.forest} />
+          <View style={styles.stepText}>
+            <AppText variant="heading">Today&apos;s recommendation</AppText>
+            <AppText>Fish Green Lake before 9 AM with a bobber rig, worms, and a backup PowerBait setup.</AppText>
+          </View>
+        </View>
+        <Link href={"/plan" as Href} asChild>
+          <Button icon="calendar" variant="secondary">Plan this trip</Button>
+        </Link>
+      </Card>
+
+      <View style={styles.statusGrid}>
+        <Card style={styles.statusCard}>
+          <AppText variant="caption" style={styles.statusLabel}>Continue previous trip</AppText>
+          <AppText variant="subheading">Lake Washington perch</AppText>
+        </Card>
+        <Card style={styles.statusCard}>
+          <AppText variant="caption" style={styles.statusLabel}>Weather placeholder</AppText>
+          <AppText variant="subheading">Cool AM, light wind</AppText>
+        </Card>
+      </View>
+
+      <Card style={styles.favoriteCard}>
+        <SectionHeader title="Favorite lakes" eyebrow="Demo mode" />
+        <View style={styles.badgeRow}>
+          {["Green Lake", "Lake Washington", "Edmonds Pier"].map((name) => (
+            <View key={name} style={styles.badge}>
+              <AppText variant="caption" style={styles.badgeText}>{name}</AppText>
+            </View>
+          ))}
+        </View>
+      </Card>
+
       <SectionHeader title="Choose your next move" eyebrow="Product flow" />
       <View style={styles.quickGrid}>
         {quickLinks.map((item) => (
@@ -100,6 +137,15 @@ export default function HomeScreen() {
             </View>
           ))}
         </Stack>
+      </Card>
+      <Card>
+        <View style={styles.cardHeader}>
+          <Ionicons name="trophy" size={22} color={colors.sunrise} />
+          <AppText variant="heading" style={styles.stepText}>
+            Recent catches
+          </AppText>
+        </View>
+        <AppText>7 yellow perch at Lake Washington on worms and a bobber rig. Log your next trip to build your own pattern.</AppText>
       </Card>
       <Card>
         <View style={styles.cardHeader}>
@@ -188,6 +234,28 @@ const styles = StyleSheet.create({
     color: colors.river,
     fontWeight: "900",
     textTransform: "uppercase"
+  },
+  recommendationCard: {
+    backgroundColor: "#fff6df",
+    gap: spacing.md
+  },
+  favoriteCard: {
+    gap: spacing.md
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  badge: {
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  badgeText: {
+    color: colors.forest,
+    fontWeight: "900"
   },
   quickGrid: {
     flexDirection: "row",

@@ -1,3 +1,4 @@
+import { Href, Link } from "expo-router";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ export default function MapScreen() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WaterType | "All">("All");
   const [selectedId, setSelectedId] = useState(waterbodies[0].id);
+  const [recentIds, setRecentIds] = useState<string[]>([waterbodies[0].id]);
   const { isFavorite, toggle } = useFavorites();
 
   const filtered = useMemo(() => {
@@ -48,6 +50,11 @@ export default function MapScreen() {
     Linking.openURL(url);
   }
 
+  function selectWater(id: string) {
+    setSelectedId(id);
+    setRecentIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 4));
+  }
+
   return (
     <Screen>
       <View style={styles.hero}>
@@ -63,6 +70,14 @@ export default function MapScreen() {
         placeholderTextColor={colors.muted}
         style={styles.search}
       />
+
+      <View style={styles.suggestionRow}>
+        {["trout", "pier", "worms", "bass"].map((suggestion) => (
+          <Pressable key={suggestion} onPress={() => setQuery(suggestion)} style={styles.suggestion}>
+            <AppText variant="caption" style={styles.suggestionText}>{suggestion}</AppText>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.filterRow}>
         {filters.map((item) => (
@@ -84,7 +99,7 @@ export default function MapScreen() {
         {filtered.slice(0, 6).map((water, index) => (
           <Pressable
             key={water.id}
-            onPress={() => setSelectedId(water.id)}
+            onPress={() => selectWater(water.id)}
             style={[
               styles.pin,
               pinPositions[index % pinPositions.length],
@@ -109,7 +124,7 @@ export default function MapScreen() {
             {filtered.map((water) => (
               <Pressable
                 key={water.id}
-                onPress={() => setSelectedId(water.id)}
+                onPress={() => selectWater(water.id)}
                 style={[styles.locationChip, selected.id === water.id && styles.locationChipActive]}
               >
                 <AppText style={[styles.locationName, selected.id === water.id && styles.locationTextActive]}>{water.name}</AppText>
@@ -121,6 +136,15 @@ export default function MapScreen() {
           </View>
         </>
       )}
+
+      <SectionHeader title="Recently viewed" eyebrow="This session" />
+      <View style={styles.locationList}>
+        {recentIds.map((id) => waterbodies.find((water) => water.id === id)).filter(Boolean).map((water) => water ? (
+          <Pressable key={water.id} onPress={() => selectWater(water.id)} style={styles.recentChip}>
+            <AppText variant="caption" style={styles.recentText}>{water.name}</AppText>
+          </Pressable>
+        ) : null)}
+      </View>
 
       <Card style={styles.sheet}>
         <View style={styles.sheetHandle} />
@@ -167,9 +191,11 @@ export default function MapScreen() {
         </Stack>
 
         <View style={styles.actions}>
-          <Button icon="information-circle" style={styles.actionButton}>
-            Open details
-          </Button>
+          <Link href={"/plan" as Href} asChild>
+            <Button icon="calendar" style={styles.actionButton}>
+              Plan Trip
+            </Button>
+          </Link>
           <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={openDirections}>
             Directions
           </Button>
@@ -213,6 +239,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm
+  },
+  suggestionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  suggestion: {
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  suggestionText: {
+    color: colors.forest,
+    fontWeight: "900"
   },
   filter: {
     backgroundColor: colors.surfaceStrong,
@@ -317,6 +358,16 @@ const styles = StyleSheet.create({
   },
   locationTextActive: {
     color: "#fff"
+  },
+  recentChip: {
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  recentText: {
+    color: colors.forest,
+    fontWeight: "900"
   },
   sheet: {
     gap: spacing.md

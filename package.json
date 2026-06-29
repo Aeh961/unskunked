@@ -12,7 +12,10 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "screenshots:ios": "node scripts/capture-screenshots.mjs ios",
+    "screenshots:android": "node scripts/capture-screenshots.mjs android"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

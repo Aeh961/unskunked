@@ -2,6 +2,16 @@ import { fishSpecies } from "@/src/data/fish";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
 
+export type TripPlanInput = {
+  month: string;
+  waterbodyId: string;
+  access: "Shore" | "Boat";
+  experience: "Beginner" | "Intermediate";
+  targetFishId: string;
+  availableBait?: string;
+  availableGear?: string;
+};
+
 export function recommendSpeciesFromGear(question: string) {
   const text = question.toLowerCase();
 
@@ -93,4 +103,42 @@ export function answerLocalQuestion(question: string) {
     .join(", ");
 
   return `Based on that, start with: ${recommendations}. Keep it simple, use small hooks, and check official regulations first.`;
+}
+
+export function buildTripPlan(input: TripPlanInput) {
+  const water = waterbodies.find((item) => item.id === input.waterbodyId) ?? waterbodies[0];
+  const fish = fishSpecies.find((item) => item.id === input.targetFishId) ?? fishSpecies.find((item) => water.speciesIds.includes(item.id)) ?? fishSpecies[0];
+  const rig =
+    rigsAndKnots.find((item) => item.type === "rig" && fish.rigs.some((name) => item.name.toLowerCase().includes(name.toLowerCase().replace(" setup", "").replace(" rig", "")))) ??
+    rigsAndKnots.find((item) => item.id === water.recommendedRigs[0]?.toLowerCase().replaceAll(" ", "-")) ??
+    rigsAndKnots.find((item) => item.id === "bobber-rig") ??
+    rigsAndKnots[0];
+  const knot = rigsAndKnots.find((item) => item.type === "knot" && fish.knots.includes(item.name)) ?? rigsAndKnots.find((item) => item.id === "improved-clinch-knot") ?? rigsAndKnots[0];
+  const bait = input.availableBait?.trim() || fish.bestBait[0] || water.suggestedBait[0];
+  const gear = input.availableGear?.trim() || `${fish.rodSetup}, ${fish.line}`;
+  const success = Math.max(45, 86 - (fish.difficulty === "Advanced" ? 22 : 0) - (water.status === "restricted" ? 8 : 0) + (input.experience === "Beginner" ? 4 : 0));
+
+  return {
+    water,
+    fish,
+    rig,
+    knot,
+    bestFish: fish.name,
+    suggestedGear: gear,
+    suggestedBait: bait,
+    suggestedRig: rig.name,
+    suggestedKnot: knot.name,
+    bestTime: fish.bestTimeOfDay,
+    estimatedSuccess: success,
+    beginnerAdvice: `${input.month} plan: fish ${input.access.toLowerCase()} access at ${water.name}, keep the setup simple, and move after 20 quiet minutes.`,
+    weatherReminder: `Look for ${fish.bestWeather.toLowerCase()}. If conditions are bright or windy, fish shade, docks, or deeper edges.`,
+    regulationReminder: water.regulationSummary,
+    checklist: [
+      "License and official regulation check",
+      gear,
+      `${bait} plus one backup lure`,
+      `${rig.name} tied with ${knot.name}`,
+      "Pliers, towel, water, sunscreen, and a trash bag"
+    ]
+  };
 }

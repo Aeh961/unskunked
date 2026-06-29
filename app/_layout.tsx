@@ -1,8 +1,16 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { colors } from "@/src/theme";
+import { seedDemoData } from "@/src/utils/localStore";
 
 export default function RootLayout() {
+  useEffect(() => {
+    if (__DEV__) {
+      seedDemoData();
+    }
+  }, []);
+
   return (
     <>
       <StatusBar style="dark" />
@@ -21,6 +29,8 @@ export default function RootLayout() {
         <Stack.Screen name="learn" options={{ title: "Learning Center" }} />
         <Stack.Screen name="start" options={{ title: "Start Here" }} />
         <Stack.Screen name="favorites" options={{ title: "Favorites" }} />
+        <Stack.Screen name="plan" options={{ title: "Plan Trip" }} />
+        <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>
   );

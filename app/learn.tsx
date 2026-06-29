@@ -10,7 +10,7 @@ import { learningArticles } from "@/src/data/learning";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 
-const categories = ["All", "Basics", "Casting", "Knots", "Rigs", "Behavior", "Mistakes", "Glossary", "FAQ"] as const;
+const categories = ["All", "Basics", "Gear", "Casting", "Knots", "Rigs", "Behavior", "Safety", "Etiquette", "Washington", "Mistakes", "Glossary", "FAQ"] as const;
 
 export default function LearningCenterScreen() {
   const [query, setQuery] = useState("");
@@ -50,6 +50,11 @@ export default function LearningCenterScreen() {
       {filtered.length > 0 ? (
         filtered.map((article) => (
           <Card key={article.id}>
+            <View style={styles.illustration}>
+              <AppText variant="caption" style={styles.illustrationText}>
+                Illustration placeholder
+              </AppText>
+            </View>
             <AppText variant="heading">{article.title}</AppText>
             <AppText variant="caption" style={styles.categoryLabel}>
               {article.category}
@@ -63,6 +68,13 @@ export default function LearningCenterScreen() {
                 </View>
               ))}
             </Stack>
+            <View style={styles.related}>
+              {article.relatedTopics.map((topic) => (
+                <View key={topic} style={styles.relatedBadge}>
+                  <AppText variant="caption" style={styles.relatedText}>{topic}</AppText>
+                </View>
+              ))}
+            </View>
             <YoutubeLink query={article.youtubeSearch} />
           </Card>
         ))
@@ -121,6 +133,37 @@ const styles = StyleSheet.create({
     color: colors.river,
     fontWeight: "900",
     textTransform: "uppercase"
+  },
+  illustration: {
+    alignItems: "center",
+    backgroundColor: colors.mist,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    height: 96,
+    justifyContent: "center",
+    marginBottom: spacing.sm
+  },
+  illustrationText: {
+    color: colors.pine,
+    fontWeight: "900"
+  },
+  related: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.sm
+  },
+  relatedBadge: {
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  relatedText: {
+    color: colors.forest,
+    fontWeight: "900"
   },
   bulletRow: {
     alignItems: "flex-start",
