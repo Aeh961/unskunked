@@ -1,11 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 const platformArg = process.argv[2];
 const platforms = platformArg ? [platformArg] : ["ios", "android"];
 const root = process.cwd();
 const delayMs = Number(process.env.SCREENSHOT_DELAY_MS ?? 1800);
+const adbPath = findAdb();
 
 const screens = [
   ["home", ""],
@@ -30,6 +32,17 @@ function run(command, args) {
   execFileSync(command, args, { stdio: "inherit" });
 }
 
+function findAdb() {
+  const candidates = [
+    process.env.ADB,
+    process.env.ANDROID_HOME ? join(process.env.ANDROID_HOME, "platform-tools", "adb") : undefined,
+    process.env.ANDROID_SDK_ROOT ? join(process.env.ANDROID_SDK_ROOT, "platform-tools", "adb") : undefined,
+    join(homedir(), "Library", "Android", "sdk", "platform-tools", "adb"),
+    "adb"
+  ].filter(Boolean);
+  return candidates.find((candidate) => candidate === "adb" || existsSync(candidate)) ?? "adb";
+}
+
 function openRoute(platform, route) {
   const expoUrl = process.env.EXPO_URL;
   const url = expoUrl
@@ -41,7 +54,7 @@ function openRoute(platform, route) {
     run("xcrun", ["simctl", "openurl", "booted", url]);
     return;
   }
-  run("adb", ["shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url]);
+  run(adbPath, ["shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", url]);
 }
 
 function capture(platform, filename) {
@@ -52,7 +65,7 @@ function capture(platform, filename) {
     run("xcrun", ["simctl", "io", "booted", "screenshot", output]);
     return;
   }
-  const png = execFileSync("adb", ["exec-out", "screencap", "-p"]);
+  const png = execFileSync(adbPath, ["exec-out", "screencap", "-p"], { maxBuffer: 12 * 1024 * 1024 });
   writeFileSync(output, png);
 }
 
@@ -64,7 +77,13 @@ for (const platform of platforms) {
   for (const [name, route] of screens) {
     const filename = `${platform}-${name}.png`;
     console.log(`Capturing ${filename}`);
-    openRoute(platform, route);
+    if (platform === "android" && name === "home") {
+      run(adbPath, ["shell", "am", "force-stop", "host.exp.exponent"]);
+      openRoute(platform, "");
+      sleep(delayMs);
+    } else {
+      openRoute(platform, route);
+    }
     sleep(delayMs);
     capture(platform, filename);
   }
