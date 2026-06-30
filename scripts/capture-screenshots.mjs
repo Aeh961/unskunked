@@ -10,15 +10,15 @@ const delayMs = Number(process.env.SCREENSHOT_DELAY_MS ?? 1800);
 const adbPath = findAdb();
 
 const screens = [
+  ["onboarding", "start"],
   ["home", ""],
   ["map", "map"],
   ["waterbody-detail", "map"],
-  ["fish-list", "fish"],
   ["fish-detail", "fish/rainbow-trout"],
   ["rig-builder", "rigs"],
-  ["rig-diagram", "rigs"],
-  ["ask-unskunked", "ask"],
+  ["trip-planner", "plan"],
   ["trip-log", "log"],
+  ["fishing-stats", "stats"],
   ["favorites", "favorites"],
   ["learning-center", "learn"],
   ["settings", "settings"]

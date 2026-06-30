@@ -5,12 +5,14 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
+import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
 import { useFavorites } from "@/src/hooks/useFavorites";
+import { regulationService } from "@/src/services/regulations";
 import { colors, radii, spacing } from "@/src/theme";
 
 export default function FishDetailScreen() {
@@ -29,6 +31,8 @@ export default function FishDetailScreen() {
       </Screen>
     );
   }
+
+  const regulation = regulationService.getSummary({ state: "WA", speciesId: fish.id, date: new Date().toISOString() });
 
   return (
     <Screen>
@@ -87,11 +91,14 @@ export default function FishDetailScreen() {
           <AppText>Daily limit: {fish.regulation.dailyLimit}</AppText>
           <AppText>Size limit: {fish.regulation.sizeLimit}</AppText>
           <AppText>Restrictions: {fish.regulation.restrictions.join(" ")}</AppText>
+          <AppText>Catch and release: {regulation.catchAndRelease ? "Yes or likely" : "Not shown in mock summary"}</AppText>
+          <AppText>Gear restrictions: {regulation.gearRestrictions.join(", ") || "Verify by waterbody"}</AppText>
           <AppText variant="caption" style={styles.warning}>
             {fish.regulation.warning}
           </AppText>
         </Stack>
       </Card>
+      <OfficialLinks links={regulation.sourceLinks} compact />
 
       <Card>
         <SectionHeader title="Watch on YouTube" eyebrow="External searches" />

@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Switch, View } from "react-native";
+import { Pressable, StyleSheet, Switch, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { regions, RegionId } from "@/src/data/regions";
+import { personalizationService, PersonalizedRecommendation } from "@/src/services/personalization";
 import { colors, radii, spacing } from "@/src/theme";
 import {
+  getFavorites,
   getDemoNotifications,
   getDemoProfiles,
   getDemoRecommendations,
   getDemoSearchHistory,
+  getOnboardingProfile,
+  getSelectedRegion,
+  getTrips,
   isDemoModeEnabled,
   seedDemoData,
-  setDemoModeEnabled
+  setDemoModeEnabled,
+  setSelectedRegion
 } from "@/src/utils/localStore";
 
 export default function SettingsScreen() {
@@ -22,20 +29,28 @@ export default function SettingsScreen() {
   const [notifications, setNotifications] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [region, setRegion] = useState<RegionId>("washington");
+  const [personalized, setPersonalized] = useState<PersonalizedRecommendation | null>(null);
 
   async function refresh() {
-    const [demoEnabled, demoProfiles, demoNotifications, demoRecommendations, demoSearches] = await Promise.all([
+    const [demoEnabled, demoProfiles, demoNotifications, demoRecommendations, demoSearches, selectedRegion, profile, favorites, trips] = await Promise.all([
       isDemoModeEnabled(),
       getDemoProfiles(),
       getDemoNotifications(),
       getDemoRecommendations(),
-      getDemoSearchHistory()
+      getDemoSearchHistory(),
+      getSelectedRegion(),
+      getOnboardingProfile(),
+      getFavorites(),
+      getTrips()
     ]);
     setEnabled(demoEnabled);
+    setRegion(selectedRegion);
     setProfiles(demoProfiles.map((profile) => `${profile.label}: ${profile.homeWater} · ${profile.favoriteTarget}`));
     setNotifications(demoNotifications.map((item) => item.title));
     setRecommendations(demoRecommendations.map((item) => item.title));
     setSearchHistory(demoSearches);
+    setPersonalized(personalizationService.buildRecommendation({ ...profile, month: "July" }, favorites, trips));
   }
 
   useEffect(() => {
@@ -49,6 +64,12 @@ export default function SettingsScreen() {
 
   async function reseed() {
     await seedDemoData();
+    await refresh();
+  }
+
+  async function chooseRegion(nextRegion: RegionId) {
+    setRegion(nextRegion);
+    await setSelectedRegion(nextRegion);
     await refresh();
   }
 
@@ -69,6 +90,34 @@ export default function SettingsScreen() {
         </View>
         <Button icon="refresh" variant="secondary" onPress={reseed}>Reload demo data</Button>
       </Card>
+
+      <Card style={styles.card}>
+        <SectionHeader title="Selected region" eyebrow="Data source" />
+        <View style={styles.regionGrid}>
+          {regions.map((item) => (
+            <Pressable key={item.id} onPress={() => chooseRegion(item.id)} style={[styles.regionCard, region === item.id && styles.regionActive]}>
+              <AppText variant="subheading" style={region === item.id && styles.regionActiveText}>{item.name}</AppText>
+              <AppText variant="caption" style={region === item.id && styles.regionActiveText}>{item.status}</AppText>
+            </Pressable>
+          ))}
+        </View>
+        <AppText variant="caption">{regions.find((item) => item.id === region)?.note}</AppText>
+      </Card>
+
+      {personalized ? (
+        <Card style={styles.card}>
+          <SectionHeader title="Personalized next action" eyebrow="Local engine" />
+          <Stack>
+            <AppText>Waterbody: {personalized.waterbody}</AppText>
+            <AppText>Target: {personalized.targetSpecies}</AppText>
+            <AppText>Bait/Lure: {personalized.baitOrLure}</AppText>
+            <AppText>Rig/Knot: {personalized.rig} · {personalized.knot}</AppText>
+            <AppText>Learn: {personalized.learningContent}</AppText>
+            <AppText style={styles.recommendation}>{personalized.nextBestAction}</AppText>
+            <AppText variant="caption">{personalized.reason}</AppText>
+          </Stack>
+        </Card>
+      ) : null}
 
       <DemoSection title="Profiles" items={profiles} />
       <DemoSection title="Sample notifications" items={notifications} />
@@ -130,5 +179,30 @@ const styles = StyleSheet.create({
     height: 8,
     marginTop: 7,
     width: 8
+  },
+  regionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  regionCard: {
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexBasis: "48%",
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  regionActive: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine
+  },
+  regionActiveText: {
+    color: "#fff"
+  },
+  recommendation: {
+    color: colors.pine,
+    fontWeight: "900"
   }
 });

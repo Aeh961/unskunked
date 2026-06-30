@@ -1,6 +1,7 @@
 import { fishSpecies } from "@/src/data/fish";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
+import { regulationService } from "@/src/services/regulations";
 
 export type TripPlanInput = {
   month: string;
@@ -116,6 +117,7 @@ export function buildTripPlan(input: TripPlanInput) {
   const knot = rigsAndKnots.find((item) => item.type === "knot" && fish.knots.includes(item.name)) ?? rigsAndKnots.find((item) => item.id === "improved-clinch-knot") ?? rigsAndKnots[0];
   const bait = input.availableBait?.trim() || fish.bestBait[0] || water.suggestedBait[0];
   const gear = input.availableGear?.trim() || `${fish.rodSetup}, ${fish.line}`;
+  const regulation = regulationService.getSummary({ state: "WA", waterbodyId: water.id, speciesId: fish.id, date: new Date().toISOString() });
   const success = Math.max(45, 86 - (fish.difficulty === "Advanced" ? 22 : 0) - (water.status === "restricted" ? 8 : 0) + (input.experience === "Beginner" ? 4 : 0));
 
   return {
@@ -132,13 +134,19 @@ export function buildTripPlan(input: TripPlanInput) {
     estimatedSuccess: success,
     beginnerAdvice: `${input.month} plan: fish ${input.access.toLowerCase()} access at ${water.name}, keep the setup simple, and move after 20 quiet minutes.`,
     weatherReminder: `Look for ${fish.bestWeather.toLowerCase()}. If conditions are bright or windy, fish shade, docks, or deeper edges.`,
-    regulationReminder: water.regulationSummary,
+    regulationReminder: `${regulation.season} ${regulation.dailyLimit}. ${regulation.warningMessages.join(" ")}`,
+    regulation,
+    safetyReminder: "Tell someone where you are going, bring water, check weather, and avoid unsafe banks or current.",
+    backupPlan: `If ${fish.name.toLowerCase()} are not biting after 20 minutes, downsize your presentation, move to shade or structure, then switch to ${water.suggestedBait[1] ?? bait}.`,
+    youtubeLinks: [`${rig.name} ${fish.name} beginner`, `${knot.name} fishing knot`, `${water.name} fishing tips`],
     checklist: [
       "License and official regulation check",
       gear,
       `${bait} plus one backup lure`,
       `${rig.name} tied with ${knot.name}`,
       "Pliers, towel, water, sunscreen, and a trash bag"
-    ]
+    ],
+    gearChecklist: ["License", gear, fish.reel, fish.line, fish.hook, "Pliers and towel"],
+    baitChecklist: [bait, ...fish.bestLures.slice(0, 2)]
   };
 }

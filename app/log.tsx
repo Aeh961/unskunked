@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Href, Link } from "expo-router";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Button } from "@/src/components/Button";
@@ -6,7 +7,7 @@ import { Card } from "@/src/components/Card";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
-import { TripLog, TripResult, getTrips, saveTrip } from "@/src/utils/localStore";
+import { TripLog, TripPlanRecord, TripResult, getTripPlans, getTrips, saveTrip } from "@/src/utils/localStore";
 import { colors, radii, spacing } from "@/src/theme";
 
 const results: TripResult[] = ["Skunked", "Unskunked", "Great Day", "Limited Out"];
@@ -25,10 +26,14 @@ const blankTrip = {
 
 export default function TripLogScreen() {
   const [trips, setTrips] = useState<TripLog[]>([]);
+  const [plans, setPlans] = useState<TripPlanRecord[]>([]);
   const [form, setForm] = useState(blankTrip);
 
   useEffect(() => {
-    getTrips().then(setTrips);
+    Promise.all([getTrips(), getTripPlans()]).then(([savedTrips, savedPlans]) => {
+      setTrips(savedTrips);
+      setPlans(savedPlans);
+    });
   }, []);
 
   const stats = useMemo(() => {
@@ -84,6 +89,28 @@ export default function TripLogScreen() {
           <AppText variant="subheading">{stats.location}</AppText>
         </Card>
       </View>
+      <Link href={"/stats" as Href} asChild>
+        <Button icon="stats-chart" variant="secondary">Open Fishing Stats</Button>
+      </Link>
+
+      <Card>
+        <SectionHeader title="Saved trip plans" eyebrow={`${plans.length} local`} />
+        {plans.length ? (
+          <Stack>
+            {plans.slice(0, 3).map((plan) => (
+              <View key={plan.id} style={styles.row}>
+                <View style={styles.flex}>
+                  <AppText variant="subheading">{plan.location}</AppText>
+                  <AppText variant="caption">{plan.targetSpecies} · {plan.bestTime}</AppText>
+                </View>
+                <AppText variant="caption" style={styles.resultBadge}>{plan.rigSetup}</AppText>
+              </View>
+            ))}
+          </Stack>
+        ) : (
+          <AppText>Save a plan from Plan My Fishing Trip to stage your next outing.</AppText>
+        )}
+      </Card>
 
       <Card style={styles.form}>
         <SectionHeader title="Log a trip" eyebrow="Saved locally" />

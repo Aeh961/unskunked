@@ -8,6 +8,7 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
+import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
@@ -18,6 +19,7 @@ import { waterbodies } from "@/src/data/waterbodies";
 import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
+import { regulationService } from "@/src/services/regulations";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
 
@@ -44,6 +46,7 @@ export default function MapScreen() {
   const species = selected.speciesIds
     .map((id) => fishSpecies.find((fish) => fish.id === id)?.name)
     .filter(Boolean);
+  const regulation = regulationService.getSummary({ state: "WA", waterbodyId: selected.id, date: new Date().toISOString() });
 
   function openDirections() {
     const url = `https://maps.apple.com/?q=${encodeURIComponent(selected.name)}&ll=${selected.latitude},${selected.longitude}`;
@@ -185,6 +188,8 @@ export default function MapScreen() {
           <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
           <AppText>Recommended bait: {selected.suggestedBait.join(", ")}</AppText>
           <AppText>Recommended rigs: {selected.recommendedRigs.join(", ")}</AppText>
+          <AppText>Season check: {regulation.season}</AppText>
+          <AppText>Bag/size: {regulation.dailyLimit} · {regulation.sizeLimit}</AppText>
           <AppText style={styles.warning}>Regulation warning: {selected.regulationSummary}</AppText>
           <AppText variant="caption">{selected.notes}</AppText>
           <YoutubeLink query={selected.youtubeSearch} />
@@ -201,6 +206,7 @@ export default function MapScreen() {
           </Button>
         </View>
       </Card>
+      <OfficialLinks links={regulation.sourceLinks} compact />
     </Screen>
   );
 }

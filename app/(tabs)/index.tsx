@@ -16,6 +16,8 @@ const quickLinks = [
   { label: "Ask", href: "/ask", icon: "chatbubble-ellipses", hint: "Local beginner answers" },
   { label: "Log Trip", href: "/log", icon: "journal", hint: "Track catches and patterns" },
   { label: "Plan Trip", href: "/plan", icon: "calendar", hint: "Generate a trip checklist" },
+  { label: "Search", href: "/search", icon: "search", hint: "Find anything local" },
+  { label: "Stats", href: "/stats", icon: "stats-chart", hint: "Spot trip patterns" },
   { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" },
   { label: "Favorites", href: "/favorites", icon: "heart", hint: "Saved fish, waters, rigs" },
   { label: "Settings", href: "/settings", icon: "settings", hint: "Demo mode and data" }

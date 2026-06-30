@@ -1,4 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { RegionId } from "@/src/data/regions";
+import { storage } from "@/src/utils/storage";
 
 export type FavoriteType = "location" | "fish" | "rig" | "knot";
 export type Favorite = {
@@ -19,6 +20,29 @@ export type TripLog = {
   rig: string;
   notes: string;
   result: TripResult;
+};
+
+export type TripPlanRecord = {
+  id: string;
+  createdAt: string;
+  location: string;
+  targetSpecies: string;
+  regulationSummary: string;
+  gearChecklist: string[];
+  baitChecklist: string[];
+  rigSetup: string;
+  knot: string;
+  bestTime: string;
+  safetyReminder: string;
+  backupPlan: string;
+  youtubeLinks: string[];
+};
+
+export type OnboardingProfile = {
+  experience: "Beginner" | "Intermediate";
+  preferredStyle: "Shore" | "Boat" | "Dock" | "River" | "Saltwater";
+  favoriteFishIds: string[];
+  favoriteWaterbodyIds: string[];
 };
 
 export type DemoProfile = {
@@ -44,11 +68,14 @@ export type DemoRecommendation = {
 
 const favoritesKey = "unskunked:favorites";
 const tripsKey = "unskunked:trips";
+const tripPlansKey = "unskunked:trip-plans";
+const onboardingProfileKey = "unskunked:onboarding-profile";
 const demoEnabledKey = "unskunked:demo-enabled";
 const profilesKey = "unskunked:demo-profiles";
 const notificationsKey = "unskunked:demo-notifications";
 const recommendationsKey = "unskunked:demo-recommendations";
 const searchHistoryKey = "unskunked:demo-search-history";
+const selectedRegionKey = "unskunked:selected-region";
 
 export const demoFavorites: Favorite[] = [
   { type: "location", id: "green-lake" },
@@ -149,25 +176,37 @@ export const demoRecommendations: DemoRecommendation[] = [
 
 export const demoSearchHistory = ["Green Lake trout", "Lake Washington perch", "bobber rig", "Palomar knot", "Seattle beginner fishing"];
 
-async function readJson<T>(key: string, fallback: T): Promise<T> {
-  try {
-    const raw = await AsyncStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
+export const demoOnboardingProfile: OnboardingProfile = {
+  experience: "Beginner",
+  preferredStyle: "Shore",
+  favoriteFishIds: ["rainbow-trout", "yellow-perch"],
+  favoriteWaterbodyIds: ["green-lake", "lake-washington"]
+};
 
-async function writeJson<T>(key: string, value: T) {
-  await AsyncStorage.setItem(key, JSON.stringify(value));
-}
+export const demoTripPlans: TripPlanRecord[] = [
+  {
+    id: "demo-plan-green-lake",
+    createdAt: "2026-06-29T07:30:00.000Z",
+    location: "Green Lake",
+    targetSpecies: "Rainbow Trout",
+    regulationSummary: "Mock summary: stocked trout and warmwater options. Verify WDFW before keeping fish.",
+    gearChecklist: ["Light spinning rod", "4-6 lb mono", "Pliers", "License"],
+    baitChecklist: ["PowerBait", "Worms", "Small spinners"],
+    rigSetup: "Trout PowerBait rig",
+    knot: "Improved Clinch Knot",
+    bestTime: "Before 9 AM",
+    safetyReminder: "Bring water, sun protection, and release fish gently if rules are unclear.",
+    backupPlan: "If trout do not bite in 20 minutes, switch to a worm under a bobber near weed edges.",
+    youtubeLinks: ["beginner trout PowerBait rig", "Green Lake trout fishing"]
+  }
+];
 
 export async function getFavorites() {
-  return readJson<Favorite[]>(favoritesKey, []);
+  return storage.readJson<Favorite[]>(favoritesKey, []);
 }
 
 export async function setFavorites(favorites: Favorite[]) {
-  await writeJson(favoritesKey, favorites);
+  await storage.writeJson(favoritesKey, favorites);
   return favorites;
 }
 
@@ -177,32 +216,68 @@ export async function toggleFavorite(favorite: Favorite) {
   const next = exists
     ? favorites.filter((item) => !(item.id === favorite.id && item.type === favorite.type))
     : [...favorites, favorite];
-  await writeJson(favoritesKey, next);
+  await storage.writeJson(favoritesKey, next);
   return next;
 }
 
 export async function getTrips() {
-  return readJson<TripLog[]>(tripsKey, []);
+  return storage.readJson<TripLog[]>(tripsKey, []);
 }
 
 export async function setTrips(trips: TripLog[]) {
-  await writeJson(tripsKey, trips);
+  await storage.writeJson(tripsKey, trips);
   return trips;
 }
 
 export async function saveTrip(trip: TripLog) {
   const trips = await getTrips();
   const next = [trip, ...trips.filter((item) => item.id !== trip.id)];
-  await writeJson(tripsKey, next);
+  await storage.writeJson(tripsKey, next);
+  return next;
+}
+
+export async function getTripPlans() {
+  return storage.readJson<TripPlanRecord[]>(tripPlansKey, []);
+}
+
+export async function saveTripPlan(plan: TripPlanRecord) {
+  const plans = await getTripPlans();
+  const next = [plan, ...plans.filter((item) => item.id !== plan.id)];
+  await storage.writeJson(tripPlansKey, next);
+  return next;
+}
+
+export async function getOnboardingProfile() {
+  return storage.readJson<OnboardingProfile>(onboardingProfileKey, demoOnboardingProfile);
+}
+
+export async function setOnboardingProfile(profile: OnboardingProfile) {
+  return storage.writeJson(onboardingProfileKey, profile);
+}
+
+export async function getSelectedRegion() {
+  return storage.readJson<RegionId>(selectedRegionKey, "washington");
+}
+
+export async function setSelectedRegion(region: RegionId) {
+  return storage.writeJson(selectedRegionKey, region);
+}
+
+export async function saveRecentSearch(query: string) {
+  const clean = query.trim();
+  if (!clean) return getDemoSearchHistory();
+  const history = await getDemoSearchHistory();
+  const next = [clean, ...history.filter((item) => item.toLowerCase() !== clean.toLowerCase())].slice(0, 12);
+  await storage.writeJson(searchHistoryKey, next);
   return next;
 }
 
 export async function isDemoModeEnabled() {
-  return readJson<boolean>(demoEnabledKey, false);
+  return storage.readJson<boolean>(demoEnabledKey, false);
 }
 
 export async function setDemoModeEnabled(enabled: boolean) {
-  await writeJson(demoEnabledKey, enabled);
+  await storage.writeJson(demoEnabledKey, enabled);
   if (enabled) {
     await seedDemoData();
   }
@@ -213,26 +288,29 @@ export async function seedDemoData() {
   await Promise.all([
     setFavorites(demoFavorites),
     setTrips(demoTrips),
-    writeJson(profilesKey, demoProfiles),
-    writeJson(notificationsKey, demoNotifications),
-    writeJson(recommendationsKey, demoRecommendations),
-    writeJson(searchHistoryKey, demoSearchHistory),
-    writeJson(demoEnabledKey, true)
+    storage.writeJson(tripPlansKey, demoTripPlans),
+    storage.writeJson(onboardingProfileKey, demoOnboardingProfile),
+    storage.writeJson(selectedRegionKey, "washington" satisfies RegionId),
+    storage.writeJson(profilesKey, demoProfiles),
+    storage.writeJson(notificationsKey, demoNotifications),
+    storage.writeJson(recommendationsKey, demoRecommendations),
+    storage.writeJson(searchHistoryKey, demoSearchHistory),
+    storage.writeJson(demoEnabledKey, true)
   ]);
 }
 
 export async function getDemoProfiles() {
-  return readJson<DemoProfile[]>(profilesKey, demoProfiles);
+  return storage.readJson<DemoProfile[]>(profilesKey, demoProfiles);
 }
 
 export async function getDemoNotifications() {
-  return readJson<DemoNotification[]>(notificationsKey, demoNotifications);
+  return storage.readJson<DemoNotification[]>(notificationsKey, demoNotifications);
 }
 
 export async function getDemoRecommendations() {
-  return readJson<DemoRecommendation[]>(recommendationsKey, demoRecommendations);
+  return storage.readJson<DemoRecommendation[]>(recommendationsKey, demoRecommendations);
 }
 
 export async function getDemoSearchHistory() {
-  return readJson<string[]>(searchHistoryKey, demoSearchHistory);
+  return storage.readJson<string[]>(searchHistoryKey, demoSearchHistory);
 }

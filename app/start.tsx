@@ -1,4 +1,5 @@
 import { Href, Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
@@ -7,7 +8,9 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { regions, RegionId } from "@/src/data/regions";
 import { colors, radii, spacing } from "@/src/theme";
+import { getSelectedRegion, setOnboardingProfile, setSelectedRegion } from "@/src/utils/localStore";
 
 const steps = [
   {
@@ -37,6 +40,24 @@ const steps = [
 ];
 
 export default function StartHereScreen() {
+  const [region, setRegion] = useState<RegionId>("washington");
+  const [experience, setExperience] = useState<"Beginner" | "Intermediate">("Beginner");
+
+  useEffect(() => {
+    getSelectedRegion().then(setRegion);
+  }, []);
+
+  async function chooseRegion(nextRegion: RegionId) {
+    setRegion(nextRegion);
+    await setSelectedRegion(nextRegion);
+    await setOnboardingProfile({
+      experience,
+      preferredStyle: "Shore",
+      favoriteFishIds: ["rainbow-trout"],
+      favoriteWaterbodyIds: ["green-lake"]
+    });
+  }
+
   return (
     <Screen>
       <View style={styles.hero}>
@@ -46,6 +67,26 @@ export default function StartHereScreen() {
         <AppText style={styles.heroText}>A simple beginner path for getting unskunked without overthinking the tackle wall.</AppText>
       </View>
       <Disclaimer />
+
+      <Card style={styles.planCard}>
+        <SectionHeader title="Choose your region" eyebrow="Beta setup" />
+        <View style={styles.regionGrid}>
+          {regions.map((item) => (
+            <Pressable key={item.id} onPress={() => chooseRegion(item.id)} style={[styles.regionCard, region === item.id && styles.regionActive]}>
+              <AppText variant="subheading" style={region === item.id && styles.regionActiveText}>{item.name}</AppText>
+              <AppText variant="caption" style={region === item.id && styles.regionActiveText}>{item.status}</AppText>
+            </Pressable>
+          ))}
+        </View>
+        <AppText variant="caption">{regions.find((item) => item.id === region)?.note}</AppText>
+        <View style={styles.regionGrid}>
+          {(["Beginner", "Intermediate"] as const).map((item) => (
+            <Pressable key={item} onPress={() => setExperience(item)} style={[styles.experience, experience === item && styles.regionActive]}>
+              <AppText variant="caption" style={[styles.experienceText, experience === item && styles.regionActiveText]}>{item}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
 
       <Card style={styles.planCard}>
         <SectionHeader title="Your first-trip flow" eyebrow="15 minute setup" />
@@ -136,5 +177,37 @@ const styles = StyleSheet.create({
   },
   tipCard: {
     gap: spacing.md
+  },
+  regionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  regionCard: {
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexBasis: "48%",
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  regionActive: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine
+  },
+  regionActiveText: {
+    color: "#fff"
+  },
+  experience: {
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  experienceText: {
+    fontWeight: "900"
   }
 });

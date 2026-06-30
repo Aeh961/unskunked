@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
+import { Button } from "@/src/components/Button";
+import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { RigDiagram } from "@/src/components/RigDiagram";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
@@ -9,6 +11,7 @@ import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
 import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
+import { saveTrip, saveTripPlan } from "@/src/utils/localStore";
 import { buildTripPlan } from "@/src/utils/recommendations";
 
 const months = ["June", "July", "August", "September"] as const;
@@ -23,11 +26,47 @@ export default function PlanTripScreen() {
   const [targetFishId, setTargetFishId] = useState(waterbodies[0].speciesIds[0]);
   const [availableBait, setAvailableBait] = useState("");
   const [availableGear, setAvailableGear] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
 
   const plan = useMemo(
     () => buildTripPlan({ month, waterbodyId, access, experience, targetFishId, availableBait, availableGear }),
     [access, availableBait, availableGear, experience, month, targetFishId, waterbodyId]
   );
+
+  async function saveCurrentPlan() {
+    await saveTripPlan({
+      id: `plan-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      location: plan.water.name,
+      targetSpecies: plan.fish.name,
+      regulationSummary: plan.regulationReminder,
+      gearChecklist: plan.gearChecklist,
+      baitChecklist: plan.baitChecklist,
+      rigSetup: plan.suggestedRig,
+      knot: plan.suggestedKnot,
+      bestTime: plan.bestTime,
+      safetyReminder: plan.safetyReminder,
+      backupPlan: plan.backupPlan,
+      youtubeLinks: plan.youtubeLinks
+    });
+    setSavedMessage("Trip plan saved locally.");
+  }
+
+  async function startTrip() {
+    await saveTrip({
+      id: `draft-${Date.now()}`,
+      location: plan.water.name,
+      date: new Date().toISOString().slice(0, 10),
+      weather: plan.weatherReminder,
+      speciesCaught: plan.fish.name,
+      numberCaught: 0,
+      bait: plan.suggestedBait,
+      rig: plan.suggestedRig,
+      notes: `Draft trip from planner. Backup plan: ${plan.backupPlan}`,
+      result: "Skunked"
+    });
+    setSavedMessage("Draft trip started in Trip Log.");
+  }
 
   return (
     <Screen>
@@ -58,19 +97,30 @@ export default function PlanTripScreen() {
           <AppText>{plan.beginnerAdvice}</AppText>
           <AppText>Weather reminder: {plan.weatherReminder}</AppText>
           <AppText style={styles.warning}>Regulation reminder: {plan.regulationReminder}</AppText>
+          <AppText>Safety: {plan.safetyReminder}</AppText>
+          <AppText>Backup plan: {plan.backupPlan}</AppText>
         </Stack>
         <RigDiagram parts={plan.rig.parts} />
-        <SectionHeader title="Checklist" eyebrow="Before you leave" />
+        <SectionHeader title="Gear checklist" eyebrow="Before you leave" />
         <Stack>
-          {plan.checklist.map((item) => (
+          {[...plan.checklist, ...plan.baitChecklist.map((bait) => `Bait/lure: ${bait}`)].map((item) => (
             <View key={item} style={styles.bullet}>
               <View style={styles.dot} />
               <AppText style={styles.flex}>{item}</AppText>
             </View>
           ))}
         </Stack>
-        <YoutubeLink query={`${plan.suggestedRig} ${plan.bestFish} beginner`} />
+        <SectionHeader title="Watch and learn" eyebrow="External searches" />
+        {plan.youtubeLinks.map((query) => (
+          <YoutubeLink key={query} query={query} />
+        ))}
+        <View style={styles.actions}>
+          <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save plan</Button>
+          <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Start Trip</Button>
+        </View>
+        {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
       </Card>
+      <OfficialLinks links={plan.regulation.sourceLinks} />
     </Screen>
   );
 }
@@ -156,6 +206,17 @@ const styles = StyleSheet.create({
   },
   plan: {
     gap: spacing.md
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  actionButton: {
+    flex: 1
+  },
+  saved: {
+    color: colors.good,
+    fontWeight: "900"
   },
   warning: {
     color: colors.danger,
