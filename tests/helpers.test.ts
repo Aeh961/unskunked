@@ -22,6 +22,10 @@ import { getMapMarkers } from "@/src/services/mapMarkers";
 import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
 import { MockConditionsProvider, cacheConditionsForLocation } from "@/src/services/conditionProviders";
 import { getImportReadinessReport, validateSnapshotManifest } from "@/src/services/wdfwImportPipeline";
+import { getFreshnessState, getProviderById, providerMetadata, verificationWorkflow } from "@/src/services/dataTrust";
+import { createProviderHealthReport } from "@/src/services/providerFramework";
+import { getRegionalProvider, regionalProviders } from "@/src/services/regionalProviders";
+import { getRecoveryMessage } from "@/src/services/recovery";
 
 describe("regulation helpers", () => {
   it("labels and permits restricted waters as fishable with caution", () => {
@@ -178,6 +182,11 @@ describe("search helpers", () => {
     const results = searchByFields(waterbodies, "seattle", [(water) => water.name, (water) => water.region]);
     expect(results.map((water) => water.name)).toContain("Green Lake");
   });
+
+  it("supports fuzzy search scoring", () => {
+    const results = searchByFields(waterbodies, "gren lke", [(water) => water.name, (water) => water.region]);
+    expect(results[0]?.name).toBe("Green Lake");
+  });
 });
 
 describe("Phase 9 map and WDFW data readiness", () => {
@@ -198,6 +207,41 @@ describe("Phase 9 map and WDFW data readiness", () => {
     expect(report.dataLastUpdated).toBe("May 2026");
     expect(report.shellfishLocationCount).toBeGreaterThanOrEqual(6);
     expect(report.missingSourceWaterbodies).toEqual([]);
+  });
+});
+
+describe("Phase 10 trust and provider readiness", () => {
+  it("exposes data source metadata with confidence and freshness", () => {
+    const source = getProviderById("wdfw-regulations");
+    expect(source?.organization).toContain("Washington");
+    expect(source?.confidence).toBe("Official Source");
+    expect(source ? getFreshnessState(source.freshness, new Date("2026-07-01")).isStale : true).toBe(false);
+  });
+
+  it("tracks verification workflow states", () => {
+    expect(verificationWorkflow.map((record) => record.status)).toContain("reviewed");
+    expect(verificationWorkflow.map((record) => record.status)).toContain("imported");
+  });
+
+  it("registers regional providers including British Columbia placeholder", () => {
+    expect(getRegionalProvider("washington")?.supportedDomains).toContain("emergency-rules");
+    expect(regionalProviders.map((provider) => provider.region)).toContain("british-columbia");
+  });
+
+  it("creates provider health reports", () => {
+    const report = createProviderHealthReport([
+      {
+        id: "wdfw-regulations",
+        domain: "fishing",
+        metadata: () => providerMetadata[0]
+      }
+    ]);
+    expect(report[0].readyForLiveSync).toBe(true);
+  });
+
+  it("returns helpful recovery messages", () => {
+    expect(getRecoveryMessage("gps-unavailable").body).toContain("manual");
+    expect(getRecoveryMessage("failed-import").body).toContain("snapshot");
   });
 });
 

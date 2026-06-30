@@ -31,6 +31,7 @@ const screens = [
   ["trip-planner", "plan"],
   ["beta-insights", "insights"],
   ["settings", "settings"],
+  ["data-sources", "data-sources"],
   ["about", "about"]
 ];
 

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
+import { ConfidenceBadge } from "@/src/components/ConfidenceBadge";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { RigDiagram } from "@/src/components/RigDiagram";
 import { Screen, Stack } from "@/src/components/Screen";
@@ -18,6 +19,7 @@ import { formatTripPlanShare, shareText } from "@/src/utils/share";
 import { Coordinates, defaultManualLocation, getNearestBeginnerWaterbody, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
 import { cacheConditionsForLocation } from "@/src/services/conditionProviders";
+import { getFreshnessState, getProviderById } from "@/src/services/dataTrust";
 
 const months = ["June", "July", "August", "September"] as const;
 const activityOptions: ActivityType[] = ["fishing", "clamming", "crabbing"];
@@ -49,6 +51,8 @@ export default function PlanTripScreen() {
     [activityType, coordinates, experience]
   );
   const isFishing = activityType === "fishing";
+  const recommendationSource = getProviderById(isFishing ? "unskunked-waterbodies" : "wdfw-shellfish");
+  const sourceFreshness = recommendationSource ? getFreshnessState(recommendationSource.freshness) : null;
 
   const nearestBeginner = useMemo(() => getNearestBeginnerWaterbody(coordinates), [coordinates]);
 
@@ -186,7 +190,7 @@ export default function PlanTripScreen() {
           </View>
           <View style={styles.options}>
             {manualLocations.map((location) => (
-              <Pressable key={location.id} onPress={() => useManualLocation(location)} style={styles.option}>
+              <Pressable key={location.id} accessibilityRole="button" accessibilityLabel={`Use ${location.label} as manual location`} onPress={() => useManualLocation(location)} style={styles.option}>
                 <AppText variant="caption" style={styles.optionText}>{location.label}</AppText>
               </Pressable>
             ))}
@@ -206,6 +210,12 @@ export default function PlanTripScreen() {
       {!isFishing ? (
         <Card style={styles.plan}>
           <SectionHeader title={`${activityType === "clamming" ? "Clam" : "Crab"} plan at ${shellfishPlan.location.name}`} eyebrow={`${shellfishPlan.score}/100 trip score`} />
+          {recommendationSource ? (
+            <View style={styles.sourceRow}>
+              <ConfidenceBadge confidence={recommendationSource.confidence} compact />
+              <AppText variant="caption" style={styles.sourceCopy}>{recommendationSource.label} · {sourceFreshness?.warning}</AppText>
+            </View>
+          ) : null}
           <Stack>
             <AppText>Target: {shellfishPlan.species?.name ?? activityType}</AppText>
             <AppText>Best window: {shellfishPlan.bestTime}</AppText>
@@ -237,6 +247,12 @@ export default function PlanTripScreen() {
       ) : (
       <Card style={styles.plan}>
         <SectionHeader title={`${plan.bestFish} at ${plan.water.name}`} eyebrow={`${plan.estimatedSuccess}% confidence`} />
+        {recommendationSource ? (
+          <View style={styles.sourceRow}>
+            <ConfidenceBadge confidence={recommendationSource.confidence} compact />
+            <AppText variant="caption" style={styles.sourceCopy}>{recommendationSource.label} · {sourceFreshness?.warning}</AppText>
+          </View>
+        ) : null}
         <Stack>
           <AppText>Suggested gear: {plan.suggestedGear}</AppText>
           <AppText>Suggested bait: {plan.suggestedBait}</AppText>
@@ -282,7 +298,7 @@ function ChoiceRow<T extends string>({ label, value, options, labels, onSelect }
       <AppText variant="subheading">{label}</AppText>
       <View style={styles.options}>
         {options.map((option) => (
-          <Pressable key={option} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
+          <Pressable key={option} accessibilityRole="button" accessibilityLabel={`Select ${labels?.[option] ?? option} for ${label}`} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
             <AppText variant="caption" style={[styles.optionText, value === option && styles.optionTextActive]}>
               {labels?.[option] ?? option}
             </AppText>
@@ -391,5 +407,15 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1
+  },
+  sourceRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  sourceCopy: {
+    color: colors.muted,
+    flex: 1,
+    fontWeight: "700"
   }
 });

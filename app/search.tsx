@@ -9,12 +9,15 @@ import { SectionHeader } from "@/src/components/SectionHeader";
 import { fishSpecies } from "@/src/data/fish";
 import { learningArticles } from "@/src/data/learning";
 import { rigsAndKnots } from "@/src/data/rigs";
+import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { waterbodies } from "@/src/data/waterbodies";
+import { providerMetadata } from "@/src/services/dataTrust";
 import { colors, radii, spacing } from "@/src/theme";
 import { getDemoSearchHistory, getTrips, saveRecentSearch, trackBetaEvent, TripLog } from "@/src/utils/localStore";
 import { searchByFields } from "@/src/utils/search";
 
-const filters = ["All", "Fish", "Water", "Rigs", "Knots", "Learning", "Trips"] as const;
+const filters = ["All", "Fish", "Shellfish", "Water", "Rigs", "Knots", "Learning", "Regulations", "Trips"] as const;
+const popularSearches = ["Lake Washington", "Dungeness crab", "razor clam", "marine area", "trout regulations", "family friendly pier"];
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
@@ -54,6 +57,20 @@ export default function SearchScreen() {
       subtitle: `${item.county ?? "WA"} · ${item.waterType} · ${item.beginnerDifficulty}`,
       href: "/map" as Href
     }));
+    const shellfish = [
+      ...searchByFields(shellfishSpecies, query, [(item) => item.name, (item) => item.activityType, (item) => item.habitat, (item) => item.gear, (item) => item.regulationWarning]).map((item) => ({
+        type: "Shellfish",
+        title: item.name,
+        subtitle: `${item.activityType} · ${item.difficulty} · ${item.seasonNotes}`,
+        href: "/plan" as Href
+      })),
+      ...searchByFields(shellfishLocations, query, [(item) => item.name, (item) => item.county, (item) => item.region, (item) => item.waterType, (item) => item.activityTypes, (item) => item.regulationWarning]).map((item) => ({
+        type: "Shellfish",
+        title: item.name,
+        subtitle: `${item.county} · ${item.activityTypes.join(", ")} · ${item.difficulty}`,
+        href: "/map" as Href
+      }))
+    ];
     const gear = searchByFields(rigsAndKnots, query, [(item) => item.name, (item) => item.worksFor, (item) => item.parts]).map((item) => ({
       type: item.type === "rig" ? "Rigs" : "Knots",
       title: item.name,
@@ -72,7 +89,13 @@ export default function SearchScreen() {
       subtitle: `${item.date} · ${item.result}`,
       href: "/log" as Href
     }));
-    const all = [...fish, ...waters, ...gear, ...learning, ...tripResults];
+    const regulations = searchByFields(providerMetadata, query, [(item) => item.label, (item) => item.organization, (item) => item.activities, (item) => item.dataTypes, (item) => item.confidence, (item) => item.notes]).map((item) => ({
+      type: "Regulations",
+      title: item.label,
+      subtitle: `${item.organization} · ${item.confidence} · verified ${item.freshness.lastVerifiedAt}`,
+      href: "/data-sources" as Href
+    }));
+    const all = [...fish, ...shellfish, ...waters, ...gear, ...learning, ...regulations, ...tripResults];
     return filter === "All" ? all : all.filter((item) => item.type === filter);
   }, [filter, query, trips]);
 
@@ -99,15 +122,23 @@ export default function SearchScreen() {
       />
       <View style={styles.filterRow}>
         {filters.map((item) => (
-          <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter search results by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
             <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</AppText>
+          </Pressable>
+        ))}
+      </View>
+      <SectionHeader title="Popular searches" eyebrow="Phase 10" />
+      <View style={styles.filterRow}>
+        {popularSearches.map((item) => (
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Search ${item}`} onPress={() => submitSearch(item)} style={styles.recent}>
+            <AppText variant="caption" style={styles.recentText}>{item}</AppText>
           </Pressable>
         ))}
       </View>
       <SectionHeader title="Recent searches" eyebrow={`${recent.length} saved`} />
       <View style={styles.filterRow}>
         {recent.map((item) => (
-          <Pressable key={item} onPress={() => submitSearch(item)} style={styles.recent}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Repeat search ${item}`} onPress={() => submitSearch(item)} style={styles.recent}>
             <AppText variant="caption" style={styles.recentText}>{item}</AppText>
           </Pressable>
         ))}

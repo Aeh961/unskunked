@@ -4,7 +4,7 @@
 
 Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
-The current app is a polished Phase 9 Washington-focused beta with WDFW-sourced metadata scaffolding, a native GPS map, clamming/crabbing readiness, current-regulation summaries, offline weather/tide/sun scoring, local storage, and native share/export flows.
+The current app is a polished Phase 10 Washington-focused public-beta candidate with WDFW-sourced metadata scaffolding, a native GPS map, clamming/crabbing readiness, source confidence badges, data freshness warnings, current-regulation summaries, offline weather/tide/sun scoring, local storage, and native share/export flows.
 
 ## Feature Overview
 
@@ -12,6 +12,12 @@ The current app is a polished Phase 9 Washington-focused beta with WDFW-sourced 
 - First-launch beta onboarding with region, experience, fishing style, favorite fish, favorite waterbodies, and a final Start Fishing Smarter flow
 - GPS-aware nearby fishing with permission handling, denied/unavailable fallbacks, manual city locations, distance sorting, and water-type filters
 - Native `react-native-maps` GPS map with fishing, clamming, crabbing, beach, pier, launch, and waterbody markers plus chip-based fallback results
+- Data Sources center showing providers, source organizations, last imported date, last verified date, source type, confidence, and update frequency
+- Confidence badges for Official Source, Verified, Imported, Community Verified, Needs Verification, Demo Data, and Unknown
+- Data freshness warnings for recommendations, regulations, weather/tide fallbacks, and source snapshots
+- Verification workflow states for future admin tooling: imported, reviewed, verified, rejected, and archived
+- Import provider framework for future `fetch`, `validate`, `transform`, `cache`, and `metadata` live sync
+- Regional provider registry for Washington, Oregon, Idaho, California, and British Columbia
 - Washington shellfish support for clamming and crabbing with species, beach/pier locations, tide reminders, legal warnings, gear checklists, and official WDFW source links
 - Expanded Washington mock waterbody dataset with 25 locations, counties, coordinates, access notes, parking notes, seasons, rigs, bait, and regulation warnings
 - WDFW-style waterbody metadata including `waterbodyId`, source, `lastUpdated`, regulation references, stocking examples, and launch/access fields
@@ -56,7 +62,11 @@ The current app is a polished Phase 9 Washington-focused beta with WDFW-sourced 
 - `src/services/regulationEngine.ts`: current regulation badges and WDFW-ready summaries
 - `src/services/fishingConditions.ts`: weather, sun, tide, and trip score helpers
 - `src/services/conditionProviders.ts`: mock/live weather and tide provider contract plus offline condition cache helper
+- `src/services/dataTrust.ts`: provider confidence, freshness, and verification workflow metadata
 - `src/services/mapMarkers.ts`: unified fishing, clamming, and crabbing marker/search model
+- `src/services/providerFramework.ts`: shared import provider interface for future live data
+- `src/services/regionalProviders.ts`: plug-and-play regional provider registry
+- `src/services/recovery.ts`: helpful fallback copy for GPS, provider, weather, tide, offline, image, regulation, and import failures
 - `src/services/wdfwImportPipeline.ts`: WDFW snapshot manifest validation and import readiness reporting
 - `src/services/offlineDownloads.ts`: offline pack definitions
 - `src/utils/`: storage abstraction, local store, recommendations, search, and YouTube helpers
@@ -85,6 +95,21 @@ flowchart TD
 ## Data Flow
 
 Unskunked currently ships WDFW-sourced metadata scaffolding as local fixtures and snapshot manifests. Screens read local data and services first, then link users out to official WDFW pages for verification. No backend is required, and no location or analytics data is sent anywhere.
+
+## Verification Workflow
+
+Phase 10 adds an admin-ready trust model for every future official import:
+
+```mermaid
+flowchart LR
+  A["Imported"] --> B["Reviewed"]
+  B --> C["Verified"]
+  B --> D["Rejected"]
+  C --> E["Archived when stale"]
+  D --> A
+```
+
+Every recommendation should explain its source, confidence, freshness, and whether official rules need to be checked.
 
 ## Offline Support
 
@@ -121,6 +146,9 @@ Useful docs:
 - [Beta Distribution](docs/BETA_DISTRIBUTION.md)
 - [Data Pipeline](docs/DATA_PIPELINE.md)
 - [Provider Setup](docs/PROVIDER_SETUP.md)
+- [Public Beta Checklist](docs/PUBLIC_BETA_CHECKLIST.md)
+- [Privacy](docs/PRIVACY.md)
+- [Architecture](docs/ARCHITECTURE.md)
 
 Beta testers should focus on onboarding, location permission/fallback behavior, nearby water sorting, planning a trip, checking disclaimers/source links, saving feedback, exporting JSON, and sharing plans/results through the native share sheet.
 
@@ -208,6 +236,7 @@ The script navigates to each route and captures:
 - Fishing Journal
 - Beta Insights
 - Settings
+- Data Sources
 - About
 
 ## Screenshots
@@ -235,6 +264,7 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![iOS Fishing Journal](screenshots/ios/ios-fishing-journal.png)
 ![iOS Beta Insights](screenshots/ios/ios-beta-insights.png)
 ![iOS Settings](screenshots/ios/ios-settings.png)
+![iOS Data Sources](screenshots/ios/ios-data-sources.png)
 ![iOS About](screenshots/ios/ios-about.png)
 
 ### Android
@@ -258,12 +288,14 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![Android Fishing Journal](screenshots/android/android-fishing-journal.png)
 ![Android Beta Insights](screenshots/android/android-beta-insights.png)
 ![Android Settings](screenshots/android/android-settings.png)
+![Android Data Sources](screenshots/android/android-data-sources.png)
 ![Android About](screenshots/android/android-about.png)
 
 ## App Limitations
 
 - Regulation content is WDFW-source-linked local guidance and must still be verified with official agencies.
 - Shellfish content is local planning guidance; users must verify WDFW shellfish rules, emergency rules, licenses, catch record card requirements, and health closures before harvesting.
+- Confidence badges explain source quality; they do not guarantee legal correctness.
 - Washington has the most complete mock data; Oregon, Idaho, and California are placeholders.
 - No backend, account sync, live weather API, live tides API, or live official regulation feed is connected yet.
 - GPS is used only locally for distance sorting and native map display, with manual fallback locations.
@@ -275,6 +307,8 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 - Add offline map tiles and richer GPS search
 - Add waterbody detail pages with emergency rule alerts
 - Replace mock weather/tide providers with free or official live providers plus cache invalidation
+- Build admin tooling around the verification workflow
+- Add automated source snapshot validation for every import
 - Add account sync once local-only beta behavior is proven
 - Add offline map/location packs
 - Add real catch photo attachments

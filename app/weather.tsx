@@ -2,10 +2,14 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
+import { ConfidenceBadge } from "@/src/components/ConfidenceBadge";
+import { ErrorState } from "@/src/components/ErrorState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { waterbodies } from "@/src/data/waterbodies";
 import { calculateTripScore, getHourlyWeather, getMockWeather, getSevenDayWeather, getSunWindows, getTideSnapshot } from "@/src/services/fishingConditions";
+import { getFreshnessState, getProviderById } from "@/src/services/dataTrust";
+import { getRecoveryMessage } from "@/src/services/recovery";
 import { colors, radii, spacing } from "@/src/theme";
 
 export default function WeatherScreen() {
@@ -15,6 +19,9 @@ export default function WeatherScreen() {
   const score = calculateTripScore({ weather, waterbody: water, userExperience: "Beginner", targetSpecies: water.speciesIds[0] });
   const sun = getSunWindows();
   const tide = getTideSnapshot(water);
+  const source = getProviderById("mock-weather-tides");
+  const freshness = source ? getFreshnessState(source.freshness) : null;
+  const weatherRecovery = getRecoveryMessage("weather-unavailable");
 
   return (
     <Screen>
@@ -24,9 +31,16 @@ export default function WeatherScreen() {
       </View>
       <Card style={styles.card}>
         <SectionHeader title="Choose water" eyebrow="Offline mock weather" />
+        {source ? (
+          <View style={styles.sourceRow}>
+            <ConfidenceBadge confidence={source.confidence} compact />
+            <AppText variant="caption" style={styles.sourceCopy}>{source.label} · {freshness?.warning}</AppText>
+          </View>
+        ) : null}
+        <ErrorState title={weatherRecovery.title} body={weatherRecovery.body} />
         <View style={styles.options}>
           {waterbodies.slice(0, 8).map((item) => (
-            <Pressable key={item.id} onPress={() => setWaterbodyId(item.id)} style={[styles.option, waterbodyId === item.id && styles.optionActive]}>
+            <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={`Show conditions for ${item.name}`} onPress={() => setWaterbodyId(item.id)} style={[styles.option, waterbodyId === item.id && styles.optionActive]}>
               <AppText variant="caption" style={[styles.optionText, waterbodyId === item.id && styles.optionTextActive]}>{item.name}</AppText>
             </Pressable>
           ))}
@@ -87,6 +101,8 @@ const styles = StyleSheet.create({
   card: { gap: spacing.md },
   options: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   option: { backgroundColor: colors.surfaceStrong, borderColor: colors.line, borderRadius: radii.pill, borderWidth: 1, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  sourceRow: { alignItems: "center", flexDirection: "row", gap: spacing.sm },
+  sourceCopy: { color: colors.muted, flex: 1 },
   optionActive: { backgroundColor: colors.pine, borderColor: colors.pine },
   optionText: { fontWeight: "900" },
   optionTextActive: { color: "#fff" }

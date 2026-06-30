@@ -140,7 +140,7 @@ export default function MapScreen() {
         </View>
         <View style={styles.suggestionRow}>
           {manualLocations.map((location) => (
-            <Pressable key={location.id} onPress={() => useManualLocation(location)} style={styles.suggestion}>
+            <Pressable key={location.id} accessibilityRole="button" accessibilityLabel={`Use ${location.label} as manual map location`} onPress={() => useManualLocation(location)} style={styles.suggestion}>
               <AppText variant="caption" style={styles.suggestionText}>{location.label}</AppText>
             </Pressable>
           ))}
@@ -148,6 +148,7 @@ export default function MapScreen() {
       </Card>
 
       <TextInput
+        accessibilityLabel="Search waterbodies, shellfish locations, bait, county, or water type"
         value={query}
         onChangeText={setQuery}
         placeholder="Search lakes, rivers, piers, parks, bait..."
@@ -157,7 +158,7 @@ export default function MapScreen() {
 
       <View style={styles.suggestionRow}>
         {["trout", "pier", "worms", "bass"].map((suggestion) => (
-          <Pressable key={suggestion} onPress={() => setQuery(suggestion)} style={styles.suggestion}>
+          <Pressable key={suggestion} accessibilityRole="button" accessibilityLabel={`Search ${suggestion}`} onPress={() => setQuery(suggestion)} style={styles.suggestion}>
             <AppText variant="caption" style={styles.suggestionText}>{suggestion}</AppText>
           </Pressable>
         ))}
@@ -165,7 +166,7 @@ export default function MapScreen() {
 
       <View style={styles.filterRow}>
         {activityFilters.map((item) => (
-          <Pressable key={item} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item === "all" ? "all activities" : item}`} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
             <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
               {item === "all" ? "All activity" : item}
             </AppText>
@@ -175,7 +176,7 @@ export default function MapScreen() {
 
       <View style={styles.filterRow}>
         {filters.map((item) => (
-          <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
             <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
               {item}
             </AppText>
@@ -217,6 +218,8 @@ export default function MapScreen() {
         {markers.slice(0, 8).map((marker) => (
           <Pressable
             key={marker.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Select ${marker.name}, ${marker.kind}, ${marker.waterType}`}
             onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
             style={[styles.locationChip, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationChipActive]}
           >

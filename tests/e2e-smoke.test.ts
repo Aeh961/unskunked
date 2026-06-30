@@ -17,6 +17,7 @@ const phase8Routes = [
   "/weather",
   "/plan",
   "/offline",
+  "/data-sources",
   "/search",
   "/journal",
   "/insights",
@@ -46,6 +47,7 @@ describe("Phase 9 E2E smoke flows", () => {
     expect(phase8Routes).toContain("/regulations");
     expect(phase8Routes).toContain("/weather");
     expect(phase8Routes).toContain("/offline");
+    expect(phase8Routes).toContain("/data-sources");
     expect(phase8Routes).toContain("/journal");
   });
 

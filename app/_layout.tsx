@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="regulations" options={{ title: "Regulations" }} />
         <Stack.Screen name="weather" options={{ title: "Weather" }} />
         <Stack.Screen name="offline" options={{ title: "Offline Mode" }} />
+        <Stack.Screen name="data-sources" options={{ title: "Data Sources" }} />
         <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>
