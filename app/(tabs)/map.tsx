@@ -20,6 +20,7 @@ import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 import { regulationService } from "@/src/services/regulations";
+import { formatWaterbodyShare, shareText } from "@/src/utils/share";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
 
@@ -56,6 +57,10 @@ export default function MapScreen() {
   function selectWater(id: string) {
     setSelectedId(id);
     setRecentIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 4));
+  }
+
+  async function shareWaterbody() {
+    await shareText(formatWaterbodyShare(selected), "Unskunked waterbody recommendation");
   }
 
   return (
@@ -203,6 +208,9 @@ export default function MapScreen() {
           </Link>
           <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={openDirections}>
             Directions
+          </Button>
+          <Button icon="share-social" variant="ghost" style={styles.actionButton} onPress={shareWaterbody}>
+            Share
           </Button>
         </View>
       </Card>

@@ -32,6 +32,9 @@ export default function RootLayout() {
         <Stack.Screen name="plan" options={{ title: "Plan Trip" }} />
         <Stack.Screen name="search" options={{ title: "Search" }} />
         <Stack.Screen name="stats" options={{ title: "Fishing Stats" }} />
+        <Stack.Screen name="feedback" options={{ title: "Feedback" }} />
+        <Stack.Screen name="export" options={{ title: "Export Data" }} />
+        <Stack.Screen name="about" options={{ title: "About" }} />
         <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>

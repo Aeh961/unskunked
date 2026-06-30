@@ -18,10 +18,10 @@ const screens = [
   ["rig-builder", "rigs"],
   ["trip-planner", "plan"],
   ["trip-log", "log"],
-  ["fishing-stats", "stats"],
-  ["favorites", "favorites"],
-  ["learning-center", "learn"],
-  ["settings", "settings"]
+  ["feedback", "feedback"],
+  ["export", "export"],
+  ["settings", "settings"],
+  ["about", "about"]
 ];
 
 function sleep(ms) {

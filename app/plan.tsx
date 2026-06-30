@@ -13,6 +13,7 @@ import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
 import { saveTrip, saveTripPlan } from "@/src/utils/localStore";
 import { buildTripPlan } from "@/src/utils/recommendations";
+import { formatTripPlanShare, shareText } from "@/src/utils/share";
 
 const months = ["June", "July", "August", "September"] as const;
 const accessOptions = ["Shore", "Boat"] as const;
@@ -68,6 +69,16 @@ export default function PlanTripScreen() {
     setSavedMessage("Draft trip started in Trip Log.");
   }
 
+  async function sharePlan() {
+    await shareText(formatTripPlanShare({
+      location: plan.water.name,
+      targetSpecies: plan.fish.name,
+      rigSetup: plan.suggestedRig,
+      knot: plan.suggestedKnot,
+      baitChecklist: plan.baitChecklist
+    }), "Unskunked trip plan");
+  }
+
   return (
     <Screen>
       <View style={styles.hero}>
@@ -118,6 +129,7 @@ export default function PlanTripScreen() {
           <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save plan</Button>
           <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Start Trip</Button>
         </View>
+        <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share trip plan</Button>
         {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
       </Card>
       <OfficialLinks links={plan.regulation.sourceLinks} />

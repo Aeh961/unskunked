@@ -20,6 +20,7 @@ const quickLinks = [
   { label: "Stats", href: "/stats", icon: "stats-chart", hint: "Spot trip patterns" },
   { label: "Learn", href: "/learn", icon: "school", hint: "Basics, knots, glossary" },
   { label: "Favorites", href: "/favorites", icon: "heart", hint: "Saved fish, waters, rigs" },
+  { label: "Feedback", href: "/feedback", icon: "chatbox", hint: "Report beta issues" },
   { label: "Settings", href: "/settings", icon: "settings", hint: "Demo mode and data" }
 ] as const;
 

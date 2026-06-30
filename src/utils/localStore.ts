@@ -8,6 +8,7 @@ export type Favorite = {
 };
 
 export type TripResult = "Skunked" | "Unskunked" | "Great Day" | "Limited Out";
+export type ExperienceLevel = "Beginner" | "Intermediate" | "Advanced";
 
 export type TripLog = {
   id: string;
@@ -39,10 +40,26 @@ export type TripPlanRecord = {
 };
 
 export type OnboardingProfile = {
-  experience: "Beginner" | "Intermediate";
+  experience: ExperienceLevel;
   preferredStyle: "Shore" | "Boat" | "Dock" | "River" | "Saltwater";
   favoriteFishIds: string[];
   favoriteWaterbodyIds: string[];
+};
+
+export type FeedbackType =
+  | "Bug report"
+  | "Feature request"
+  | "Confusing regulation"
+  | "Wrong fish recommendation"
+  | "Wrong waterbody info"
+  | "General feedback";
+
+export type FeedbackEntry = {
+  id: string;
+  createdAt: string;
+  type: FeedbackType;
+  screen: string;
+  message: string;
 };
 
 export type DemoProfile = {
@@ -70,6 +87,7 @@ const favoritesKey = "unskunked:favorites";
 const tripsKey = "unskunked:trips";
 const tripPlansKey = "unskunked:trip-plans";
 const onboardingProfileKey = "unskunked:onboarding-profile";
+const feedbackKey = "unskunked:feedback";
 const demoEnabledKey = "unskunked:demo-enabled";
 const profilesKey = "unskunked:demo-profiles";
 const notificationsKey = "unskunked:demo-notifications";
@@ -253,6 +271,41 @@ export async function getOnboardingProfile() {
 
 export async function setOnboardingProfile(profile: OnboardingProfile) {
   return storage.writeJson(onboardingProfileKey, profile);
+}
+
+export async function getFeedback() {
+  return storage.readJson<FeedbackEntry[]>(feedbackKey, []);
+}
+
+export async function saveFeedback(entry: FeedbackEntry) {
+  const feedback = await getFeedback();
+  const next = [entry, ...feedback.filter((item) => item.id !== entry.id)];
+  await storage.writeJson(feedbackKey, next);
+  return next;
+}
+
+export async function getBetaExportData() {
+  const [favorites, trips, tripPlans, feedback, profile, region, searchHistory] = await Promise.all([
+    getFavorites(),
+    getTrips(),
+    getTripPlans(),
+    getFeedback(),
+    getOnboardingProfile(),
+    getSelectedRegion(),
+    getDemoSearchHistory()
+  ]);
+  return {
+    exportedAt: new Date().toISOString(),
+    app: "Unskunked",
+    version: "0.1.0",
+    selectedRegion: region,
+    profile,
+    favorites,
+    tripPlans,
+    tripLogs: trips,
+    feedback,
+    recentSearches: searchHistory
+  };
 }
 
 export async function getSelectedRegion() {

@@ -9,7 +9,8 @@ import { createMemoryStorageDriver, createStorageRepository } from "@/src/utils/
 import { regulationService, WashingtonRegulationProvider } from "@/src/services/regulations";
 import { calculateTripAnalytics } from "@/src/services/tripAnalytics";
 import { personalizationService } from "@/src/services/personalization";
-import { demoFavorites, demoOnboardingProfile, demoTrips } from "@/src/utils/localStore";
+import { demoFavorites, demoOnboardingProfile, demoTripPlans, demoTrips } from "@/src/utils/localStore";
+import { formatJsonExport, formatTripPlanShare } from "@/src/utils/share";
 
 describe("regulation helpers", () => {
   it("labels and permits restricted waters as fishable with caution", () => {
@@ -77,6 +78,21 @@ describe("storage helpers", () => {
     const store = createStorageRepository(driver);
     await store.writeJson("profile", { region: "washington" });
     expect(await store.readJson("profile", null)).toEqual({ region: "washington" });
+  });
+});
+
+describe("share and export helpers", () => {
+  it("formats a shareable trip plan", () => {
+    const message = formatTripPlanShare(demoTripPlans[0]);
+    expect(message).toContain("Green Lake");
+    expect(message).toContain("rainbow trout");
+    expect(message).toContain("Improved Clinch Knot");
+  });
+
+  it("formats JSON exports consistently", () => {
+    const output = formatJsonExport({ feedback: [{ type: "Bug report" }] });
+    expect(output).toContain("\"feedback\"");
+    expect(output).toContain("Bug report");
   });
 });
 

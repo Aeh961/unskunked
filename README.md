@@ -4,11 +4,12 @@
 
 Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
-The current app is a polished Phase 5 beta foundation using mock Washington fishing data, local storage, typed data services, and no paid APIs or backend.
+The current app is a polished Phase 6 beta launch build using mock Washington fishing data, local storage, typed data services, native share/export flows, and no paid APIs or backend.
 
 ## Feature Overview
 
 - Demo Mode that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history
+- First-launch beta onboarding with region, experience, fishing style, favorite fish, favorite waterbodies, and a final Start Fishing Smarter flow
 - Real-data-ready regulation architecture with provider interfaces, Washington mock provider, emergency-rule placeholders, waterbody rules, species rules, season checks, limits, and gear warnings
 - Official WDFW verification links for regulations, emergency rules, licenses, and Fish Washington resources
 - Personalization engine using onboarding profile, favorites, trip history, season, successful bait, and successful rigs
@@ -24,6 +25,9 @@ The current app is a polished Phase 5 beta foundation using mock Washington fish
 - Learning Center with beginner, species, rod, reel, line, hook, lure, safety, etiquette, and Washington basics articles
 - Region selection for Washington, Oregon, Idaho, and California, with non-Washington regions clearly marked demo-only
 - Global search across fish, waterbodies, rigs, knots, learning articles, and trip logs
+- Feedback system for bug reports, feature requests, confusing regulations, wrong recommendations, wrong waterbody info, and general notes
+- Native share-sheet support for trip plans, fish tips, waterbody recommendations, trip log results, feedback, and beta data export
+- About Unskunked page with mission, disclaimers, current region support, roadmap, and contact/feedback entry point
 - Screenshot automation for iOS and Android
 
 ## Architecture
@@ -36,6 +40,7 @@ The current app is a polished Phase 5 beta foundation using mock Washington fish
 - `src/services/`: regulation providers, personalization engine, and trip analytics
 - `src/utils/`: storage abstraction, local store, recommendations, search, and YouTube helpers
 - `scripts/`: automation utilities
+- `docs/`: QA checklist, beta tester guide, and developer handoff
 - `screenshots/`: generated iOS and Android screenshots
 
 The app is intentionally local-first. Future real-data integrations should replace or augment provider classes in `src/services/*` while preserving the current screen contracts.
@@ -52,6 +57,16 @@ Phase 5 adds the production-facing shape for regulation data:
 - `WaterbodyRuleService`: focused helper for waterbody warning messages
 
 Current rule data is still mock/local. Official WDFW integration should add source timestamps, import validation, and waterbody/species/date matching before any legal claims are made.
+
+## Beta Testing
+
+Useful docs:
+
+- [QA Checklist](docs/QA_CHECKLIST.md)
+- [Beta Tester Guide](docs/BETA_TESTER_GUIDE.md)
+- [Developer Handoff](docs/DEVELOPER_HANDOFF.md)
+
+Beta testers should focus on onboarding, planning a trip, checking disclaimers/source links, saving feedback, exporting JSON, and sharing plans/results through the native share sheet.
 
 ## Development Setup
 
@@ -127,10 +142,10 @@ The script navigates to each route and captures:
 - Rig Builder
 - Trip Planner
 - Trip Log
-- Fishing Stats
-- Favorites
-- Learning Center
+- Feedback
+- Export
 - Settings
+- About
 
 ## Screenshots
 
@@ -146,10 +161,10 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![iOS Rig Builder](screenshots/ios/ios-rig-builder.png)
 ![iOS Trip Planner](screenshots/ios/ios-trip-planner.png)
 ![iOS Trip Log](screenshots/ios/ios-trip-log.png)
-![iOS Fishing Stats](screenshots/ios/ios-fishing-stats.png)
-![iOS Favorites](screenshots/ios/ios-favorites.png)
-![iOS Learning Center](screenshots/ios/ios-learning-center.png)
+![iOS Feedback](screenshots/ios/ios-feedback.png)
+![iOS Export](screenshots/ios/ios-export.png)
 ![iOS Settings](screenshots/ios/ios-settings.png)
+![iOS About](screenshots/ios/ios-about.png)
 
 ### Android
 
@@ -161,10 +176,17 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![Android Rig Builder](screenshots/android/android-rig-builder.png)
 ![Android Trip Planner](screenshots/android/android-trip-planner.png)
 ![Android Trip Log](screenshots/android/android-trip-log.png)
-![Android Fishing Stats](screenshots/android/android-fishing-stats.png)
-![Android Favorites](screenshots/android/android-favorites.png)
-![Android Learning Center](screenshots/android/android-learning-center.png)
+![Android Feedback](screenshots/android/android-feedback.png)
+![Android Export](screenshots/android/android-export.png)
 ![Android Settings](screenshots/android/android-settings.png)
+![Android About](screenshots/android/android-about.png)
+
+## App Limitations
+
+- Regulation content is mock/local and must be verified with official agencies.
+- Washington has the most complete mock data; Oregon, Idaho, and California are placeholders.
+- No backend, account sync, GPS, weather, tides, stocking reports, or official regulation feed is connected yet.
+- JSON export uses the native share sheet rather than a hosted account portal.
 
 ## Roadmap To Real Data
 

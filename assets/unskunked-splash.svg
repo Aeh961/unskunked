@@ -1,0 +1,10 @@
+<svg width="1242" height="2436" viewBox="0 0 1242 2436" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1242" height="2436" fill="#F4F1E8"/>
+  <rect x="241" y="728" width="760" height="760" rx="168" fill="#123B30"/>
+  <path d="M368 1234C445 1139 535 1098 632 1108C725 1118 799 1174 908 1133C866 1249 778 1322 653 1322C533 1322 437 1291 368 1234Z" fill="#277F95"/>
+  <path d="M433 1028C511 927 609 890 726 918C678 954 645 996 624 1045C555 1030 491 1024 433 1028Z" fill="#E4A947"/>
+  <circle cx="778" cy="1062" r="30" fill="#EEF5F1"/>
+  <circle cx="786" cy="1055" r="10" fill="#17231F"/>
+  <text x="621" y="1644" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" fill="#123B30">Unskunked</text>
+  <text x="621" y="1714" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#607268">Fish smarter. Learn faster.</text>
+</svg>

@@ -9,6 +9,7 @@ import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { TripLog, TripPlanRecord, TripResult, getTripPlans, getTrips, saveTrip } from "@/src/utils/localStore";
 import { colors, radii, spacing } from "@/src/theme";
+import { formatTripLogShare, shareText } from "@/src/utils/share";
 
 const results: TripResult[] = ["Skunked", "Unskunked", "Great Day", "Limited Out"];
 
@@ -159,6 +160,7 @@ export default function TripLogScreen() {
               <AppText>Number caught: {trip.numberCaught ?? 0}</AppText>
               <AppText>Bait/Rig: {trip.bait} · {trip.rig}</AppText>
               <AppText variant="caption">{trip.notes}</AppText>
+              <Button icon="share-social" variant="ghost" onPress={() => shareText(formatTripLogShare(trip), "Unskunked trip result")}>Share result</Button>
               <View style={styles.photoPlaceholder}>
                 <AppText variant="caption">Photo placeholder</AppText>
               </View>

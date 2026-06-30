@@ -6,6 +6,7 @@ import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
+import { Button } from "@/src/components/Button";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
@@ -14,6 +15,7 @@ import { fishSpecies } from "@/src/data/fish";
 import { useFavorites } from "@/src/hooks/useFavorites";
 import { regulationService } from "@/src/services/regulations";
 import { colors, radii, spacing } from "@/src/theme";
+import { formatFishShare, shareText } from "@/src/utils/share";
 
 export default function FishDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +34,12 @@ export default function FishDetailScreen() {
     );
   }
 
-  const regulation = regulationService.getSummary({ state: "WA", speciesId: fish.id, date: new Date().toISOString() });
+  const selectedFish = fish;
+  const regulation = regulationService.getSummary({ state: "WA", speciesId: selectedFish.id, date: new Date().toISOString() });
+
+  async function shareFish() {
+    await shareText(formatFishShare(selectedFish), `Unskunked ${selectedFish.name} tip`);
+  }
 
   return (
     <Screen>
@@ -78,6 +85,7 @@ export default function FishDetailScreen() {
           <AppText>Rigs: {fish.rigs.join(", ")}</AppText>
         </Stack>
       </Card>
+      <Button icon="share-social" variant="secondary" onPress={shareFish}>Share fish tip</Button>
 
       <InfoList title="Where to find them" eyebrow="Habitat" items={fish.whereToFind} />
       <InfoList title="Casting tips" eyebrow="Technique" items={fish.castingTips} />

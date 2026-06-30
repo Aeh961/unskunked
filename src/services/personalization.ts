@@ -2,11 +2,11 @@ import { fishSpecies } from "@/src/data/fish";
 import { learningArticles } from "@/src/data/learning";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
-import { Favorite, TripLog } from "@/src/utils/localStore";
+import { ExperienceLevel, Favorite, TripLog } from "@/src/utils/localStore";
 import { calculateTripAnalytics } from "./tripAnalytics";
 
 export type UserProfile = {
-  experience: "Beginner" | "Intermediate";
+  experience: ExperienceLevel;
   preferredStyle: "Shore" | "Boat" | "Dock" | "River" | "Saltwater";
   favoriteFishIds: string[];
   favoriteWaterbodyIds: string[];

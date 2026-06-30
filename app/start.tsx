@@ -8,9 +8,11 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { fishSpecies } from "@/src/data/fish";
 import { regions, RegionId } from "@/src/data/regions";
+import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
-import { getSelectedRegion, setOnboardingProfile, setSelectedRegion } from "@/src/utils/localStore";
+import { ExperienceLevel, getOnboardingProfile, getSelectedRegion, setOnboardingProfile, setSelectedRegion } from "@/src/utils/localStore";
 
 const steps = [
   {
@@ -41,21 +43,42 @@ const steps = [
 
 export default function StartHereScreen() {
   const [region, setRegion] = useState<RegionId>("washington");
-  const [experience, setExperience] = useState<"Beginner" | "Intermediate">("Beginner");
+  const [experience, setExperience] = useState<ExperienceLevel>("Beginner");
+  const [style, setStyle] = useState<"Shore" | "Boat" | "Dock" | "River" | "Saltwater">("Shore");
+  const [favoriteFishIds, setFavoriteFishIds] = useState<string[]>(["rainbow-trout"]);
+  const [favoriteWaterbodyIds, setFavoriteWaterbodyIds] = useState<string[]>(["green-lake"]);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    getSelectedRegion().then(setRegion);
+    Promise.all([getSelectedRegion(), getOnboardingProfile()]).then(([selectedRegion, profile]) => {
+      setRegion(selectedRegion);
+      setExperience(profile.experience);
+      setStyle(profile.preferredStyle);
+      setFavoriteFishIds(profile.favoriteFishIds);
+      setFavoriteWaterbodyIds(profile.favoriteWaterbodyIds);
+    });
   }, []);
 
-  async function chooseRegion(nextRegion: RegionId) {
-    setRegion(nextRegion);
+  async function saveProfile(nextRegion = region) {
     await setSelectedRegion(nextRegion);
     await setOnboardingProfile({
       experience,
-      preferredStyle: "Shore",
-      favoriteFishIds: ["rainbow-trout"],
-      favoriteWaterbodyIds: ["green-lake"]
+      preferredStyle: style,
+      favoriteFishIds,
+      favoriteWaterbodyIds
     });
+    setSaved(true);
+  }
+
+  async function chooseRegion(nextRegion: RegionId) {
+    setRegion(nextRegion);
+    await saveProfile(nextRegion);
+  }
+
+  function toggleItem(id: string, values: string[], setter: (next: string[]) => void) {
+    const next = values.includes(id) ? values.filter((item) => item !== id) : [...values, id];
+    setter(next.length ? next : [id]);
+    setSaved(false);
   }
 
   return (
@@ -80,9 +103,44 @@ export default function StartHereScreen() {
         </View>
         <AppText variant="caption">{regions.find((item) => item.id === region)?.note}</AppText>
         <View style={styles.regionGrid}>
-          {(["Beginner", "Intermediate"] as const).map((item) => (
-            <Pressable key={item} onPress={() => setExperience(item)} style={[styles.experience, experience === item && styles.regionActive]}>
+          {(["Beginner", "Intermediate", "Advanced"] as const).map((item) => (
+            <Pressable key={item} onPress={() => { setExperience(item); setSaved(false); }} style={[styles.experience, experience === item && styles.regionActive]}>
               <AppText variant="caption" style={[styles.experienceText, experience === item && styles.regionActiveText]}>{item}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={styles.planCard}>
+        <SectionHeader title="Fishing style" eyebrow="Personalize" />
+        <View style={styles.regionGrid}>
+          {(["Shore", "Boat", "Dock", "River", "Saltwater"] as const).map((item) => (
+            <Pressable key={item} onPress={() => { setStyle(item); setSaved(false); }} style={[styles.experience, style === item && styles.regionActive]}>
+              <AppText variant="caption" style={[styles.experienceText, style === item && styles.regionActiveText]}>{item}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={styles.planCard}>
+        <SectionHeader title="Favorite fish" eyebrow={`${favoriteFishIds.length} selected`} />
+        <View style={styles.regionGrid}>
+          {fishSpecies.slice(0, 8).map((fish) => (
+            <Pressable key={fish.id} onPress={() => toggleItem(fish.id, favoriteFishIds, setFavoriteFishIds)} style={[styles.regionCard, favoriteFishIds.includes(fish.id) && styles.regionActive]}>
+              <AppText variant="subheading" style={favoriteFishIds.includes(fish.id) && styles.regionActiveText}>{fish.name}</AppText>
+              <AppText variant="caption" style={favoriteFishIds.includes(fish.id) && styles.regionActiveText}>{fish.difficulty}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={styles.planCard}>
+        <SectionHeader title="Favorite waterbodies" eyebrow={`${favoriteWaterbodyIds.length} selected`} />
+        <View style={styles.regionGrid}>
+          {waterbodies.slice(0, 6).map((water) => (
+            <Pressable key={water.id} onPress={() => toggleItem(water.id, favoriteWaterbodyIds, setFavoriteWaterbodyIds)} style={[styles.regionCard, favoriteWaterbodyIds.includes(water.id) && styles.regionActive]}>
+              <AppText variant="subheading" style={favoriteWaterbodyIds.includes(water.id) && styles.regionActiveText}>{water.name}</AppText>
+              <AppText variant="caption" style={favoriteWaterbodyIds.includes(water.id) && styles.regionActiveText}>{water.waterType} · {water.beginnerDifficulty}</AppText>
             </Pressable>
           ))}
         </View>
@@ -114,10 +172,11 @@ export default function StartHereScreen() {
       </Card>
 
       <Card style={styles.tipCard}>
-        <SectionHeader title="Default beginner setup" eyebrow="When unsure" />
-        <AppText>Light spinning rod, 4-6 lb mono, size 8-12 hook, worm or PowerBait, and a bobber or split shot rig.</AppText>
-        <Link href={"/rigs" as Href} asChild>
-          <Button icon="git-branch">Open Rig Builder</Button>
+        <SectionHeader title="Start Fishing Smarter" eyebrow="Ready" />
+        <AppText>Save your beta profile, then start with a plan that matches your region, fish, style, and experience.</AppText>
+        <Button icon="checkmark-circle" onPress={() => saveProfile()}>{saved ? "Profile saved" : "Save beta profile"}</Button>
+        <Link href={"/plan" as Href} asChild>
+          <Button icon="calendar" variant="secondary">Plan first trip</Button>
         </Link>
       </Card>
     </Screen>

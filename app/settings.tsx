@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Href, Link } from "expo-router";
 import { Pressable, StyleSheet, Switch, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Button } from "@/src/components/Button";
@@ -89,6 +90,25 @@ export default function SettingsScreen() {
           <Switch value={enabled} onValueChange={toggleDemo} trackColor={{ true: colors.river, false: colors.line }} thumbColor={enabled ? colors.sun : colors.surfaceStrong} />
         </View>
         <Button icon="refresh" variant="secondary" onPress={reseed}>Reload demo data</Button>
+      </Card>
+
+      <Card style={styles.card}>
+        <SectionHeader title="Safety and legal" eyebrow="Global disclaimer" />
+        <Stack>
+          <AppText>Unskunked is for planning and education only.</AppText>
+          <AppText>Do not rely on this app as legal advice. Always verify official rules, emergency rules, license requirements, seasons, limits, size rules, closures, and gear restrictions before fishing or keeping fish.</AppText>
+        </Stack>
+        <View style={styles.actionRow}>
+          <Link href={"/about" as Href} asChild>
+            <Button icon="information-circle" variant="secondary" style={styles.actionButton}>About</Button>
+          </Link>
+          <Link href={"/feedback" as Href} asChild>
+            <Button icon="chatbox" variant="secondary" style={styles.actionButton}>Feedback</Button>
+          </Link>
+          <Link href={"/export" as Href} asChild>
+            <Button icon="share-social" variant="secondary" style={styles.actionButton}>Export</Button>
+          </Link>
+        </View>
       </Card>
 
       <Card style={styles.card}>
@@ -204,5 +224,13 @@ const styles = StyleSheet.create({
   recommendation: {
     color: colors.pine,
     fontWeight: "900"
+  },
+  actionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  actionButton: {
+    flexBasis: "31%"
   }
 });
