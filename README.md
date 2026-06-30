@@ -134,6 +134,8 @@ The script navigates to each route and captures:
 
 ## Screenshots
 
+Screenshots are tracked so GitHub visitors see the app flow immediately. Regenerate them with the screenshot script after launching the latest build in iOS Simulator or Android Emulator.
+
 ### iOS
 
 ![iOS Onboarding](screenshots/ios/ios-onboarding.png)
