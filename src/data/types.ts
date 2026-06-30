@@ -42,9 +42,15 @@ export type WaterType = "Lake" | "River" | "Saltwater" | "Park" | "Pier";
 
 export type Waterbody = {
   id: string;
+  waterbodyId?: string;
   name: string;
   region: string;
   county?: string;
+  city?: string;
+  source?: string;
+  lastUpdated?: string;
+  regulationReference?: string;
+  boatLaunchReference?: string;
   waterType: WaterType;
   latitude: number;
   longitude: number;
@@ -53,6 +59,21 @@ export type Waterbody = {
   parkingNote?: string;
   bestSeason?: string;
   officialLink?: string;
+  boatLaunch?: boolean;
+  kayakFriendly?: boolean;
+  bankFishing?: boolean;
+  wheelchairAccessible?: boolean;
+  bathrooms?: boolean;
+  camping?: boolean;
+  fee?: string;
+  photoPlaceholder?: string;
+  familyFriendly?: boolean;
+  stocking?: Array<{
+    species: string;
+    date: string;
+    count: number;
+    source: string;
+  }>;
   status: Status;
   regulationSummary: string;
   suggestedBait: string[];

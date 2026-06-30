@@ -1,4 +1,5 @@
 import { Waterbody } from "./types";
+import { makeWdfwWaterbodyId, wdfwDataUpdated, wdfwSourceNames } from "./wdfwSources";
 
 const fishWashington = "https://wdfw.wa.gov/fishing/locations";
 
@@ -51,9 +52,15 @@ function wa(
 ): Waterbody {
   return {
     id,
+    waterbodyId: makeWdfwWaterbodyId(id),
     name,
     region,
     county,
+    city: region,
+    source: `${wdfwSourceNames.fishWashington}; ${wdfwSourceNames.regulations}; ${wdfwSourceNames.waterAccess}`,
+    lastUpdated: wdfwDataUpdated,
+    regulationReference: "Verify in the WDFW annual pamphlet and emergency rules before fishing.",
+    boatLaunchReference: "Verify launch status in WDFW water access listings.",
     waterType,
     latitude,
     longitude,
@@ -62,6 +69,16 @@ function wa(
     parkingNote,
     bestSeason,
     officialLink: fishWashington,
+    boatLaunch: waterType === "Lake" || waterType === "Saltwater",
+    kayakFriendly: waterType === "Lake" && beginnerDifficulty !== "Advanced",
+    bankFishing: waterType !== "Saltwater" || beginnerDifficulty !== "Advanced",
+    wheelchairAccessible: beginnerDifficulty === "Easy" && (waterType === "Park" || waterType === "Pier" || waterType === "Lake"),
+    bathrooms: beginnerDifficulty === "Easy" || waterType === "Pier",
+    camping: ["potholes-reservoir", "banks-lake", "lake-chelan", "deception-pass", "rattlesnake-lake"].includes(id),
+    fee: ["rattlesnake-lake", "lake-sammamish", "spanaway-lake", "deception-pass"].includes(id) ? "Parking or day-use fee may apply" : "Usually free or varies by access point",
+    photoPlaceholder: `${name} photo placeholder`,
+    familyFriendly: beginnerDifficulty === "Easy" && shoreAccessDifficulty === "Easy",
+    stocking: makeStocking(id),
     status,
     regulationSummary: `Mock guidance: ${regulationSummary}`,
     suggestedBait,
@@ -72,4 +89,16 @@ function wa(
     todayRecommendation,
     youtubeSearch: `${name} fishing beginner ${recommendedRigs[0]}`
   };
+}
+
+function makeStocking(id: string): Waterbody["stocking"] {
+  const stocked: Record<string, Waterbody["stocking"]> = {
+    "green-lake": [{ species: "Rainbow Trout", date: "2026-04-18", count: 3500, source: wdfwSourceNames.stocking }],
+    "rattlesnake-lake": [{ species: "Rainbow Trout", date: "2026-04-24", count: 2500, source: wdfwSourceNames.stocking }],
+    "pine-lake": [{ species: "Rainbow Trout", date: "2026-04-11", count: 1800, source: wdfwSourceNames.stocking }],
+    "beaver-lake": [{ species: "Rainbow Trout", date: "2026-04-09", count: 2200, source: wdfwSourceNames.stocking }],
+    "angle-lake": [{ species: "Rainbow Trout", date: "2026-04-15", count: 1600, source: wdfwSourceNames.stocking }],
+    "spanaway-lake": [{ species: "Rainbow Trout", date: "2026-04-20", count: 3000, source: wdfwSourceNames.stocking }]
+  };
+  return stocked[id] ?? [];
 }

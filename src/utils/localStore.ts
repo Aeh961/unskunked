@@ -90,6 +90,7 @@ const tripPlansKey = "unskunked:trip-plans";
 const onboardingProfileKey = "unskunked:onboarding-profile";
 const feedbackKey = "unskunked:feedback";
 const betaEventsKey = "unskunked:beta-events";
+const offlinePackIdsKey = "unskunked:offline-pack-ids";
 const demoEnabledKey = "unskunked:demo-enabled";
 const profilesKey = "unskunked:demo-profiles";
 const notificationsKey = "unskunked:demo-notifications";
@@ -331,6 +332,17 @@ export async function trackBetaEvent(type: BetaEventType, label: string) {
     ...events
   ].slice(0, 250);
   await storage.writeJson(betaEventsKey, next);
+  return next;
+}
+
+export async function getDownloadedOfflinePackIds() {
+  return storage.readJson<string[]>(offlinePackIdsKey, []);
+}
+
+export async function toggleOfflinePack(id: string) {
+  const ids = await getDownloadedOfflinePackIds();
+  const next = ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id];
+  await storage.writeJson(offlinePackIdsKey, next);
   return next;
 }
 

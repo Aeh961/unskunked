@@ -26,6 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="fish/[id]" options={{ title: "Fish details" }} />
         <Stack.Screen name="log" options={{ title: "Trip Log" }} />
+        <Stack.Screen name="journal" options={{ title: "Fishing Journal" }} />
         <Stack.Screen name="learn" options={{ title: "Learning Center" }} />
         <Stack.Screen name="start" options={{ title: "Start Here" }} />
         <Stack.Screen name="favorites" options={{ title: "Favorites" }} />
@@ -36,6 +37,9 @@ export default function RootLayout() {
         <Stack.Screen name="export" options={{ title: "Export Data" }} />
         <Stack.Screen name="about" options={{ title: "About" }} />
         <Stack.Screen name="insights" options={{ title: "Beta Insights" }} />
+        <Stack.Screen name="regulations" options={{ title: "Regulations" }} />
+        <Stack.Screen name="weather" options={{ title: "Weather" }} />
+        <Stack.Screen name="offline" options={{ title: "Offline Mode" }} />
         <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>

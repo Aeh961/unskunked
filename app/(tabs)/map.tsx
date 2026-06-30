@@ -20,6 +20,7 @@ import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 import { regulationService } from "@/src/services/regulations";
+import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { Coordinates, defaultManualLocation, getNearbyWaterbodies, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
 import { trackBetaEvent } from "@/src/utils/localStore";
@@ -54,6 +55,7 @@ export default function MapScreen() {
     .map((id) => fishSpecies.find((fish) => fish.id === id)?.name)
     .filter(Boolean);
   const regulation = regulationService.getSummary({ state: "WA", waterbodyId: selected.id, date: new Date().toISOString() });
+  const currentRegulations = getCurrentRegulations({ waterbodyId: selected.id, date: new Date().toISOString() });
 
   function openDirections() {
     const url = `https://maps.apple.com/?q=${encodeURIComponent(selected.name)}&ll=${selected.latitude},${selected.longitude}`;
@@ -234,12 +236,37 @@ export default function MapScreen() {
           <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
           <AppText>Distance: {"distanceMiles" in selected ? `${selected.distanceMiles} miles from selected location` : "Set a location to calculate distance"}</AppText>
           <AppText>Shore access: {selected.shoreAccessDifficulty ?? selected.beginnerDifficulty}</AppText>
+          <AppText>Boat launch: {selected.boatLaunch ? "Yes or nearby" : "Not highlighted"}</AppText>
+          <AppText>Kayak friendly: {selected.kayakFriendly ? "Yes" : "Use caution"}</AppText>
+          <AppText>Bank fishing: {selected.bankFishing ? "Yes" : "Limited"}</AppText>
+          <AppText>Wheelchair accessible: {selected.wheelchairAccessible ? "Likely at some access points" : "Not confirmed"}</AppText>
+          <AppText>Bathrooms: {selected.bathrooms ? "Likely at primary access" : "Not confirmed"}</AppText>
+          <AppText>Camping: {selected.camping ? "Nearby or on-site" : "Not highlighted"}</AppText>
+          <AppText>Fee: {selected.fee}</AppText>
           <AppText>Parking: {selected.parkingNote ?? "Check local parking before leaving."}</AppText>
+          <AppText>GPS: {selected.latitude.toFixed(4)}, {selected.longitude.toFixed(4)}</AppText>
           <AppText>Best season: {selected.bestSeason ?? "Verify by waterbody and species."}</AppText>
           <AppText>Recommended bait: {selected.suggestedBait.join(", ")}</AppText>
           <AppText>Recommended rigs: {selected.recommendedRigs.join(", ")}</AppText>
           <AppText>Season check: {regulation.season}</AppText>
           <AppText>Bag/size: {regulation.dailyLimit} · {regulation.sizeLimit}</AppText>
+          <View style={styles.badgeWrap}>
+            {currentRegulations.badges.map((badge) => (
+              <View key={badge.label} style={[styles.speciesBadge, badge.tone === "caution" && styles.cautionBadge, badge.tone === "bad" && styles.badBadge]}>
+                <AppText variant="caption" style={styles.speciesText}>{badge.label}</AppText>
+              </View>
+            ))}
+          </View>
+          <AppText>Data last updated: {currentRegulations.dataLastUpdated}</AppText>
+          <AppText>WDFW seed ID: {selected.waterbodyId}</AppText>
+          {selected.stocking?.length ? (
+            <Stack>
+              <AppText variant="subheading">Recent stocking</AppText>
+              {selected.stocking.map((stock) => (
+                <AppText key={`${stock.species}-${stock.date}`}>{stock.species}: {stock.count.toLocaleString()} fish on {stock.date}</AppText>
+              ))}
+            </Stack>
+          ) : null}
           <AppText style={styles.warning}>Regulation warning: {selected.regulationSummary}</AppText>
           <AppText variant="caption">{selected.notes}</AppText>
           <YoutubeLink query={selected.youtubeSearch} />
@@ -476,6 +503,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
+  },
+  cautionBadge: {
+    backgroundColor: "#fff3d6"
+  },
+  badBadge: {
+    backgroundColor: "#f9ded8"
   },
   speciesText: {
     color: colors.forest,

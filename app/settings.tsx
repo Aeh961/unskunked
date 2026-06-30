@@ -111,6 +111,9 @@ export default function SettingsScreen() {
           <Link href={"/insights" as Href} asChild>
             <Button icon="analytics" variant="secondary" style={styles.actionButton}>Insights</Button>
           </Link>
+          <Link href={"/offline" as Href} asChild>
+            <Button icon="download" variant="secondary" style={styles.actionButton}>Offline</Button>
+          </Link>
         </View>
       </Card>
 

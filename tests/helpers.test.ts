@@ -14,6 +14,9 @@ import { formatJsonExport, formatTripPlanShare } from "@/src/utils/share";
 import { defaultManualLocation, distanceMiles, getNearbyWaterbodies, getNearestBeginnerWaterbody } from "@/src/services/location";
 import { getOfficialLinksForWaterbody } from "@/src/services/officialLinks";
 import { calculateBetaInsights } from "@/src/services/betaInsights";
+import { getCurrentRegulations } from "@/src/services/regulationEngine";
+import { calculateTripScore, getMockWeather, getSunWindows, getTideSnapshot } from "@/src/services/fishingConditions";
+import { getOfflinePacks } from "@/src/services/offlineDownloads";
 
 describe("regulation helpers", () => {
   it("labels and permits restricted waters as fishable with caution", () => {
@@ -41,6 +44,13 @@ describe("regulation helpers", () => {
     expect(links.emergencyRules).toContain("emergency-rules");
     expect(links.marineAreas).toContain("marine-areas");
     expect(links.freshwaterRules).toContain("freshwater");
+  });
+
+  it("returns current regulation badges for a waterbody", () => {
+    const rules = getCurrentRegulations({ waterbodyId: "green-lake", speciesId: "rainbow-trout" });
+    expect(rules.badges.map((badge) => badge.label)).toContain("Open");
+    expect(rules.badges.some((badge) => badge.label.includes("Trout Limit"))).toBe(true);
+    expect(rules.dataLastUpdated).toBe("May 2026");
   });
 });
 
@@ -102,6 +112,28 @@ describe("location helpers", () => {
   it("finds a nearest beginner-friendly waterbody", () => {
     const water = getNearestBeginnerWaterbody(defaultManualLocation.coordinates);
     expect(water?.beginnerDifficulty).toBe("Easy");
+  });
+});
+
+describe("fishing conditions", () => {
+  it("calculates a smart trip score", () => {
+    const water = waterbodies.find((item) => item.id === "green-lake")!;
+    const weather = getMockWeather(water);
+    const score = calculateTripScore({ weather, waterbody: water, userExperience: "Beginner", targetSpecies: "rainbow-trout" });
+    expect(score).toBeGreaterThan(70);
+    expect(score).toBeLessThanOrEqual(100);
+  });
+
+  it("provides sun windows and saltwater tides", () => {
+    expect(getSunWindows().morningBite).toContain("-");
+    const tide = getTideSnapshot(waterbodies.find((item) => item.id === "puget-sound")!);
+    expect(tide?.movement).toBeTruthy();
+  });
+
+  it("creates offline download packs", () => {
+    const packs = getOfflinePacks();
+    expect(packs.map((pack) => pack.label)).toContain("Entire Washington");
+    expect(packs[0].waterbodyCount).toBeGreaterThanOrEqual(25);
   });
 });
 
@@ -189,7 +221,7 @@ describe("mock data validation", () => {
 
   it("has at least 25 expanded Washington waterbodies with access metadata", () => {
     expect(waterbodies.length).toBeGreaterThanOrEqual(25);
-    expect(waterbodies.every((water) => water.county && water.parkingNote && water.bestSeason && water.officialLink)).toBe(true);
+    expect(waterbodies.every((water) => water.county && water.parkingNote && water.bestSeason && water.officialLink && water.waterbodyId && water.lastUpdated)).toBe(true);
   });
 
   it("has expanded Washington fish species coverage", () => {

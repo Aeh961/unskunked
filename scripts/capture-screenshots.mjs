@@ -10,19 +10,21 @@ const delayMs = Number(process.env.SCREENSHOT_DELAY_MS ?? 1800);
 const adbPath = findAdb();
 
 const screens = [
-  ["onboarding", "start"],
   ["home", ""],
-  ["map", "map"],
+  ["nearby-waters", "map"],
   ["nearby-waterbodies", "map"],
   ["waterbody-detail", "map"],
   ["fish-detail", "fish/rainbow-trout"],
+  ["regulations", "regulations"],
+  ["weather", "weather"],
   ["nearby-trip-planner", "plan"],
+  ["gps-permission", "map"],
+  ["offline-mode", "offline"],
+  ["search", "search"],
+  ["fishing-journal", "journal"],
   ["rig-builder", "rigs"],
   ["trip-planner", "plan"],
-  ["trip-log", "log"],
   ["beta-insights", "insights"],
-  ["feedback", "feedback"],
-  ["export", "export"],
   ["settings", "settings"],
   ["about", "about"]
 ];

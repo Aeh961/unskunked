@@ -4,7 +4,7 @@
 
 Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
-The current app is a polished Phase 7 Washington-focused beta using expanded mock Washington fishing data, GPS/manual nearby search, local storage, typed data services, native share/export flows, and no paid APIs or backend.
+The current app is a polished Phase 8 Washington-focused beta with WDFW-sourced metadata scaffolding, current-regulation summaries, offline weather/tide/sun scoring, GPS/manual nearby search, local storage, and native share/export flows.
 
 ## Feature Overview
 
@@ -12,13 +12,18 @@ The current app is a polished Phase 7 Washington-focused beta using expanded moc
 - First-launch beta onboarding with region, experience, fishing style, favorite fish, favorite waterbodies, and a final Start Fishing Smarter flow
 - GPS-aware nearby fishing with permission handling, denied/unavailable fallbacks, manual city locations, distance sorting, and water-type filters
 - Expanded Washington mock waterbody dataset with 25 locations, counties, coordinates, access notes, parking notes, seasons, rigs, bait, and regulation warnings
+- WDFW-style waterbody metadata including `waterbodyId`, source, `lastUpdated`, regulation references, stocking examples, and launch/access fields
+- Current regulation engine with open/restricted/closed status, season, catch limits, bait restrictions, emergency-rule reminders, and badge summaries
+- Smart fishing conditions score using weather, wind, temperature, pressure, cloud cover, rain, UV, waterbody type, season, time windows, experience, and target species
+- Offline weather, hourly, tomorrow, 7-day, sunrise/sunset, golden hour, bite windows, and saltwater tide support
+- Offline download packs for Washington, counties, and species
 - Expanded Washington fish coverage including trout, bass, panfish, walleye, catfish, carp, salmon, steelhead, sturgeon placeholder, and saltwater species
 - Real-data-ready regulation architecture with provider interfaces, Washington mock provider, emergency-rule placeholders, waterbody rules, species rules, season checks, limits, and gear warnings
 - Official WDFW verification links for regulations, emergency rules, licenses, Fish Washington, freshwater rules, marine areas, and shellfish/seaweed resources
 - Personalization engine using onboarding profile, favorites, trip history, season, successful bait, and successful rigs
 - Professional Home dashboard with today’s recommendation, continue-trip prompt, favorite lakes, quick actions, beginner tips, recent catches, weather placeholder, and regulation reminder
 - Interactive mock map with search suggestions, filters, markers, recently viewed waterbodies, favorites, and a polished selected-water detail card
-- Plan My Fishing Trip generator with legal summary, gear checklist, bait checklist, rig setup, knot, best time, safety reminder, backup plan, YouTube links, saved plans, and Start Trip draft logs
+- Plan My Fishing Trip generator with nearby mode, legal summary, gear checklist, bait checklist, rig setup, knot, smart timing, safety reminder, backup plan, YouTube links, saved plans, and Start Trip draft logs
 - Fish database and detail pages with season, weather, time of day, bait, lures, gear, rigs, knots, mistakes, habitat, regulation warnings, and YouTube learning links
 - Guided Rig Builder with a confidence estimate, bait recommendation, knot recommendation, and labeled SVG rig diagrams
 - Trip Log with saved plans, local history, skunked versus unskunked stats, most successful bait, and most successful location
@@ -43,12 +48,42 @@ The current app is a polished Phase 7 Washington-focused beta using expanded moc
 - `src/hooks/`: reusable hooks such as favorites
 - `src/services/`: regulation providers, personalization engine, and trip analytics
 - `src/services/location.ts`: distance calculation, manual fallback locations, Expo location permission flow, and nearby sorting
+- `src/services/regulationEngine.ts`: current regulation badges and WDFW-ready summaries
+- `src/services/fishingConditions.ts`: weather, sun, tide, and trip score helpers
+- `src/services/offlineDownloads.ts`: offline pack definitions
 - `src/utils/`: storage abstraction, local store, recommendations, search, and YouTube helpers
 - `scripts/`: automation utilities
 - `docs/`: QA checklist, beta tester guide, and developer handoff
 - `screenshots/`: generated iOS and Android screenshots
 
 The app is intentionally local-first. Future real-data integrations should replace or augment provider classes in `src/services/*` while preserving the current screen contracts.
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+  A["WDFW source links and local seed data"] --> B["src/data waterbodies, fish, sources"]
+  B --> C["Regulation engine"]
+  B --> D["Nearby and location service"]
+  B --> E["Weather, sun, tide, trip score service"]
+  C --> F["Map, Regulations, Trip Planner"]
+  D --> F
+  E --> F
+  F --> G["AsyncStorage: trips, plans, favorites, feedback, offline packs"]
+  G --> H["Export, Journal, Beta Insights"]
+```
+
+## Data Flow
+
+Unskunked currently ships WDFW-sourced metadata scaffolding as local fixtures. Screens read local data and services first, then link users out to official WDFW pages for verification. No backend is required, and no location or analytics data is sent anywhere.
+
+## Offline Support
+
+Core waterbodies, fish, regulation summaries, trip logs, trip plans, favorites, feedback, and offline pack selections are local. Offline packs currently mark local datasets for offline use; future phases should add map tiles and official WDFW import bundles.
+
+## GPS Support
+
+Location is optional. If permission is denied or unavailable, Unskunked falls back to manual Washington locations and continues to sort nearby waterbodies locally.
 
 ## Regulation Data Path
 
@@ -142,17 +177,17 @@ The script navigates to each route and captures:
 
 - Onboarding
 - Home with nearby recommendation
-- Map
-- Nearby Waterbodies
+- Nearby Waters
 - Waterbody Detail
 - Fish Detail
+- Regulations
+- Weather
 - Nearby Trip Planner
-- Rig Builder
-- Trip Planner
-- Trip Log
+- GPS Permission
+- Offline Mode
+- Search
+- Fishing Journal
 - Beta Insights
-- Feedback
-- Export
 - Settings
 - About
 
@@ -164,17 +199,17 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 
 ![iOS Onboarding](screenshots/ios/ios-onboarding.png)
 ![iOS Home](screenshots/ios/ios-home.png)
-![iOS Map](screenshots/ios/ios-map.png)
-![iOS Nearby Waterbodies](screenshots/ios/ios-nearby-waterbodies.png)
+![iOS Nearby Waters](screenshots/ios/ios-nearby-waters.png)
 ![iOS Waterbody Detail](screenshots/ios/ios-waterbody-detail.png)
 ![iOS Fish Detail](screenshots/ios/ios-fish-detail.png)
+![iOS Regulations](screenshots/ios/ios-regulations.png)
+![iOS Weather](screenshots/ios/ios-weather.png)
 ![iOS Nearby Trip Planner](screenshots/ios/ios-nearby-trip-planner.png)
-![iOS Rig Builder](screenshots/ios/ios-rig-builder.png)
-![iOS Trip Planner](screenshots/ios/ios-trip-planner.png)
-![iOS Trip Log](screenshots/ios/ios-trip-log.png)
+![iOS GPS Permission](screenshots/ios/ios-gps-permission.png)
+![iOS Offline Mode](screenshots/ios/ios-offline-mode.png)
+![iOS Search](screenshots/ios/ios-search.png)
+![iOS Fishing Journal](screenshots/ios/ios-fishing-journal.png)
 ![iOS Beta Insights](screenshots/ios/ios-beta-insights.png)
-![iOS Feedback](screenshots/ios/ios-feedback.png)
-![iOS Export](screenshots/ios/ios-export.png)
 ![iOS Settings](screenshots/ios/ios-settings.png)
 ![iOS About](screenshots/ios/ios-about.png)
 
@@ -182,25 +217,25 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 
 ![Android Onboarding](screenshots/android/android-onboarding.png)
 ![Android Home](screenshots/android/android-home.png)
-![Android Map](screenshots/android/android-map.png)
-![Android Nearby Waterbodies](screenshots/android/android-nearby-waterbodies.png)
+![Android Nearby Waters](screenshots/android/android-nearby-waters.png)
 ![Android Waterbody Detail](screenshots/android/android-waterbody-detail.png)
 ![Android Fish Detail](screenshots/android/android-fish-detail.png)
+![Android Regulations](screenshots/android/android-regulations.png)
+![Android Weather](screenshots/android/android-weather.png)
 ![Android Nearby Trip Planner](screenshots/android/android-nearby-trip-planner.png)
-![Android Rig Builder](screenshots/android/android-rig-builder.png)
-![Android Trip Planner](screenshots/android/android-trip-planner.png)
-![Android Trip Log](screenshots/android/android-trip-log.png)
+![Android GPS Permission](screenshots/android/android-gps-permission.png)
+![Android Offline Mode](screenshots/android/android-offline-mode.png)
+![Android Search](screenshots/android/android-search.png)
+![Android Fishing Journal](screenshots/android/android-fishing-journal.png)
 ![Android Beta Insights](screenshots/android/android-beta-insights.png)
-![Android Feedback](screenshots/android/android-feedback.png)
-![Android Export](screenshots/android/android-export.png)
 ![Android Settings](screenshots/android/android-settings.png)
 ![Android About](screenshots/android/android-about.png)
 
 ## App Limitations
 
-- Regulation content is mock/local and must be verified with official agencies.
+- Regulation content is WDFW-source-linked local guidance and must still be verified with official agencies.
 - Washington has the most complete mock data; Oregon, Idaho, and California are placeholders.
-- No backend, account sync, weather, tides, stocking reports, or official regulation feed is connected yet.
+- No backend, account sync, live weather API, live tides API, or live official regulation feed is connected yet.
 - GPS is used only locally for distance sorting and has manual fallback locations.
 - JSON export uses the native share sheet rather than a hosted account portal.
 

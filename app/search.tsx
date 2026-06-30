@@ -36,10 +36,22 @@ export default function SearchScreen() {
       subtitle: `${item.difficulty} · ${item.bestSeason}`,
       href: `/fish/${item.id}` as Href
     }));
-    const waters = searchByFields(waterbodies, query, [(item) => item.name, (item) => item.region, (item) => item.suggestedBait]).map((item) => ({
+    const waters = searchByFields(waterbodies, query, [
+      (item) => item.name,
+      (item) => item.region,
+      (item) => item.county ?? "",
+      (item) => item.city ?? "",
+      (item) => item.waterType,
+      (item) => item.beginnerDifficulty,
+      (item) => item.shoreAccessDifficulty ?? "",
+      (item) => (item.bankFishing ? "shore bank shore only" : ""),
+      (item) => (item.boatLaunch ? "boat launch boat only" : ""),
+      (item) => (item.familyFriendly ? "family friendly" : ""),
+      (item) => item.suggestedBait
+    ]).map((item) => ({
       type: "Water",
       title: item.name,
-      subtitle: `${item.waterType} · ${item.beginnerDifficulty}`,
+      subtitle: `${item.county ?? "WA"} · ${item.waterType} · ${item.beginnerDifficulty}`,
       href: "/map" as Href
     }));
     const gear = searchByFields(rigsAndKnots, query, [(item) => item.name, (item) => item.worksFor, (item) => item.parts]).map((item) => ({
