@@ -1,4 +1,5 @@
 export type Status = "open" | "closed" | "restricted";
+export type ActivityType = "fishing" | "clamming" | "crabbing";
 
 export type Regulation = {
   status: Status;
@@ -39,6 +40,43 @@ export type FishSpecies = {
 };
 
 export type WaterType = "Lake" | "River" | "Saltwater" | "Park" | "Pier";
+
+export type ActivityLocation = {
+  id: string;
+  name: string;
+  activityTypes: ActivityType[];
+  county: string;
+  region: string;
+  waterType: WaterType | "Beach" | "Marine Area";
+  latitude: number;
+  longitude: number;
+  accessType: "Shore" | "Boat" | "Pier" | "Beach";
+  difficulty: "Easy" | "Moderate" | "Advanced";
+  familyFriendly: boolean;
+  seasonNotes: string;
+  regulationWarning: string;
+  tideDependency: string;
+  gearChecklist: string[];
+  harvestNotes: string[];
+  safetyWarnings: string[];
+  officialLinks: string[];
+  source: string;
+  lastUpdated: string;
+  photoPlaceholder: string;
+};
+
+export type ShellfishSpecies = {
+  id: string;
+  name: string;
+  activityType: "clamming" | "crabbing";
+  difficulty: "Easy" | "Moderate" | "Advanced";
+  seasonNotes: string;
+  habitat: string[];
+  gear: string[];
+  regulationWarning: string;
+  keepReleaseWarning: string;
+  youtubeSearches: string[];
+};
 
 export type Waterbody = {
   id: string;

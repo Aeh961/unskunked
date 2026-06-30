@@ -1,4 +1,4 @@
-import { Waterbody } from "@/src/data/types";
+import { ActivityType, Waterbody } from "@/src/data/types";
 
 export type WeatherSnapshot = {
   airTempF: number;
@@ -81,18 +81,29 @@ export function getTideSnapshot(water: Pick<Waterbody, "waterType">): TideSnapsh
 }
 
 export function calculateTripScore(input: {
+  activityType?: ActivityType;
   weather: WeatherSnapshot;
   waterbody: Pick<Waterbody, "waterType" | "beginnerDifficulty" | "bestSeason">;
   userExperience: "Beginner" | "Intermediate" | "Advanced";
   targetSpecies?: string;
+  tide?: TideSnapshot | null;
+  distanceMiles?: number;
   date?: Date;
 }) {
   let score = 78;
+  const activity = input.activityType ?? "fishing";
   if (input.weather.windMph <= 8) score += 8;
+  if (input.weather.windMph > 18) score -= activity === "crabbing" ? 12 : 16;
   if (input.weather.cloudCoverPercent >= 35 && input.weather.cloudCoverPercent <= 75) score += 5;
   if (input.weather.rainChancePercent > 50) score -= 10;
   if (input.waterbody.beginnerDifficulty === "Easy") score += input.userExperience === "Beginner" ? 7 : 3;
   if (input.waterbody.waterType === "Saltwater" && input.userExperience === "Beginner") score -= 8;
   if (input.targetSpecies?.toLowerCase().includes("trout")) score += 4;
+  if (activity === "clamming" && input.tide?.movement === "Outgoing") score += 10;
+  if (activity === "clamming" && input.tide?.movement === "Incoming") score += 4;
+  if (activity === "crabbing" && input.tide && input.tide.movement !== "Slack") score += 9;
+  if (activity !== "fishing" && input.waterbody.waterType === "Saltwater") score += 5;
+  if (typeof input.distanceMiles === "number" && input.distanceMiles <= 20) score += 4;
+  if (typeof input.distanceMiles === "number" && input.distanceMiles > 90) score -= 8;
   return Math.max(0, Math.min(100, score));
 }

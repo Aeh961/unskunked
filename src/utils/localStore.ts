@@ -1,8 +1,10 @@
 import { RegionId } from "@/src/data/regions";
+import { ActivityType } from "@/src/data/types";
 import { BetaEvent, BetaEventType, calculateBetaInsights } from "@/src/services/betaInsights";
+import { TideSnapshot, WeatherSnapshot } from "@/src/services/fishingConditions";
 import { storage } from "@/src/utils/storage";
 
-export type FavoriteType = "location" | "fish" | "rig" | "knot";
+export type FavoriteType = "location" | "fish" | "rig" | "knot" | "shellfish-location";
 export type Favorite = {
   id: string;
   type: FavoriteType;
@@ -13,6 +15,7 @@ export type ExperienceLevel = "Beginner" | "Intermediate" | "Advanced";
 
 export type TripLog = {
   id: string;
+  activityType?: ActivityType;
   location: string;
   date: string;
   weather: string;
@@ -21,11 +24,14 @@ export type TripLog = {
   bait: string;
   rig: string;
   notes: string;
+  photoUri?: string;
+  tide?: string;
   result: TripResult;
 };
 
 export type TripPlanRecord = {
   id: string;
+  activityType?: ActivityType;
   createdAt: string;
   location: string;
   targetSpecies: string;
@@ -35,6 +41,8 @@ export type TripPlanRecord = {
   rigSetup: string;
   knot: string;
   bestTime: string;
+  score?: number;
+  conditionsSummary?: string;
   safetyReminder: string;
   backupPlan: string;
   youtubeLinks: string[];
@@ -97,6 +105,16 @@ const notificationsKey = "unskunked:demo-notifications";
 const recommendationsKey = "unskunked:demo-recommendations";
 const searchHistoryKey = "unskunked:demo-search-history";
 const selectedRegionKey = "unskunked:selected-region";
+const cachedConditionsKey = "unskunked:cached-conditions";
+
+export type CachedConditionSnapshot = {
+  id: string;
+  locationName: string;
+  activityType: ActivityType;
+  updatedAt: string;
+  weather: WeatherSnapshot;
+  tide: TideSnapshot | null;
+};
 
 export const demoFavorites: Favorite[] = [
   { type: "location", id: "green-lake" },
@@ -108,12 +126,15 @@ export const demoFavorites: Favorite[] = [
   { type: "rig", id: "bobber-rig" },
   { type: "rig", id: "drop-shot-rig" },
   { type: "knot", id: "palomar-knot" },
-  { type: "knot", id: "improved-clinch-knot" }
+  { type: "knot", id: "improved-clinch-knot" },
+  { type: "shellfish-location", id: "dosewallips-state-park" },
+  { type: "shellfish-location", id: "edmonds-pier-crab" }
 ];
 
 export const demoTrips: TripLog[] = [
   {
     id: "demo-trip-1",
+    activityType: "fishing",
     location: "Green Lake",
     date: "2026-06-21",
     weather: "Cool morning, light chop",
@@ -126,6 +147,7 @@ export const demoTrips: TripLog[] = [
   },
   {
     id: "demo-trip-2",
+    activityType: "fishing",
     location: "Lake Washington",
     date: "2026-06-24",
     weather: "Sunny, warm, calm",
@@ -138,6 +160,7 @@ export const demoTrips: TripLog[] = [
   },
   {
     id: "demo-trip-3",
+    activityType: "fishing",
     location: "Lake Sammamish",
     date: "2026-06-27",
     weather: "Bright sun, afternoon wind",
@@ -207,6 +230,7 @@ export const demoOnboardingProfile: OnboardingProfile = {
 export const demoTripPlans: TripPlanRecord[] = [
   {
     id: "demo-plan-green-lake",
+    activityType: "fishing",
     createdAt: "2026-06-29T07:30:00.000Z",
     location: "Green Lake",
     targetSpecies: "Rainbow Trout",
@@ -216,6 +240,8 @@ export const demoTripPlans: TripPlanRecord[] = [
     rigSetup: "Trout PowerBait rig",
     knot: "Improved Clinch Knot",
     bestTime: "Before 9 AM",
+    score: 92,
+    conditionsSummary: "Cool morning, light chop, favorable trout window",
     safetyReminder: "Bring water, sun protection, and release fish gently if rules are unclear.",
     backupPlan: "If trout do not bite in 20 minutes, switch to a worm under a bobber near weed edges.",
     youtubeLinks: ["beginner trout PowerBait rig", "Green Lake trout fishing"]
@@ -288,7 +314,7 @@ export async function saveFeedback(entry: FeedbackEntry) {
 }
 
 export async function getBetaExportData() {
-  const [favorites, trips, tripPlans, feedback, profile, region, searchHistory, betaEvents] = await Promise.all([
+  const [favorites, trips, tripPlans, feedback, profile, region, searchHistory, betaEvents, cachedConditions] = await Promise.all([
     getFavorites(),
     getTrips(),
     getTripPlans(),
@@ -296,7 +322,8 @@ export async function getBetaExportData() {
     getOnboardingProfile(),
     getSelectedRegion(),
     getDemoSearchHistory(),
-    getBetaEvents()
+    getBetaEvents(),
+    getCachedConditions()
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -310,6 +337,7 @@ export async function getBetaExportData() {
     feedback,
     recentSearches: searchHistory,
     betaEvents,
+    cachedConditions,
     betaInsights: calculateBetaInsights({ events: betaEvents, searches: searchHistory, feedback, trips, tripPlans, favorites })
   };
 }
@@ -410,4 +438,15 @@ export async function getDemoRecommendations() {
 
 export async function getDemoSearchHistory() {
   return storage.readJson<string[]>(searchHistoryKey, demoSearchHistory);
+}
+
+export async function getCachedConditions() {
+  return storage.readJson<CachedConditionSnapshot[]>(cachedConditionsKey, []);
+}
+
+export async function saveCachedCondition(snapshot: CachedConditionSnapshot) {
+  const snapshots = await getCachedConditions();
+  const next = [snapshot, ...snapshots.filter((item) => item.id !== snapshot.id)].slice(0, 50);
+  await storage.writeJson(cachedConditionsKey, next);
+  return next;
 }

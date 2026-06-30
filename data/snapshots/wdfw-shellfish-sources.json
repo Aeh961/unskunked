@@ -1,0 +1,42 @@
+{
+  "version": "phase-9-shellfish-readiness",
+  "dataLastUpdated": "May 2026",
+  "sources": [
+    {
+      "id": "wdfw-shellfish-seaweed",
+      "title": "WDFW Shellfish and Seaweed Regulations",
+      "sourceUrl": "https://wdfw.wa.gov/fishing/shellfishing-regulations",
+      "snapshotDate": "2026-05-01",
+      "importedDate": "2026-06-30",
+      "lastVerifiedDate": "2026-06-30",
+      "activityTypes": ["clamming", "crabbing"]
+    },
+    {
+      "id": "wdfw-emergency-rules",
+      "title": "WDFW Emergency Fishing Rules",
+      "sourceUrl": "https://wdfw.wa.gov/fishing/regulations/emergency-rules",
+      "snapshotDate": "2026-05-01",
+      "importedDate": "2026-06-30",
+      "lastVerifiedDate": "2026-06-30",
+      "activityTypes": ["fishing", "clamming", "crabbing"]
+    },
+    {
+      "id": "wdfw-marine-areas",
+      "title": "WDFW Marine Area Resources",
+      "sourceUrl": "https://wdfw.wa.gov/fishing/management/marine-areas",
+      "snapshotDate": "2026-05-01",
+      "importedDate": "2026-06-30",
+      "lastVerifiedDate": "2026-06-30",
+      "activityTypes": ["fishing", "crabbing"]
+    },
+    {
+      "id": "wdfw-fishing-locations",
+      "title": "WDFW Fish Washington Locations",
+      "sourceUrl": "https://wdfw.wa.gov/fishing/locations",
+      "snapshotDate": "2026-05-01",
+      "importedDate": "2026-06-30",
+      "lastVerifiedDate": "2026-06-30",
+      "activityTypes": ["fishing"]
+    }
+  ]
+}

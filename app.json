@@ -5,11 +5,11 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "unskunked",
-    "icon": "./assets/unskunked-icon.svg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "jsEngine": "jsc",
     "splash": {
-      "image": "./assets/unskunked-splash.svg",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#f4f1e8"
     },
@@ -25,7 +25,7 @@
         "ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/unskunked-icon.svg",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#123B30"
       }
     },

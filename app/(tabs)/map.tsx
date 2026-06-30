@@ -1,6 +1,7 @@
 import { Href, Link } from "expo-router";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
 import { Button } from "@/src/components/Button";
@@ -14,7 +15,8 @@ import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
-import { WaterType } from "@/src/data/types";
+import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
+import { ActivityType, WaterType } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
 import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
@@ -24,13 +26,17 @@ import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { Coordinates, defaultManualLocation, getNearbyWaterbodies, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
 import { trackBetaEvent } from "@/src/utils/localStore";
+import { getMapMarkers, getMarkerTint } from "@/src/services/mapMarkers";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
+const activityFilters: Array<ActivityType | "all"> = ["all", "fishing", "clamming", "crabbing"];
 
 export default function MapScreen() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WaterType | "All">("All");
+  const [activityFilter, setActivityFilter] = useState<ActivityType | "all">("all");
   const [selectedId, setSelectedId] = useState(waterbodies[0].id);
+  const [selectedShellfishId, setSelectedShellfishId] = useState<string | null>(null);
   const [recentIds, setRecentIds] = useState<string[]>([waterbodies[0].id]);
   const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
@@ -50,7 +56,24 @@ export default function MapScreen() {
     ]);
   }, [coordinates, filter, query]);
 
+  const markers = useMemo(() => getMapMarkers({
+    activity: activityFilter,
+    waterType: filter === "All" ? "all" : filter,
+    query,
+    coordinates
+  }), [activityFilter, coordinates, filter, query]);
+
   const selected = filtered.find((water) => water.id === selectedId) ?? filtered[0] ?? waterbodies[0];
+  const selectedShellfishLocation = selectedShellfishId ? shellfishLocations.find((location) => location.id === selectedShellfishId) : null;
+  const selectedShellfishTargets = selectedShellfishLocation
+    ? shellfishSpecies.filter((speciesItem) => selectedShellfishLocation.activityTypes.includes(speciesItem.activityType))
+    : [];
+  const mapRegion = {
+    latitude: selectedShellfishLocation?.latitude ?? selected.latitude,
+    longitude: selectedShellfishLocation?.longitude ?? selected.longitude,
+    latitudeDelta: 0.95,
+    longitudeDelta: 0.95
+  };
   const species = selected.speciesIds
     .map((id) => fishSpecies.find((fish) => fish.id === id)?.name)
     .filter(Boolean);
@@ -64,10 +87,20 @@ export default function MapScreen() {
 
   function selectWater(id: string) {
     setSelectedId(id);
+    setSelectedShellfishId(null);
     setRecentIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 4));
     const water = waterbodies.find((item) => item.id === id);
     if (water) {
       trackBetaEvent("waterbody-view", water.name);
+    }
+  }
+
+  function selectShellfish(id: string) {
+    setSelectedShellfishId(id);
+    setRecentIds((current) => current.slice(0, 4));
+    const location = shellfishLocations.find((item) => item.id === id);
+    if (location) {
+      trackBetaEvent("waterbody-view", `${location.name} shellfish`);
     }
   }
 
@@ -131,6 +164,16 @@ export default function MapScreen() {
       </View>
 
       <View style={styles.filterRow}>
+        {activityFilters.map((item) => (
+          <Pressable key={item} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
+            <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
+              {item === "all" ? "All activity" : item}
+            </AppText>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.filterRow}>
         {filters.map((item) => (
           <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
             <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
@@ -141,23 +184,46 @@ export default function MapScreen() {
       </View>
 
       <View style={styles.mapCanvas}>
-        <View style={styles.mountainOne} />
-        <View style={styles.mountainTwo} />
-        <View style={styles.waterShape} />
-        <AppText variant="caption" style={styles.mapLabel}>
-          Mock interactive map
-        </AppText>
-        {filtered.slice(0, 6).map((water, index) => (
+        <MapView
+          style={StyleSheet.absoluteFill}
+          region={mapRegion}
+          showsUserLocation={locationStatus === "granted"}
+          showsMyLocationButton={false}
+          loadingEnabled
+        >
+          {markers.slice(0, 50).map((marker) => (
+            <Marker
+              key={marker.id}
+              coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+              title={marker.name}
+              description={marker.subtitle}
+              pinColor={getMarkerTint(marker.kind)}
+              onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
+            />
+          ))}
+        </MapView>
+        <View style={styles.mapOverlay}>
+          <AppText variant="caption" style={styles.mapLabel}>
+            Live GPS map · {markers.length} markers
+          </AppText>
+          <AppText variant="caption" style={styles.mapSubLabel}>
+            Blue fishing · orange clams · red crab
+          </AppText>
+        </View>
+      </View>
+
+      <SectionHeader title="Map results" eyebrow="Search fallback" />
+      <View style={styles.locationList}>
+        {markers.slice(0, 8).map((marker) => (
           <Pressable
-            key={water.id}
-            onPress={() => selectWater(water.id)}
-            style={[
-              styles.pin,
-              pinPositions[index % pinPositions.length],
-              selected.id === water.id && styles.pinActive
-            ]}
+            key={marker.id}
+            onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
+            style={[styles.locationChip, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationChipActive]}
           >
-            <Ionicons name={water.waterType === "River" ? "water" : water.waterType === "Pier" ? "trail-sign" : "location"} size={17} color="#fff" />
+            <AppText style={[styles.locationName, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationTextActive]}>{marker.name}</AppText>
+            <AppText variant="caption" style={[styles.locationMeta, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationTextActive]}>
+              {marker.distanceMiles ? `${marker.distanceMiles} mi · ` : ""}{marker.kind} · {marker.waterType}
+            </AppText>
           </Pressable>
         ))}
       </View>
@@ -286,19 +352,64 @@ export default function MapScreen() {
           </Button>
         </View>
       </Card>
+      {selectedShellfishLocation ? (
+        <Card style={styles.sheet}>
+          <View style={styles.sheetHandle} />
+          <View style={styles.row}>
+            <View style={styles.flex}>
+              <AppText variant="heading">{selectedShellfishLocation.name}</AppText>
+              <AppText variant="caption">
+                {selectedShellfishLocation.region} · {selectedShellfishLocation.county} · {selectedShellfishLocation.waterType} · {selectedShellfishLocation.difficulty}
+              </AppText>
+            </View>
+            <View style={styles.saveWrap}>
+              <FavoriteButton active={isFavorite("shellfish-location", selectedShellfishLocation.id)} onPress={() => toggle("shellfish-location", selectedShellfishLocation.id)} label={`Save ${selectedShellfishLocation.name}`} />
+              <AppText variant="caption" style={styles.saveText}>Save</AppText>
+            </View>
+          </View>
+          <Stack>
+            <View style={styles.recommendation}>
+              <Ionicons name="boat" size={20} color={colors.forest} />
+              <View style={styles.flex}>
+                <AppText variant="subheading">Best shellfish plan</AppText>
+                <AppText>{selectedShellfishLocation.tideDependency}</AppText>
+              </View>
+            </View>
+            <AppText variant="subheading">Targets</AppText>
+            <View style={styles.badgeWrap}>
+              {selectedShellfishTargets.map((target) => (
+                <View key={target.id} style={styles.speciesBadge}>
+                  <AppText variant="caption" style={styles.speciesText}>{target.name}</AppText>
+                </View>
+              ))}
+            </View>
+            <AppText>Gear: {selectedShellfishLocation.gearChecklist.join(", ")}</AppText>
+            <AppText>Access: {selectedShellfishLocation.accessType} · Family friendly: {selectedShellfishLocation.familyFriendly ? "Yes" : "Use caution"}</AppText>
+            <AppText>GPS: {selectedShellfishLocation.latitude.toFixed(4)}, {selectedShellfishLocation.longitude.toFixed(4)}</AppText>
+            <AppText>Source: {selectedShellfishLocation.source}</AppText>
+            <AppText>Data last updated: {selectedShellfishLocation.lastUpdated}</AppText>
+            <AppText style={styles.warning}>Regulation warning: {selectedShellfishLocation.regulationWarning}</AppText>
+            {selectedShellfishLocation.harvestNotes.map((note) => (
+              <AppText key={note}>{note}</AppText>
+            ))}
+          </Stack>
+          <View style={styles.actions}>
+            <Link href={"/plan" as Href} asChild>
+              <Button icon="calendar" style={styles.actionButton}>Plan Shellfish</Button>
+            </Link>
+            <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={() => Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(selectedShellfishLocation.name)}&ll=${selectedShellfishLocation.latitude},${selectedShellfishLocation.longitude}`)}>
+              Directions
+            </Button>
+            <Button icon="share-social" variant="ghost" style={styles.actionButton} onPress={() => shareText(`Unskunked shellfish pick: ${selectedShellfishLocation.name}. Verify WDFW shellfish, emergency, license, and health advisories before harvesting.`, "Unskunked shellfish location")}>
+              Share
+            </Button>
+          </View>
+        </Card>
+      ) : null}
       <OfficialLinks links={regulation.sourceLinks} compact />
     </Screen>
   );
 }
-
-const pinPositions = [
-  { left: "18%", top: "48%" },
-  { left: "36%", top: "34%" },
-  { left: "56%", top: "54%" },
-  { left: "72%", top: "28%" },
-  { left: "80%", top: "66%" },
-  { left: "28%", top: "70%" }
-] as const;
 
 const styles = StyleSheet.create({
   hero: {
@@ -371,56 +482,21 @@ const styles = StyleSheet.create({
     height: 250,
     overflow: "hidden"
   },
-  mountainOne: {
-    backgroundColor: colors.moss,
-    borderRadius: 120,
-    height: 180,
-    left: -38,
-    position: "absolute",
-    top: -58,
-    transform: [{ rotate: "18deg" }],
-    width: 230
-  },
-  mountainTwo: {
-    backgroundColor: colors.pine,
-    borderRadius: 140,
-    height: 190,
-    position: "absolute",
-    right: -58,
-    top: -44,
-    transform: [{ rotate: "-16deg" }],
-    width: 260
-  },
-  waterShape: {
-    backgroundColor: colors.river,
-    borderRadius: 130,
-    bottom: -72,
-    height: 180,
-    left: -20,
-    position: "absolute",
-    width: "112%"
-  },
-  mapLabel: {
-    color: colors.deepWater,
-    fontWeight: "900",
+  mapOverlay: {
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: radii.md,
     left: spacing.md,
+    padding: spacing.sm,
     position: "absolute",
     top: spacing.md
   },
-  pin: {
-    alignItems: "center",
-    backgroundColor: colors.clay,
-    borderColor: "#fff",
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    height: 38,
-    justifyContent: "center",
-    position: "absolute",
-    width: 38
+  mapLabel: {
+    color: colors.deepWater,
+    fontWeight: "900"
   },
-  pinActive: {
-    backgroundColor: colors.forest,
-    transform: [{ scale: 1.14 }]
+  mapSubLabel: {
+    color: colors.muted,
+    fontWeight: "800"
   },
   locationList: {
     flexDirection: "row",

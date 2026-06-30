@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fishSpecies } from "@/src/data/fish";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
+import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { getStatusLabel, isFishable } from "@/src/utils/regulations";
 import { answerLocalQuestion, buildTripPlan, recommendSpeciesFromGear } from "@/src/utils/recommendations";
 import { searchByFields } from "@/src/utils/search";
@@ -17,6 +18,10 @@ import { calculateBetaInsights } from "@/src/services/betaInsights";
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { calculateTripScore, getMockWeather, getSunWindows, getTideSnapshot } from "@/src/services/fishingConditions";
 import { getOfflinePacks } from "@/src/services/offlineDownloads";
+import { getMapMarkers } from "@/src/services/mapMarkers";
+import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
+import { MockConditionsProvider, cacheConditionsForLocation } from "@/src/services/conditionProviders";
+import { getImportReadinessReport, validateSnapshotManifest } from "@/src/services/wdfwImportPipeline";
 
 describe("regulation helpers", () => {
   it("labels and permits restricted waters as fishable with caution", () => {
@@ -130,6 +135,37 @@ describe("fishing conditions", () => {
     expect(tide?.movement).toBeTruthy();
   });
 
+  it("scores clamming and crabbing with tide context", () => {
+    const water = { waterType: "Saltwater" as const, beginnerDifficulty: "Easy" as const, bestSeason: "Summer" };
+    const weather = getMockWeather({ waterType: "Saltwater", region: "Puget Sound" });
+    const tide = getTideSnapshot({ waterType: "Saltwater" });
+    const clamScore = calculateTripScore({ activityType: "clamming", weather, tide, waterbody: water, userExperience: "Beginner", distanceMiles: 12 });
+    const crabScore = calculateTripScore({ activityType: "crabbing", weather, tide, waterbody: water, userExperience: "Intermediate", distanceMiles: 12 });
+    expect(clamScore).toBeGreaterThan(60);
+    expect(crabScore).toBeGreaterThan(60);
+  });
+
+  it("builds shellfish trip plans from nearby coordinates", () => {
+    const plan = buildShellfishPlan({ activityType: "clamming", coordinates: defaultManualLocation.coordinates, experience: "Beginner" });
+    expect(plan.location.activityTypes).toContain("clamming");
+    expect(plan.score).toBeGreaterThan(0);
+    expect(plan.whatToBring.length).toBeGreaterThan(2);
+  });
+
+  it("uses condition providers and offline cache shape", async () => {
+    const provider = new MockConditionsProvider();
+    const location = shellfishLocations[0];
+    const snapshot = await cacheConditionsForLocation({
+      id: `test:${location.id}`,
+      locationName: location.name,
+      activityType: "clamming",
+      location,
+      provider
+    });
+    expect(snapshot.weather.airTempF).toBeGreaterThan(0);
+    expect(snapshot.tide?.movement).toBeTruthy();
+  });
+
   it("creates offline download packs", () => {
     const packs = getOfflinePacks();
     expect(packs.map((pack) => pack.label)).toContain("Entire Washington");
@@ -141,6 +177,27 @@ describe("search helpers", () => {
   it("filters waterbodies by name and region", () => {
     const results = searchByFields(waterbodies, "seattle", [(water) => water.name, (water) => water.region]);
     expect(results.map((water) => water.name)).toContain("Green Lake");
+  });
+});
+
+describe("Phase 9 map and WDFW data readiness", () => {
+  it("builds searchable markers for fishing, clamming, and crabbing", () => {
+    const all = getMapMarkers({ coordinates: defaultManualLocation.coordinates });
+    const clams = getMapMarkers({ activity: "clamming", query: "beach" });
+    const crabs = getMapMarkers({ activity: "crabbing" });
+    expect(all.some((marker) => marker.kind === "fishing")).toBe(true);
+    expect(clams.every((marker) => marker.kind === "clamming")).toBe(true);
+    expect(crabs.every((marker) => marker.kind === "crabbing")).toBe(true);
+  });
+
+  it("tracks shellfish species and verified source snapshots", () => {
+    expect(shellfishSpecies.some((species) => species.id === "dungeness-crab")).toBe(true);
+    expect(shellfishSpecies.some((species) => species.id === "razor-clam")).toBe(true);
+    expect(validateSnapshotManifest()).toBe(true);
+    const report = getImportReadinessReport();
+    expect(report.dataLastUpdated).toBe("May 2026");
+    expect(report.shellfishLocationCount).toBeGreaterThanOrEqual(6);
+    expect(report.missingSourceWaterbodies).toEqual([]);
   });
 });
 

@@ -7,13 +7,16 @@ import { Card } from "@/src/components/Card";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { ActivityType } from "@/src/data/types";
 import { TripLog, TripPlanRecord, TripResult, getTripPlans, getTrips, saveTrip } from "@/src/utils/localStore";
 import { colors, radii, spacing } from "@/src/theme";
 import { formatTripLogShare, shareText } from "@/src/utils/share";
 
 const results: TripResult[] = ["Skunked", "Unskunked", "Great Day", "Limited Out"];
+const activityTypes: ActivityType[] = ["fishing", "clamming", "crabbing"];
 
 const blankTrip = {
+  activityType: "fishing" as ActivityType,
   location: "",
   date: new Date().toISOString().slice(0, 10),
   weather: "",
@@ -52,6 +55,7 @@ export default function TripLogScreen() {
   async function submit() {
     const trip: TripLog = {
       id: `${Date.now()}`,
+      activityType: form.activityType,
       date: form.date.trim() || new Date().toISOString().slice(0, 10),
       location: form.location.trim() || "Unknown spot",
       weather: form.weather.trim() || "Not logged",
@@ -116,6 +120,16 @@ export default function TripLogScreen() {
       <Card style={styles.form}>
         <SectionHeader title="Log a trip" eyebrow="Saved locally" />
         <Field label="Location" value={form.location} onChangeText={(location) => setForm({ ...form, location })} placeholder="Green Lake" />
+        <AppText variant="subheading">Activity</AppText>
+        <View style={styles.resultRow}>
+          {activityTypes.map((activityType) => (
+            <Pressable key={activityType} onPress={() => setForm({ ...form, activityType })} style={[styles.result, form.activityType === activityType && styles.resultActive]}>
+              <AppText variant="caption" style={[styles.resultText, form.activityType === activityType && styles.resultTextActive]}>
+                {activityType}
+              </AppText>
+            </Pressable>
+          ))}
+        </View>
         <Field label="Date" value={form.date} onChangeText={(date) => setForm({ ...form, date })} placeholder="2026-06-29" />
         <Field label="Weather" value={form.weather} onChangeText={(weather) => setForm({ ...form, weather })} placeholder="Cool, cloudy, light wind" />
         <Field label="Species caught" value={form.speciesCaught} onChangeText={(speciesCaught) => setForm({ ...form, speciesCaught })} placeholder="Rainbow Trout" />
@@ -148,7 +162,7 @@ export default function TripLogScreen() {
               <View style={styles.flex}>
                 <AppText variant="heading">{trip.location}</AppText>
                 <AppText variant="caption">
-                  {trip.date} · {trip.weather}
+                  {trip.date} · {trip.activityType ?? "fishing"} · {trip.weather}
                 </AppText>
               </View>
               <AppText variant="caption" style={styles.resultBadge}>
@@ -159,6 +173,7 @@ export default function TripLogScreen() {
               <AppText>Species: {trip.speciesCaught}</AppText>
               <AppText>Number caught: {trip.numberCaught ?? 0}</AppText>
               <AppText>Bait/Rig: {trip.bait} · {trip.rig}</AppText>
+              {trip.tide ? <AppText>Tide: {trip.tide}</AppText> : null}
               <AppText variant="caption">{trip.notes}</AppText>
               <Button icon="share-social" variant="ghost" onPress={() => shareText(formatTripLogShare(trip), "Unskunked trip result")}>Share result</Button>
               <View style={styles.photoPlaceholder}>

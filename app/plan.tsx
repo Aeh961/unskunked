@@ -9,19 +9,24 @@ import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
+import { ActivityType } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
 import { saveTrip, saveTripPlan, trackBetaEvent } from "@/src/utils/localStore";
 import { buildTripPlan } from "@/src/utils/recommendations";
 import { formatTripPlanShare, shareText } from "@/src/utils/share";
 import { Coordinates, defaultManualLocation, getNearestBeginnerWaterbody, manualLocations, requestExpoLocation } from "@/src/services/location";
+import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
+import { cacheConditionsForLocation } from "@/src/services/conditionProviders";
 
 const months = ["June", "July", "August", "September"] as const;
+const activityOptions: ActivityType[] = ["fishing", "clamming", "crabbing"];
 const accessOptions = ["Shore", "Boat"] as const;
-const experienceOptions = ["Beginner", "Intermediate"] as const;
+const experienceOptions = ["Beginner", "Intermediate", "Advanced"] as const;
 const timeOptions = ["1 hour", "2 hours", "Half day", "All day"] as const;
 
 export default function PlanTripScreen() {
+  const [activityType, setActivityType] = useState<ActivityType>("fishing");
   const [month, setMonth] = useState<(typeof months)[number]>("July");
   const [waterbodyId, setWaterbodyId] = useState(waterbodies[0].id);
   const [access, setAccess] = useState<(typeof accessOptions)[number]>("Shore");
@@ -39,6 +44,11 @@ export default function PlanTripScreen() {
     () => buildTripPlan({ month, waterbodyId, access, experience, targetFishId, availableBait, availableGear, userLocation: coordinates, preferNearest, timeAvailable }),
     [access, availableBait, availableGear, coordinates, experience, month, preferNearest, targetFishId, timeAvailable, waterbodyId]
   );
+  const shellfishPlan = useMemo(
+    () => buildShellfishPlan({ activityType: activityType === "crabbing" ? "crabbing" : "clamming", coordinates, experience }),
+    [activityType, coordinates, experience]
+  );
+  const isFishing = activityType === "fishing";
 
   const nearestBeginner = useMemo(() => getNearestBeginnerWaterbody(coordinates), [coordinates]);
 
@@ -55,9 +65,39 @@ export default function PlanTripScreen() {
   }
 
   async function saveCurrentPlan() {
+    if (!isFishing) {
+      await cacheConditionsForLocation({
+        id: `${activityType}:${shellfishPlan.location.id}`,
+        locationName: shellfishPlan.location.name,
+        activityType,
+        location: shellfishPlan.location
+      });
+      await trackBetaEvent("planner-choice", `${shellfishPlan.location.name} · ${shellfishPlan.species?.name ?? activityType} · ${shellfishPlan.score}`);
+      await saveTripPlan({
+        id: `plan-${Date.now()}`,
+        activityType,
+        createdAt: new Date().toISOString(),
+        location: shellfishPlan.location.name,
+        targetSpecies: shellfishPlan.species?.name ?? activityType,
+        regulationSummary: shellfishPlan.location.regulationWarning,
+        gearChecklist: shellfishPlan.whatToBring,
+        baitChecklist: activityType === "crabbing" ? ["Fish carcass or legal crab bait", "Bait box"] : ["No bait needed", "Tide table"],
+        rigSetup: activityType === "crabbing" ? "Crab ring or pot setup" : "Low-tide beach digging setup",
+        knot: activityType === "crabbing" ? "Bowline or secure pot line knot" : "No fishing knot required",
+        bestTime: shellfishPlan.bestTime,
+        score: shellfishPlan.score,
+        conditionsSummary: `${shellfishPlan.weather.airTempF}F · ${shellfishPlan.weather.windMph} mph wind · ${shellfishPlan.tide?.movement ?? "No tide"} tide`,
+        safetyReminder: shellfishPlan.safetyNotes.join(" "),
+        backupPlan: activityType === "crabbing" ? "If pots are empty, move depth or scent trail and verify legal soak/location." : "If the beach is crowded or closed, switch to a verified nearby open beach.",
+        youtubeLinks: shellfishPlan.species?.youtubeSearches ?? [`Washington ${activityType} beginner`]
+      });
+      setSavedMessage(`${activityType} plan saved locally.`);
+      return;
+    }
     await trackBetaEvent("planner-choice", `${plan.water.name} · ${plan.fish.name} · ${plan.suggestedRig}`);
     await saveTripPlan({
       id: `plan-${Date.now()}`,
+      activityType: "fishing",
       createdAt: new Date().toISOString(),
       location: plan.water.name,
       targetSpecies: plan.fish.name,
@@ -67,6 +107,8 @@ export default function PlanTripScreen() {
       rigSetup: plan.suggestedRig,
       knot: plan.suggestedKnot,
       bestTime: plan.bestTime,
+      score: plan.estimatedSuccess,
+      conditionsSummary: plan.weatherReminder,
       safetyReminder: plan.safetyReminder,
       backupPlan: plan.backupPlan,
       youtubeLinks: plan.youtubeLinks
@@ -75,8 +117,27 @@ export default function PlanTripScreen() {
   }
 
   async function startTrip() {
+    if (!isFishing) {
+      await saveTrip({
+        id: `draft-${Date.now()}`,
+        activityType,
+        location: shellfishPlan.location.name,
+        date: new Date().toISOString().slice(0, 10),
+        weather: `${shellfishPlan.weather.airTempF}F, ${shellfishPlan.weather.windMph} mph wind`,
+        speciesCaught: shellfishPlan.species?.name ?? activityType,
+        numberCaught: 0,
+        bait: activityType === "crabbing" ? "Crab bait" : "No bait",
+        rig: activityType === "crabbing" ? "Crab ring/pot" : "Clam shovel/rake",
+        tide: shellfishPlan.tide ? `${shellfishPlan.tide.movement} · high ${shellfishPlan.tide.high} · low ${shellfishPlan.tide.low}` : undefined,
+        notes: `Draft ${activityType} trip from planner. ${shellfishPlan.explanation}`,
+        result: "Skunked"
+      });
+      setSavedMessage(`Draft ${activityType} trip started in Trip Log.`);
+      return;
+    }
     await saveTrip({
       id: `draft-${Date.now()}`,
+      activityType: "fishing",
       location: plan.water.name,
       date: new Date().toISOString().slice(0, 10),
       weather: plan.weatherReminder,
@@ -91,6 +152,10 @@ export default function PlanTripScreen() {
   }
 
   async function sharePlan() {
+    if (!isFishing) {
+      await shareText(`Unskunked helped me plan a ${activityType} trip at ${shellfishPlan.location.name}. Score: ${shellfishPlan.score}/100. Best window: ${shellfishPlan.bestTime}. Verify WDFW rules, emergency rules, license, and health advisories before harvesting.`, "Unskunked shellfish plan");
+      return;
+    }
     await shareText(formatTripPlanShare({
       location: plan.water.name,
       targetSpecies: plan.fish.name,
@@ -127,16 +192,49 @@ export default function PlanTripScreen() {
             ))}
           </View>
         </View>
+        <ChoiceRow label="Activity" value={activityType} options={activityOptions} labels={{ fishing: "Fishing", clamming: "Clamming", crabbing: "Crabbing" }} onSelect={setActivityType} />
         <ChoiceRow label="Month" value={month} options={months} onSelect={setMonth} />
-        <ChoiceRow label="Waterbody" value={waterbodyId} options={waterbodies.map((water) => water.id)} labels={Object.fromEntries(waterbodies.map((water) => [water.id, water.name]))} onSelect={setWaterbodyId} />
+        {isFishing ? <ChoiceRow label="Waterbody" value={waterbodyId} options={waterbodies.map((water) => water.id)} labels={Object.fromEntries(waterbodies.map((water) => [water.id, water.name]))} onSelect={setWaterbodyId} /> : null}
         <ChoiceRow label="Shore or boat" value={access} options={accessOptions} onSelect={setAccess} />
         <ChoiceRow label="Time available" value={timeAvailable} options={timeOptions} onSelect={setTimeAvailable} />
         <ChoiceRow label="Experience" value={experience} options={experienceOptions} onSelect={setExperience} />
-        <ChoiceRow label="Target fish" value={targetFishId} options={fishSpecies.map((fish) => fish.id)} labels={Object.fromEntries(fishSpecies.map((fish) => [fish.id, fish.name]))} onSelect={setTargetFishId} />
-        <Field label="Available bait" value={availableBait} onChangeText={setAvailableBait} placeholder="worms, PowerBait, jigs..." />
+        {isFishing ? <ChoiceRow label="Target fish" value={targetFishId} options={fishSpecies.map((fish) => fish.id)} labels={Object.fromEntries(fishSpecies.map((fish) => [fish.id, fish.name]))} onSelect={setTargetFishId} /> : null}
+        <Field label={isFishing ? "Available bait" : "Available gear/bait"} value={availableBait} onChangeText={setAvailableBait} placeholder={isFishing ? "worms, PowerBait, jigs..." : "clam shovel, crab pot, gauge, bait..."} />
         <Field label="Available gear" value={availableGear} onChangeText={setAvailableGear} placeholder="light spinning rod, 6 lb mono..." />
       </Card>
 
+      {!isFishing ? (
+        <Card style={styles.plan}>
+          <SectionHeader title={`${activityType === "clamming" ? "Clam" : "Crab"} plan at ${shellfishPlan.location.name}`} eyebrow={`${shellfishPlan.score}/100 trip score`} />
+          <Stack>
+            <AppText>Target: {shellfishPlan.species?.name ?? activityType}</AppText>
+            <AppText>Best window: {shellfishPlan.bestTime}</AppText>
+            <AppText>Weather: {shellfishPlan.weather.airTempF}F · wind {shellfishPlan.weather.windMph} mph · rain {shellfishPlan.weather.rainChancePercent}%</AppText>
+            <AppText>Tide: {shellfishPlan.tide ? `${shellfishPlan.tide.current} · ${shellfishPlan.tide.movement} · high ${shellfishPlan.tide.high} · low ${shellfishPlan.tide.low}` : "No tide data"}</AppText>
+            <AppText>{shellfishPlan.explanation}</AppText>
+            <AppText style={styles.warning}>Regulation: {shellfishPlan.location.regulationWarning}</AppText>
+          </Stack>
+          <SectionHeader title="Checklist" eyebrow="Before you leave" />
+          <Stack>
+            {[...shellfishPlan.whatToBring, ...shellfishPlan.regulationReminders, ...shellfishPlan.safetyNotes].map((item) => (
+              <View key={item} style={styles.bullet}>
+                <View style={styles.dot} />
+                <AppText style={styles.flex}>{item}</AppText>
+              </View>
+            ))}
+          </Stack>
+          <SectionHeader title="Watch and learn" eyebrow="External searches" />
+          {(shellfishPlan.species?.youtubeSearches ?? [`Washington ${activityType} beginner`]).map((query) => (
+            <YoutubeLink key={query} query={query} />
+          ))}
+          <View style={styles.actions}>
+            <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save plan</Button>
+            <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Start Trip</Button>
+          </View>
+          <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share shellfish plan</Button>
+          {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
+        </Card>
+      ) : (
       <Card style={styles.plan}>
         <SectionHeader title={`${plan.bestFish} at ${plan.water.name}`} eyebrow={`${plan.estimatedSuccess}% confidence`} />
         <Stack>
@@ -172,6 +270,7 @@ export default function PlanTripScreen() {
         <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share trip plan</Button>
         {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
       </Card>
+      )}
       <OfficialLinks links={plan.regulation.sourceLinks} />
     </Screen>
   );

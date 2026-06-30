@@ -8,7 +8,7 @@ export type TripPlanInput = {
   month: string;
   waterbodyId: string;
   access: "Shore" | "Boat";
-  experience: "Beginner" | "Intermediate";
+  experience: "Beginner" | "Intermediate" | "Advanced";
   targetFishId: string;
   availableBait?: string;
   availableGear?: string;
@@ -122,7 +122,7 @@ export function buildTripPlan(input: TripPlanInput) {
   const bait = input.availableBait?.trim() || fish.bestBait[0] || water.suggestedBait[0];
   const gear = input.availableGear?.trim() || `${fish.rodSetup}, ${fish.line}`;
   const regulation = regulationService.getSummary({ state: "WA", waterbodyId: water.id, speciesId: fish.id, date: new Date().toISOString() });
-  const success = Math.max(45, 86 - (fish.difficulty === "Advanced" ? 22 : 0) - (water.status === "restricted" ? 8 : 0) + (input.experience === "Beginner" ? 4 : 0));
+  const success = Math.max(45, 86 - (fish.difficulty === "Advanced" ? 22 : 0) - (water.status === "restricted" ? 8 : 0) + (input.experience === "Beginner" ? 4 : input.experience === "Advanced" ? 6 : 0));
 
   return {
     water,

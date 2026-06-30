@@ -4,6 +4,8 @@ import { getNearbyWaterbodies, defaultManualLocation } from "@/src/services/loca
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { calculateTripScore, getMockWeather } from "@/src/services/fishingConditions";
 import { getOfflinePacks } from "@/src/services/offlineDownloads";
+import { getMapMarkers } from "@/src/services/mapMarkers";
+import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
 import { buildTripPlan } from "@/src/utils/recommendations";
 import { searchByFields } from "@/src/utils/search";
 
@@ -22,7 +24,24 @@ const phase8Routes = [
   "/about"
 ];
 
-describe("Phase 8 E2E smoke flows", () => {
+const phase9Screens = [
+  "Home",
+  "Nearby Waters",
+  "Waterbody Detail",
+  "Fish Detail",
+  "Regulations",
+  "Weather",
+  "Trip Planner",
+  "GPS Permission",
+  "Offline Mode",
+  "Search",
+  "Fishing Journal",
+  "Beta Insights",
+  "Settings",
+  "About"
+];
+
+describe("Phase 9 E2E smoke flows", () => {
   it("covers the required screenshot and beta routes", () => {
     expect(phase8Routes).toContain("/regulations");
     expect(phase8Routes).toContain("/weather");
@@ -62,5 +81,27 @@ describe("Phase 8 E2E smoke flows", () => {
     const score = calculateTripScore({ weather: getMockWeather(water), waterbody: water, userExperience: "Beginner", targetSpecies: water.speciesIds[0] });
     expect(score).toBeGreaterThan(0);
     expect(getOfflinePacks().length).toBeGreaterThan(3);
+  });
+
+  it("covers Phase 9 screenshot surfaces", () => {
+    expect(phase9Screens).toContain("Nearby Waters");
+    expect(phase9Screens).toContain("GPS Permission");
+    expect(phase9Screens).toContain("Fishing Journal");
+  });
+
+  it("supports GPS map marker filters for shellfish activities", () => {
+    const clamMarkers = getMapMarkers({ activity: "clamming", coordinates: defaultManualLocation.coordinates });
+    const crabMarkers = getMapMarkers({ activity: "crabbing", coordinates: defaultManualLocation.coordinates });
+    expect(clamMarkers.length).toBeGreaterThan(0);
+    expect(crabMarkers.length).toBeGreaterThan(0);
+    expect(clamMarkers[0].distanceMiles).toBeGreaterThanOrEqual(0);
+  });
+
+  it("builds shellfish planner flows for clamming and crabbing", () => {
+    const clamming = buildShellfishPlan({ activityType: "clamming", coordinates: defaultManualLocation.coordinates, experience: "Beginner" });
+    const crabbing = buildShellfishPlan({ activityType: "crabbing", coordinates: defaultManualLocation.coordinates, experience: "Intermediate" });
+    expect(clamming.location.activityTypes).toContain("clamming");
+    expect(crabbing.location.activityTypes).toContain("crabbing");
+    expect(crabbing.tide?.movement).toBeTruthy();
   });
 });

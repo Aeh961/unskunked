@@ -6,10 +6,27 @@ export type StorageDriver = {
   removeItem: (key: string) => Promise<void>;
 };
 
+const nodeFallbackStorage: Record<string, string> = {};
+
 export const asyncStorageDriver: StorageDriver = {
-  getItem: (key) => AsyncStorage.getItem(key),
-  setItem: (key, value) => AsyncStorage.setItem(key, value),
-  removeItem: (key) => AsyncStorage.removeItem(key)
+  getItem: (key) => {
+    if (typeof window === "undefined") return Promise.resolve(nodeFallbackStorage[key] ?? null);
+    return AsyncStorage.getItem(key);
+  },
+  setItem: (key, value) => {
+    if (typeof window === "undefined") {
+      nodeFallbackStorage[key] = value;
+      return Promise.resolve();
+    }
+    return AsyncStorage.setItem(key, value);
+  },
+  removeItem: (key) => {
+    if (typeof window === "undefined") {
+      delete nodeFallbackStorage[key];
+      return Promise.resolve();
+    }
+    return AsyncStorage.removeItem(key);
+  }
 };
 
 export function createMemoryStorageDriver(initial: Record<string, string> = {}): StorageDriver & { snapshot: () => Record<string, string> } {
