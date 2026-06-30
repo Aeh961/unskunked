@@ -35,6 +35,7 @@ export default function RootLayout() {
         <Stack.Screen name="feedback" options={{ title: "Feedback" }} />
         <Stack.Screen name="export" options={{ title: "Export Data" }} />
         <Stack.Screen name="about" options={{ title: "About" }} />
+        <Stack.Screen name="insights" options={{ title: "Beta Insights" }} />
         <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>

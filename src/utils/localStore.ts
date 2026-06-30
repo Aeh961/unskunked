@@ -1,4 +1,5 @@
 import { RegionId } from "@/src/data/regions";
+import { BetaEvent, BetaEventType, calculateBetaInsights } from "@/src/services/betaInsights";
 import { storage } from "@/src/utils/storage";
 
 export type FavoriteType = "location" | "fish" | "rig" | "knot";
@@ -88,6 +89,7 @@ const tripsKey = "unskunked:trips";
 const tripPlansKey = "unskunked:trip-plans";
 const onboardingProfileKey = "unskunked:onboarding-profile";
 const feedbackKey = "unskunked:feedback";
+const betaEventsKey = "unskunked:beta-events";
 const demoEnabledKey = "unskunked:demo-enabled";
 const profilesKey = "unskunked:demo-profiles";
 const notificationsKey = "unskunked:demo-notifications";
@@ -285,14 +287,15 @@ export async function saveFeedback(entry: FeedbackEntry) {
 }
 
 export async function getBetaExportData() {
-  const [favorites, trips, tripPlans, feedback, profile, region, searchHistory] = await Promise.all([
+  const [favorites, trips, tripPlans, feedback, profile, region, searchHistory, betaEvents] = await Promise.all([
     getFavorites(),
     getTrips(),
     getTripPlans(),
     getFeedback(),
     getOnboardingProfile(),
     getSelectedRegion(),
-    getDemoSearchHistory()
+    getDemoSearchHistory(),
+    getBetaEvents()
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -304,8 +307,31 @@ export async function getBetaExportData() {
     tripPlans,
     tripLogs: trips,
     feedback,
-    recentSearches: searchHistory
+    recentSearches: searchHistory,
+    betaEvents,
+    betaInsights: calculateBetaInsights({ events: betaEvents, searches: searchHistory, feedback, trips, tripPlans, favorites })
   };
+}
+
+export async function getBetaEvents() {
+  return storage.readJson<BetaEvent[]>(betaEventsKey, []);
+}
+
+export async function trackBetaEvent(type: BetaEventType, label: string) {
+  const clean = label.trim();
+  if (!clean) return getBetaEvents();
+  const events = await getBetaEvents();
+  const next = [
+    {
+      id: `event-${Date.now()}`,
+      type,
+      label: clean,
+      createdAt: new Date().toISOString()
+    },
+    ...events
+  ].slice(0, 250);
+  await storage.writeJson(betaEventsKey, next);
+  return next;
 }
 
 export async function getSelectedRegion() {
@@ -348,6 +374,12 @@ export async function seedDemoData() {
     storage.writeJson(notificationsKey, demoNotifications),
     storage.writeJson(recommendationsKey, demoRecommendations),
     storage.writeJson(searchHistoryKey, demoSearchHistory),
+    storage.writeJson(betaEventsKey, [
+      { id: "demo-event-fish", type: "fish-view" satisfies BetaEventType, label: "Rainbow Trout", createdAt: "2026-06-29T08:00:00.000Z" },
+      { id: "demo-event-water", type: "waterbody-view" satisfies BetaEventType, label: "Green Lake", createdAt: "2026-06-29T08:05:00.000Z" },
+      { id: "demo-event-rig", type: "rig-use" satisfies BetaEventType, label: "Bobber rig", createdAt: "2026-06-29T08:10:00.000Z" },
+      { id: "demo-event-plan", type: "planner-choice" satisfies BetaEventType, label: "Nearest beginner spot", createdAt: "2026-06-29T08:15:00.000Z" }
+    ]),
     storage.writeJson(demoEnabledKey, true)
   ]);
 }

@@ -1,12 +1,16 @@
 import { fishSpecies } from "@/src/data/fish";
 import { Regulation, Status, Waterbody } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
+import { wdfwLinks } from "@/src/services/officialLinks";
 
 export type RegulationSourceLinks = {
   regulations: string;
   emergencyRules: string;
   licenses: string;
   fishWashington: string;
+  shellfishSeaweed: string;
+  marineAreas: string;
+  freshwaterRules: string;
 };
 
 export type RegulationQuery = {
@@ -37,17 +41,11 @@ export interface RegulationProvider {
 }
 
 export const washingtonSourceLinks: RegulationSourceLinks = {
-  regulations: "https://wdfw.wa.gov/fishing/regulations",
-  emergencyRules: "https://wdfw.wa.gov/fishing/regulations/emergency-rules",
-  licenses: "https://wdfw.wa.gov/licenses/fishing",
-  fishWashington: "https://wdfw.wa.gov/fishing/locations"
+  ...wdfwLinks
 };
 
 const placeholderLinks: RegulationSourceLinks = {
-  regulations: "https://wdfw.wa.gov/fishing/regulations",
-  emergencyRules: "https://wdfw.wa.gov/fishing/regulations/emergency-rules",
-  licenses: "https://wdfw.wa.gov/licenses/fishing",
-  fishWashington: "https://wdfw.wa.gov/fishing/locations"
+  ...wdfwLinks
 };
 
 function fromRegulation(regulation: Regulation, water?: Waterbody): RegulationSummary {

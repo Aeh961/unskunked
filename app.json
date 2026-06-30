@@ -14,9 +14,16 @@
       "backgroundColor": "#f4f1e8"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Unskunked uses your location to sort nearby fishing spots. You can use manual location fallback instead."
+      }
     },
     "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/unskunked-icon.svg",
         "backgroundColor": "#123B30"

@@ -11,6 +11,9 @@ import { calculateTripAnalytics } from "@/src/services/tripAnalytics";
 import { personalizationService } from "@/src/services/personalization";
 import { demoFavorites, demoOnboardingProfile, demoTripPlans, demoTrips } from "@/src/utils/localStore";
 import { formatJsonExport, formatTripPlanShare } from "@/src/utils/share";
+import { defaultManualLocation, distanceMiles, getNearbyWaterbodies, getNearestBeginnerWaterbody } from "@/src/services/location";
+import { getOfficialLinksForWaterbody } from "@/src/services/officialLinks";
+import { calculateBetaInsights } from "@/src/services/betaInsights";
 
 describe("regulation helpers", () => {
   it("labels and permits restricted waters as fishable with caution", () => {
@@ -30,6 +33,14 @@ describe("regulation helpers", () => {
     const summary = regulationService.getSummary({ state: "OR" });
     expect(summary.season).toContain("placeholder");
     expect(summary.catchAndRelease).toBe(true);
+  });
+
+  it("generates WDFW link sets with expanded official sources", () => {
+    const links = getOfficialLinksForWaterbody(waterbodies.find((water) => water.id === "puget-sound"));
+    expect(links.regulations).toContain("wdfw.wa.gov");
+    expect(links.emergencyRules).toContain("emergency-rules");
+    expect(links.marineAreas).toContain("marine-areas");
+    expect(links.freshwaterRules).toContain("freshwater");
   });
 });
 
@@ -55,6 +66,42 @@ describe("species recommendations", () => {
     expect(plan.gearChecklist.length).toBeGreaterThan(2);
     expect(plan.backupPlan).toContain("20 minutes");
     expect(plan.regulation.sourceLinks.emergencyRules).toContain("emergency-rules");
+  });
+
+  it("can build a nearby beginner trip plan from coordinates", () => {
+    const plan = buildTripPlan({
+      month: "July",
+      waterbodyId: "lake-chelan",
+      access: "Shore",
+      experience: "Beginner",
+      targetFishId: "rainbow-trout",
+      userLocation: defaultManualLocation.coordinates,
+      preferNearest: true,
+      timeAvailable: "2 hours"
+    });
+    expect(plan.water.beginnerDifficulty).toBe("Easy");
+    expect(plan.beginnerAdvice).toContain("2 hours");
+  });
+});
+
+describe("location helpers", () => {
+  it("calculates distance between Seattle and Green Lake", () => {
+    const greenLake = waterbodies.find((water) => water.id === "green-lake");
+    expect(greenLake).toBeTruthy();
+    const miles = distanceMiles(defaultManualLocation.coordinates, { latitude: greenLake!.latitude, longitude: greenLake!.longitude });
+    expect(miles).toBeGreaterThan(3);
+    expect(miles).toBeLessThan(8);
+  });
+
+  it("sorts nearby waterbodies by distance", () => {
+    const nearby = getNearbyWaterbodies(defaultManualLocation.coordinates, { limit: 5 });
+    expect(nearby.length).toBe(5);
+    expect(nearby[0].distanceMiles).toBeLessThanOrEqual(nearby[1].distanceMiles);
+  });
+
+  it("finds a nearest beginner-friendly waterbody", () => {
+    const water = getNearestBeginnerWaterbody(defaultManualLocation.coordinates);
+    expect(water?.beginnerDifficulty).toBe("Easy");
   });
 });
 
@@ -113,6 +160,23 @@ describe("trip analytics and personalization", () => {
     expect(recommendation.waterbody).toBeTruthy();
     expect(recommendation.nextBestAction).toContain("Plan");
   });
+
+  it("calculates local-only beta insights", () => {
+    const insights = calculateBetaInsights({
+      events: [
+        { id: "1", type: "fish-view", label: "Rainbow Trout", createdAt: "2026-06-30" },
+        { id: "2", type: "waterbody-view", label: "Green Lake", createdAt: "2026-06-30" },
+        { id: "3", type: "planner-choice", label: "Nearest beginner spot", createdAt: "2026-06-30" }
+      ],
+      searches: ["Green Lake"],
+      feedback: [{ id: "f1", createdAt: "2026-06-30", type: "Bug report", screen: "Map", message: "Test" }],
+      trips: demoTrips,
+      tripPlans: demoTripPlans,
+      favorites: demoFavorites
+    });
+    expect(insights.mostViewedFish).toContain("Rainbow Trout");
+    expect(insights.feedbackCategories).toContain("Bug report");
+  });
 });
 
 describe("mock data validation", () => {
@@ -121,6 +185,17 @@ describe("mock data validation", () => {
     for (const water of waterbodies) {
       expect(water.speciesIds.every((id) => speciesIds.has(id))).toBe(true);
     }
+  });
+
+  it("has at least 25 expanded Washington waterbodies with access metadata", () => {
+    expect(waterbodies.length).toBeGreaterThanOrEqual(25);
+    expect(waterbodies.every((water) => water.county && water.parkingNote && water.bestSeason && water.officialLink)).toBe(true);
+  });
+
+  it("has expanded Washington fish species coverage", () => {
+    const required = ["rainbow-trout", "cutthroat-trout", "brown-trout", "brook-trout", "kokanee", "largemouth-bass", "smallmouth-bass", "yellow-perch", "crappie", "bluegill", "walleye", "channel-catfish", "carp", "lingcod", "rockfish", "flounder", "salmon", "steelhead", "sturgeon"];
+    const ids = new Set(fishSpecies.map((fish) => fish.id));
+    expect(required.every((id) => ids.has(id))).toBe(true);
   });
 
   it("has step-by-step content for every rig and knot", () => {

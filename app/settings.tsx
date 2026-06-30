@@ -108,6 +108,9 @@ export default function SettingsScreen() {
           <Link href={"/export" as Href} asChild>
             <Button icon="share-social" variant="secondary" style={styles.actionButton}>Export</Button>
           </Link>
+          <Link href={"/insights" as Href} asChild>
+            <Button icon="analytics" variant="secondary" style={styles.actionButton}>Insights</Button>
+          </Link>
         </View>
       </Card>
 

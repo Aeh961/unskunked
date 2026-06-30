@@ -12,8 +12,13 @@ export type Regulation = {
 export type FishSpecies = {
   id: string;
   name: string;
+  waterKind?: "Freshwater" | "Saltwater" | "Anadromous";
   status: Status;
   difficulty: "Easy" | "Moderate" | "Advanced";
+  seasonNotes?: string;
+  habitat?: string[];
+  regulationsWarning?: string;
+  keepReleaseWarning?: string;
   bestSeason: string;
   bestWeather: string;
   bestTimeOfDay: string;
@@ -39,10 +44,15 @@ export type Waterbody = {
   id: string;
   name: string;
   region: string;
+  county?: string;
   waterType: WaterType;
   latitude: number;
   longitude: number;
   speciesIds: string[];
+  shoreAccessDifficulty?: "Easy" | "Moderate" | "Advanced";
+  parkingNote?: string;
+  bestSeason?: string;
+  officialLink?: string;
   status: Status;
   regulationSummary: string;
   suggestedBait: string[];

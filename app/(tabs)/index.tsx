@@ -7,6 +7,7 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { Screen, Stack } from "@/src/components/Screen";
+import { defaultManualLocation, getNearbyWaterbodies } from "@/src/services/location";
 import { colors, radii, spacing } from "@/src/theme";
 
 const quickLinks = [
@@ -32,6 +33,8 @@ const beginnerPlan = [
 ];
 
 export default function HomeScreen() {
+  const nearbyPick = getNearbyWaterbodies(defaultManualLocation.coordinates, { beginnerOnly: true, limit: 1 })[0];
+
   return (
     <Screen>
       <View style={styles.hero}>
@@ -79,6 +82,16 @@ export default function HomeScreen() {
           <Button icon="calendar" variant="secondary">Plan this trip</Button>
         </Link>
       </Card>
+
+      {nearbyPick ? (
+        <Card style={styles.favoriteCard}>
+          <SectionHeader title="Nearby starter pick" eyebrow={`${nearbyPick.distanceMiles} mi from Seattle fallback`} />
+          <AppText>{nearbyPick.name}: {nearbyPick.todayRecommendation}</AppText>
+          <Link href={"/map" as Href} asChild>
+            <Button icon="locate" variant="secondary">See nearby waters</Button>
+          </Link>
+        </Card>
+      ) : null}
 
       <View style={styles.statusGrid}>
         <Card style={styles.statusCard}>

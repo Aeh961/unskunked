@@ -20,7 +20,9 @@ import { useFavorites } from "@/src/hooks/useFavorites";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 import { regulationService } from "@/src/services/regulations";
+import { Coordinates, defaultManualLocation, getNearbyWaterbodies, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
+import { trackBetaEvent } from "@/src/utils/localStore";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
 
@@ -29,19 +31,23 @@ export default function MapScreen() {
   const [filter, setFilter] = useState<WaterType | "All">("All");
   const [selectedId, setSelectedId] = useState(waterbodies[0].id);
   const [recentIds, setRecentIds] = useState<string[]>([waterbodies[0].id]);
+  const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
+  const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
+  const [locationStatus, setLocationStatus] = useState<"idle" | "granted" | "denied" | "unavailable">("idle");
   const { isFavorite, toggle } = useFavorites();
 
   const filtered = useMemo(() => {
-    const byType = filter === "All" ? waterbodies : waterbodies.filter((water) => water.waterType === filter);
-    return searchByFields(byType, query, [
+    const nearby = getNearbyWaterbodies(coordinates, { waterType: filter });
+    return searchByFields(nearby, query, [
       (water) => water.name,
       (water) => water.region,
+      (water) => water.county ?? "",
       (water) => water.waterType,
       (water) => water.notes,
       (water) => water.suggestedBait,
       (water) => water.recommendedRigs
     ]);
-  }, [filter, query]);
+  }, [coordinates, filter, query]);
 
   const selected = filtered.find((water) => water.id === selectedId) ?? filtered[0] ?? waterbodies[0];
   const species = selected.speciesIds
@@ -57,10 +63,27 @@ export default function MapScreen() {
   function selectWater(id: string) {
     setSelectedId(id);
     setRecentIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 4));
+    const water = waterbodies.find((item) => item.id === id);
+    if (water) {
+      trackBetaEvent("waterbody-view", water.name);
+    }
   }
 
   async function shareWaterbody() {
     await shareText(formatWaterbodyShare(selected), "Unskunked waterbody recommendation");
+  }
+
+  async function useCurrentLocation() {
+    const state = await requestExpoLocation();
+    setCoordinates(state.coordinates ?? defaultManualLocation.coordinates);
+    setLocationStatus(state.status);
+    setLocationMessage(state.message);
+  }
+
+  function useManualLocation(location: (typeof manualLocations)[number]) {
+    setCoordinates(location.coordinates);
+    setLocationStatus("idle");
+    setLocationMessage(`Using ${location.label} as your manual location.`);
   }
 
   return (
@@ -70,6 +93,24 @@ export default function MapScreen() {
         <AppText style={styles.heroText}>Search Washington lakes, rivers, parks, piers, and saltwater spots using local demo data.</AppText>
       </View>
       <Disclaimer />
+
+      <Card style={styles.locationCard}>
+        <SectionHeader title="Nearby fishing" eyebrow={locationStatus === "granted" ? "GPS enabled" : "Manual fallback"} />
+        <AppText>{locationMessage}</AppText>
+        {locationStatus === "denied" ? <AppText style={styles.warning}>Permission denied. You can still use manual locations and search all waterbodies.</AppText> : null}
+        {locationStatus === "unavailable" ? <AppText style={styles.warning}>Location unavailable or offline. Manual nearby search is active.</AppText> : null}
+        <View style={styles.actions}>
+          <Button icon="locate" style={styles.actionButton} onPress={useCurrentLocation}>Use my location</Button>
+          <Button icon="map" variant="secondary" style={styles.actionButton} onPress={() => useManualLocation(defaultManualLocation)}>Manual</Button>
+        </View>
+        <View style={styles.suggestionRow}>
+          {manualLocations.map((location) => (
+            <Pressable key={location.id} onPress={() => useManualLocation(location)} style={styles.suggestion}>
+              <AppText variant="caption" style={styles.suggestionText}>{location.label}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
 
       <TextInput
         value={query}
@@ -127,7 +168,7 @@ export default function MapScreen() {
         />
       ) : (
         <>
-          <SectionHeader title="Matched locations" eyebrow={`${filtered.length} local spots`} />
+          <SectionHeader title="Nearby waterbodies" eyebrow={`${filtered.length} sorted by distance`} />
           <View style={styles.locationList}>
             {filtered.map((water) => (
               <Pressable
@@ -137,7 +178,7 @@ export default function MapScreen() {
               >
                 <AppText style={[styles.locationName, selected.id === water.id && styles.locationTextActive]}>{water.name}</AppText>
                 <AppText variant="caption" style={[styles.locationMeta, selected.id === water.id && styles.locationTextActive]}>
-                  {water.waterType} · {water.beginnerDifficulty}
+                  {water.distanceMiles} mi · {water.waterType} · {water.beginnerDifficulty}
                 </AppText>
               </Pressable>
             ))}
@@ -160,7 +201,7 @@ export default function MapScreen() {
           <View style={styles.flex}>
             <AppText variant="heading">{selected.name}</AppText>
             <AppText variant="caption">
-              {selected.region} · {selected.waterType} · {selected.beginnerDifficulty}
+              {selected.region} · {selected.county ?? "WA"} · {selected.waterType} · {selected.beginnerDifficulty}
             </AppText>
           </View>
           <StatusBadge status={selected.status} />
@@ -191,6 +232,10 @@ export default function MapScreen() {
           </View>
 
           <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
+          <AppText>Distance: {"distanceMiles" in selected ? `${selected.distanceMiles} miles from selected location` : "Set a location to calculate distance"}</AppText>
+          <AppText>Shore access: {selected.shoreAccessDifficulty ?? selected.beginnerDifficulty}</AppText>
+          <AppText>Parking: {selected.parkingNote ?? "Check local parking before leaving."}</AppText>
+          <AppText>Best season: {selected.bestSeason ?? "Verify by waterbody and species."}</AppText>
           <AppText>Recommended bait: {selected.suggestedBait.join(", ")}</AppText>
           <AppText>Recommended rigs: {selected.recommendedRigs.join(", ")}</AppText>
           <AppText>Season check: {regulation.season}</AppText>
@@ -248,6 +293,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 54,
     paddingHorizontal: spacing.md
+  },
+  locationCard: {
+    gap: spacing.md
   },
   filterRow: {
     flexDirection: "row",

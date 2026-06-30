@@ -4,14 +4,17 @@
 
 Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
-The current app is a polished Phase 6 beta launch build using mock Washington fishing data, local storage, typed data services, native share/export flows, and no paid APIs or backend.
+The current app is a polished Phase 7 Washington-focused beta using expanded mock Washington fishing data, GPS/manual nearby search, local storage, typed data services, native share/export flows, and no paid APIs or backend.
 
 ## Feature Overview
 
 - Demo Mode that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history
 - First-launch beta onboarding with region, experience, fishing style, favorite fish, favorite waterbodies, and a final Start Fishing Smarter flow
+- GPS-aware nearby fishing with permission handling, denied/unavailable fallbacks, manual city locations, distance sorting, and water-type filters
+- Expanded Washington mock waterbody dataset with 25 locations, counties, coordinates, access notes, parking notes, seasons, rigs, bait, and regulation warnings
+- Expanded Washington fish coverage including trout, bass, panfish, walleye, catfish, carp, salmon, steelhead, sturgeon placeholder, and saltwater species
 - Real-data-ready regulation architecture with provider interfaces, Washington mock provider, emergency-rule placeholders, waterbody rules, species rules, season checks, limits, and gear warnings
-- Official WDFW verification links for regulations, emergency rules, licenses, and Fish Washington resources
+- Official WDFW verification links for regulations, emergency rules, licenses, Fish Washington, freshwater rules, marine areas, and shellfish/seaweed resources
 - Personalization engine using onboarding profile, favorites, trip history, season, successful bait, and successful rigs
 - Professional Home dashboard with today’s recommendation, continue-trip prompt, favorite lakes, quick actions, beginner tips, recent catches, weather placeholder, and regulation reminder
 - Interactive mock map with search suggestions, filters, markers, recently viewed waterbodies, favorites, and a polished selected-water detail card
@@ -28,6 +31,7 @@ The current app is a polished Phase 6 beta launch build using mock Washington fi
 - Feedback system for bug reports, feature requests, confusing regulations, wrong recommendations, wrong waterbody info, and general notes
 - Native share-sheet support for trip plans, fish tips, waterbody recommendations, trip log results, feedback, and beta data export
 - About Unskunked page with mission, disclaimers, current region support, roadmap, and contact/feedback entry point
+- Local-only Beta Insights for viewed fish, viewed waterbodies, rig use, planner choices, searches, and feedback categories
 - Screenshot automation for iOS and Android
 
 ## Architecture
@@ -38,6 +42,7 @@ The current app is a polished Phase 6 beta launch build using mock Washington fi
 - `src/data/`: mock fish, waterbody, rig, learning, and region data
 - `src/hooks/`: reusable hooks such as favorites
 - `src/services/`: regulation providers, personalization engine, and trip analytics
+- `src/services/location.ts`: distance calculation, manual fallback locations, Expo location permission flow, and nearby sorting
 - `src/utils/`: storage abstraction, local store, recommendations, search, and YouTube helpers
 - `scripts/`: automation utilities
 - `docs/`: QA checklist, beta tester guide, and developer handoff
@@ -65,8 +70,9 @@ Useful docs:
 - [QA Checklist](docs/QA_CHECKLIST.md)
 - [Beta Tester Guide](docs/BETA_TESTER_GUIDE.md)
 - [Developer Handoff](docs/DEVELOPER_HANDOFF.md)
+- [Beta Distribution](docs/BETA_DISTRIBUTION.md)
 
-Beta testers should focus on onboarding, planning a trip, checking disclaimers/source links, saving feedback, exporting JSON, and sharing plans/results through the native share sheet.
+Beta testers should focus on onboarding, location permission/fallback behavior, nearby water sorting, planning a trip, checking disclaimers/source links, saving feedback, exporting JSON, and sharing plans/results through the native share sheet.
 
 ## Development Setup
 
@@ -135,13 +141,16 @@ EXPO_URL=exp://YOUR_LOCAL_IP:8081 npm run screenshots:android
 The script navigates to each route and captures:
 
 - Onboarding
-- Home
+- Home with nearby recommendation
 - Map
+- Nearby Waterbodies
 - Waterbody Detail
 - Fish Detail
+- Nearby Trip Planner
 - Rig Builder
 - Trip Planner
 - Trip Log
+- Beta Insights
 - Feedback
 - Export
 - Settings
@@ -156,11 +165,14 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![iOS Onboarding](screenshots/ios/ios-onboarding.png)
 ![iOS Home](screenshots/ios/ios-home.png)
 ![iOS Map](screenshots/ios/ios-map.png)
+![iOS Nearby Waterbodies](screenshots/ios/ios-nearby-waterbodies.png)
 ![iOS Waterbody Detail](screenshots/ios/ios-waterbody-detail.png)
 ![iOS Fish Detail](screenshots/ios/ios-fish-detail.png)
+![iOS Nearby Trip Planner](screenshots/ios/ios-nearby-trip-planner.png)
 ![iOS Rig Builder](screenshots/ios/ios-rig-builder.png)
 ![iOS Trip Planner](screenshots/ios/ios-trip-planner.png)
 ![iOS Trip Log](screenshots/ios/ios-trip-log.png)
+![iOS Beta Insights](screenshots/ios/ios-beta-insights.png)
 ![iOS Feedback](screenshots/ios/ios-feedback.png)
 ![iOS Export](screenshots/ios/ios-export.png)
 ![iOS Settings](screenshots/ios/ios-settings.png)
@@ -171,11 +183,14 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 ![Android Onboarding](screenshots/android/android-onboarding.png)
 ![Android Home](screenshots/android/android-home.png)
 ![Android Map](screenshots/android/android-map.png)
+![Android Nearby Waterbodies](screenshots/android/android-nearby-waterbodies.png)
 ![Android Waterbody Detail](screenshots/android/android-waterbody-detail.png)
 ![Android Fish Detail](screenshots/android/android-fish-detail.png)
+![Android Nearby Trip Planner](screenshots/android/android-nearby-trip-planner.png)
 ![Android Rig Builder](screenshots/android/android-rig-builder.png)
 ![Android Trip Planner](screenshots/android/android-trip-planner.png)
 ![Android Trip Log](screenshots/android/android-trip-log.png)
+![Android Beta Insights](screenshots/android/android-beta-insights.png)
 ![Android Feedback](screenshots/android/android-feedback.png)
 ![Android Export](screenshots/android/android-export.png)
 ![Android Settings](screenshots/android/android-settings.png)
@@ -185,7 +200,8 @@ Screenshots are tracked so GitHub visitors see the app flow immediately. Regener
 
 - Regulation content is mock/local and must be verified with official agencies.
 - Washington has the most complete mock data; Oregon, Idaho, and California are placeholders.
-- No backend, account sync, GPS, weather, tides, stocking reports, or official regulation feed is connected yet.
+- No backend, account sync, weather, tides, stocking reports, or official regulation feed is connected yet.
+- GPS is used only locally for distance sorting and has manual fallback locations.
 - JSON export uses the native share sheet rather than a hosted account portal.
 
 ## Roadmap To Real Data

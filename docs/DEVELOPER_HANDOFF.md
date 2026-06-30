@@ -10,6 +10,8 @@ Unskunked is an Expo React Native TypeScript app using Expo Router, local mock d
 - `src/data/`: local fish, waterbody, rig, learning, disclaimer, and region data.
 - `src/hooks/`: reusable app hooks.
 - `src/services/`: regulation providers, personalization, and analytics.
+- `src/services/location.ts`: Expo location permission handling, distance math, manual fallback locations, and nearby sorting.
+- `src/services/officialLinks.ts`: WDFW source link definitions and verification copy.
 - `src/utils/`: storage, local store, recommendations, search, share, and YouTube helpers.
 - `scripts/`: screenshot automation.
 - `docs/`: QA, beta testing, and handoff documentation.
@@ -47,6 +49,10 @@ Official data should be added as a provider implementation, not hard-coded in sc
 - recent searches
 
 Use `createMemoryStorageDriver` for unit tests.
+
+## Location And Nearby
+
+Nearby fishing is local-only. `requestExpoLocation` asks for foreground permission through `expo-location`; denied or unavailable states fall back to Seattle. `getNearbyWaterbodies` calculates haversine distance and sorts local mock waterbody data. Manual fallback locations currently include Seattle, Tacoma, Spokane, Yakima, and Wenatchee.
 
 ## Screenshot Automation
 

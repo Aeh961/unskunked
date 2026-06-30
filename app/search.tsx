@@ -11,7 +11,7 @@ import { learningArticles } from "@/src/data/learning";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
-import { getDemoSearchHistory, getTrips, saveRecentSearch, TripLog } from "@/src/utils/localStore";
+import { getDemoSearchHistory, getTrips, saveRecentSearch, trackBetaEvent, TripLog } from "@/src/utils/localStore";
 import { searchByFields } from "@/src/utils/search";
 
 const filters = ["All", "Fish", "Water", "Rigs", "Knots", "Learning", "Trips"] as const;
@@ -66,6 +66,7 @@ export default function SearchScreen() {
 
   async function submitSearch(value = query) {
     const next = await saveRecentSearch(value);
+    await trackBetaEvent("search", value);
     setRecent(next);
     setQuery(value);
   }

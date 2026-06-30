@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
@@ -16,11 +17,18 @@ import { useFavorites } from "@/src/hooks/useFavorites";
 import { regulationService } from "@/src/services/regulations";
 import { colors, radii, spacing } from "@/src/theme";
 import { formatFishShare, shareText } from "@/src/utils/share";
+import { trackBetaEvent } from "@/src/utils/localStore";
 
 export default function FishDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const fish = fishSpecies.find((item) => item.id === id);
   const { isFavorite, toggle } = useFavorites();
+
+  useEffect(() => {
+    if (fish) {
+      trackBetaEvent("fish-view", fish.name);
+    }
+  }, [fish]);
 
   if (!fish) {
     return (

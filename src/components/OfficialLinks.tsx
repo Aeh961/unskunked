@@ -26,6 +26,15 @@ export function OfficialLinks({ links = washingtonSourceLinks, compact = false }
         <Button icon="card-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.licenses)}>
           Buy/check license
         </Button>
+        <Button icon="fish-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.freshwaterRules)}>
+          Freshwater rules
+        </Button>
+        <Button icon="boat-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.marineAreas)}>
+          Marine areas
+        </Button>
+        <Button icon="leaf-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.shellfishSeaweed)}>
+          Shellfish/seaweed
+        </Button>
         <Button icon="map-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.fishWashington)}>
           Fish Washington
         </Button>

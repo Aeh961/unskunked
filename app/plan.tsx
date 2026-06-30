@@ -11,13 +11,15 @@ import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
 import { waterbodies } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
-import { saveTrip, saveTripPlan } from "@/src/utils/localStore";
+import { saveTrip, saveTripPlan, trackBetaEvent } from "@/src/utils/localStore";
 import { buildTripPlan } from "@/src/utils/recommendations";
 import { formatTripPlanShare, shareText } from "@/src/utils/share";
+import { Coordinates, defaultManualLocation, getNearestBeginnerWaterbody, manualLocations, requestExpoLocation } from "@/src/services/location";
 
 const months = ["June", "July", "August", "September"] as const;
 const accessOptions = ["Shore", "Boat"] as const;
 const experienceOptions = ["Beginner", "Intermediate"] as const;
+const timeOptions = ["1 hour", "2 hours", "Half day", "All day"] as const;
 
 export default function PlanTripScreen() {
   const [month, setMonth] = useState<(typeof months)[number]>("July");
@@ -28,13 +30,32 @@ export default function PlanTripScreen() {
   const [availableBait, setAvailableBait] = useState("");
   const [availableGear, setAvailableGear] = useState("");
   const [savedMessage, setSavedMessage] = useState("");
+  const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
+  const [preferNearest, setPreferNearest] = useState(false);
+  const [timeAvailable, setTimeAvailable] = useState<(typeof timeOptions)[number]>("2 hours");
+  const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
 
   const plan = useMemo(
-    () => buildTripPlan({ month, waterbodyId, access, experience, targetFishId, availableBait, availableGear }),
-    [access, availableBait, availableGear, experience, month, targetFishId, waterbodyId]
+    () => buildTripPlan({ month, waterbodyId, access, experience, targetFishId, availableBait, availableGear, userLocation: coordinates, preferNearest, timeAvailable }),
+    [access, availableBait, availableGear, coordinates, experience, month, preferNearest, targetFishId, timeAvailable, waterbodyId]
   );
 
+  const nearestBeginner = useMemo(() => getNearestBeginnerWaterbody(coordinates), [coordinates]);
+
+  async function useCurrentLocation() {
+    const state = await requestExpoLocation();
+    setCoordinates(state.coordinates ?? defaultManualLocation.coordinates);
+    setLocationMessage(state.message);
+    setPreferNearest(true);
+  }
+
+  function useManualLocation(location: (typeof manualLocations)[number]) {
+    setCoordinates(location.coordinates);
+    setLocationMessage(`Using ${location.label} as the planner location.`);
+  }
+
   async function saveCurrentPlan() {
+    await trackBetaEvent("planner-choice", `${plan.water.name} · ${plan.fish.name} · ${plan.suggestedRig}`);
     await saveTripPlan({
       id: `plan-${Date.now()}`,
       createdAt: new Date().toISOString(),
@@ -88,9 +109,28 @@ export default function PlanTripScreen() {
 
       <Card style={styles.form}>
         <SectionHeader title="Trip inputs" eyebrow="Local planner" />
+        <View style={styles.nearbyCard}>
+          <SectionHeader title="Nearby mode" eyebrow="Optional GPS" />
+          <AppText>{locationMessage}</AppText>
+          <AppText>Nearest beginner-friendly pick: {nearestBeginner?.name ?? "No nearby waterbody found"}</AppText>
+          <View style={styles.actions}>
+            <Button icon="locate" style={styles.actionButton} onPress={useCurrentLocation}>Use my location</Button>
+            <Button icon="navigate" variant={preferNearest ? "primary" : "secondary"} style={styles.actionButton} onPress={() => setPreferNearest(!preferNearest)}>
+              {preferNearest ? "Nearest on" : "Nearest off"}
+            </Button>
+          </View>
+          <View style={styles.options}>
+            {manualLocations.map((location) => (
+              <Pressable key={location.id} onPress={() => useManualLocation(location)} style={styles.option}>
+                <AppText variant="caption" style={styles.optionText}>{location.label}</AppText>
+              </Pressable>
+            ))}
+          </View>
+        </View>
         <ChoiceRow label="Month" value={month} options={months} onSelect={setMonth} />
         <ChoiceRow label="Waterbody" value={waterbodyId} options={waterbodies.map((water) => water.id)} labels={Object.fromEntries(waterbodies.map((water) => [water.id, water.name]))} onSelect={setWaterbodyId} />
         <ChoiceRow label="Shore or boat" value={access} options={accessOptions} onSelect={setAccess} />
+        <ChoiceRow label="Time available" value={timeAvailable} options={timeOptions} onSelect={setTimeAvailable} />
         <ChoiceRow label="Experience" value={experience} options={experienceOptions} onSelect={setExperience} />
         <ChoiceRow label="Target fish" value={targetFishId} options={fishSpecies.map((fish) => fish.id)} labels={Object.fromEntries(fishSpecies.map((fish) => [fish.id, fish.name]))} onSelect={setTargetFishId} />
         <Field label="Available bait" value={availableBait} onChangeText={setAvailableBait} placeholder="worms, PowerBait, jigs..." />
@@ -178,6 +218,10 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   form: {
+    gap: spacing.md
+  },
+  nearbyCard: {
+    backgroundColor: colors.mist,
     gap: spacing.md
   },
   group: {

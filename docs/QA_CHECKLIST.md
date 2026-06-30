@@ -31,8 +31,12 @@ Use this checklist before sharing a beta build with testers.
 
 ## Map
 
+- [ ] Tap Use my location and confirm permission prompt appears.
+- [ ] Deny location and confirm manual fallback messaging appears.
+- [ ] Select Seattle, Tacoma, Spokane, Yakima, and Wenatchee manual locations.
 - [ ] Search waterbodies.
 - [ ] Filter by water type.
+- [ ] Confirm nearby waterbodies show distance and sort nearest first.
 - [ ] Select a waterbody.
 - [ ] Favorite a location.
 - [ ] Verify official links open.
@@ -54,6 +58,10 @@ Use this checklist before sharing a beta build with testers.
 
 ## Trip Planner
 
+- [ ] Tap Use my location and confirm nearby mode handles granted or denied permission.
+- [ ] Toggle nearest beginner-friendly spot.
+- [ ] Select manual location fallback.
+- [ ] Select time available.
 - [ ] Change month, waterbody, access, experience, and target fish.
 - [ ] Confirm legal summary, checklist, safety reminder, backup plan, and YouTube links update.
 - [ ] Save trip plan.
@@ -105,6 +113,7 @@ Use this checklist before sharing a beta build with testers.
 - [ ] Change selected region.
 - [ ] Confirm personalized recommendation updates.
 - [ ] Open About, Feedback, and Export.
+- [ ] Open Beta Insights and confirm local-only analytics display.
 
 ## iOS
 

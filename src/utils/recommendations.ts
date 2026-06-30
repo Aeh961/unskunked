@@ -2,6 +2,7 @@ import { fishSpecies } from "@/src/data/fish";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { waterbodies } from "@/src/data/waterbodies";
 import { regulationService } from "@/src/services/regulations";
+import { Coordinates, getNearestBeginnerWaterbody } from "@/src/services/location";
 
 export type TripPlanInput = {
   month: string;
@@ -11,6 +12,9 @@ export type TripPlanInput = {
   targetFishId: string;
   availableBait?: string;
   availableGear?: string;
+  userLocation?: Coordinates;
+  preferNearest?: boolean;
+  timeAvailable?: string;
 };
 
 export function recommendSpeciesFromGear(question: string) {
@@ -107,7 +111,7 @@ export function answerLocalQuestion(question: string) {
 }
 
 export function buildTripPlan(input: TripPlanInput) {
-  const water = waterbodies.find((item) => item.id === input.waterbodyId) ?? waterbodies[0];
+  const water = input.preferNearest && input.userLocation ? getNearestBeginnerWaterbody(input.userLocation) : waterbodies.find((item) => item.id === input.waterbodyId) ?? waterbodies[0];
   const fish = fishSpecies.find((item) => item.id === input.targetFishId) ?? fishSpecies.find((item) => water.speciesIds.includes(item.id)) ?? fishSpecies[0];
   const rig =
     rigsAndKnots.find((item) => item.type === "rig" && fish.rigs.some((name) => item.name.toLowerCase().includes(name.toLowerCase().replace(" setup", "").replace(" rig", "")))) ??
@@ -132,7 +136,7 @@ export function buildTripPlan(input: TripPlanInput) {
     suggestedKnot: knot.name,
     bestTime: fish.bestTimeOfDay,
     estimatedSuccess: success,
-    beginnerAdvice: `${input.month} plan: fish ${input.access.toLowerCase()} access at ${water.name}, keep the setup simple, and move after 20 quiet minutes.`,
+    beginnerAdvice: `${input.month} plan: fish ${input.access.toLowerCase()} access at ${water.name} for ${input.timeAvailable ?? "about 2 hours"}, keep the setup simple, and move after 20 quiet minutes.`,
     weatherReminder: `Look for ${fish.bestWeather.toLowerCase()}. If conditions are bright or windy, fish shade, docks, or deeper edges.`,
     regulationReminder: `${regulation.season} ${regulation.dailyLimit}. ${regulation.warningMessages.join(" ")}`,
     regulation,
