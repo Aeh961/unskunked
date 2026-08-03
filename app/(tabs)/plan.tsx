@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
@@ -28,12 +29,18 @@ const experienceOptions = ["Beginner", "Intermediate", "Advanced"] as const;
 const timeOptions = ["1 hour", "2 hours", "Half day", "All day"] as const;
 
 export default function PlanTripScreen() {
-  const [activityType, setActivityType] = useState<ActivityType>("fishing");
+  const params = useLocalSearchParams<{ activity?: string; waterbodyId?: string; targetFishId?: string }>();
+  const initialActivity = activityOptions.includes(params.activity as ActivityType) ? (params.activity as ActivityType) : "fishing";
+  const initialWaterbodyId = waterbodies.some((water) => water.id === params.waterbodyId) ? (params.waterbodyId as string) : waterbodies[0].id;
+  const initialTargetFishId = fishSpecies.some((fish) => fish.id === params.targetFishId)
+    ? (params.targetFishId as string)
+    : waterbodies.find((water) => water.id === initialWaterbodyId)?.speciesIds[0] ?? waterbodies[0].speciesIds[0];
+  const [activityType, setActivityType] = useState<ActivityType>(initialActivity);
   const [month, setMonth] = useState<(typeof months)[number]>("July");
-  const [waterbodyId, setWaterbodyId] = useState(waterbodies[0].id);
+  const [waterbodyId, setWaterbodyId] = useState(initialWaterbodyId);
   const [access, setAccess] = useState<(typeof accessOptions)[number]>("Shore");
   const [experience, setExperience] = useState<(typeof experienceOptions)[number]>("Beginner");
-  const [targetFishId, setTargetFishId] = useState(waterbodies[0].speciesIds[0]);
+  const [targetFishId, setTargetFishId] = useState(initialTargetFishId);
   const [availableBait, setAvailableBait] = useState("");
   const [availableGear, setAvailableGear] = useState("");
   const [savedMessage, setSavedMessage] = useState("");

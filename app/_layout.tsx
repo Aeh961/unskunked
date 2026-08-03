@@ -30,7 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="learn" options={{ title: "Learning Center" }} />
         <Stack.Screen name="start" options={{ title: "Start Here" }} />
         <Stack.Screen name="favorites" options={{ title: "Favorites" }} />
-        <Stack.Screen name="plan" options={{ title: "Plan Trip" }} />
+        <Stack.Screen name="rigs" options={{ title: "Rigs & Knots" }} />
         <Stack.Screen name="search" options={{ title: "Search" }} />
         <Stack.Screen name="stats" options={{ title: "Fishing Stats" }} />
         <Stack.Screen name="feedback" options={{ title: "Feedback" }} />

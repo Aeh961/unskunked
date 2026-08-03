@@ -5,8 +5,8 @@ import { colors } from "@/src/theme";
 const icons = {
   index: "home",
   map: "map",
+  plan: "calendar",
   fish: "fish",
-  rigs: "git-branch",
   ask: "chatbubble-ellipses"
 } as const;
 
@@ -31,8 +31,8 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
       <Tabs.Screen name="map" options={{ title: "Map" }} />
+      <Tabs.Screen name="plan" options={{ title: "Plan" }} />
       <Tabs.Screen name="fish" options={{ title: "Fish" }} />
-      <Tabs.Screen name="rigs" options={{ title: "Rigs" }} />
       <Tabs.Screen name="ask" options={{ title: "Ask" }} />
     </Tabs>
   );
