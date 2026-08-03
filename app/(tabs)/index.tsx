@@ -10,11 +10,9 @@ import { Screen } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { ActivityType } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
-import { personalizationService, PersonalizedRecommendation } from "@/src/services/personalization";
 import { getMockWeather, getSunWindows } from "@/src/services/fishingConditions";
-import { defaultManualLocation, getNearbyWaterbodies } from "@/src/services/location";
 import { colors, radii, spacing } from "@/src/theme";
-import { getFavorites, getOnboardingProfile, getTrips, TripLog } from "@/src/utils/localStore";
+import { getTrips, TripLog } from "@/src/utils/localStore";
 
 const activityButtons: Array<{ activity: ActivityType; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
   { activity: "fishing", label: "Go Fishing", icon: "fish" },
@@ -30,26 +28,19 @@ function getGreeting() {
 }
 
 export default function HomeScreen() {
-  const [recommendation, setRecommendation] = useState<PersonalizedRecommendation | null>(null);
   const [recentTrips, setRecentTrips] = useState<TripLog[]>([]);
 
   useEffect(() => {
-    Promise.all([getOnboardingProfile(), getFavorites(), getTrips()]).then(([profile, favorites, trips]) => {
-      const month = new Date().toLocaleString("en-US", { month: "long" });
-      setRecommendation(personalizationService.buildRecommendation({ ...profile, month }, favorites, trips));
-      setRecentTrips(trips.slice(-3).reverse());
-    });
+    getTrips().then((trips) => setRecentTrips(trips.slice(-3).reverse()));
   }, []);
 
-  const nearbyPick = useMemo(
-    () => getNearbyWaterbodies(defaultManualLocation.coordinates, { beginnerOnly: true, limit: 1 })[0],
-    []
-  );
+  // Generic ambient conditions only - not tied to any specific waterbody, since the
+  // app should never pick a destination for the user before they choose one themselves.
   const conditions = useMemo(() => {
-    const weather = getMockWeather(nearbyPick ?? waterbodies[0]);
+    const weather = getMockWeather(waterbodies[0]);
     const sun = getSunWindows();
     return { weather, sun };
-  }, [nearbyPick]);
+  }, []);
 
   return (
     <Screen>
@@ -81,19 +72,6 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {nearbyPick ? (
-        <Card style={styles.card}>
-          <SectionHeader title="Nearby recommendation" eyebrow={`${nearbyPick.distanceMiles} mi from Seattle fallback`} />
-          <AppText>{nearbyPick.name}: {nearbyPick.todayRecommendation}</AppText>
-          <Link href={"/map" as Href} asChild>
-            <Pressable accessibilityRole="button" style={styles.cardLink}>
-              <AppText style={styles.cardLinkText}>See on map</AppText>
-              <Ionicons name="chevron-forward" size={16} color={colors.pine} />
-            </Pressable>
-          </Link>
-        </Card>
-      ) : null}
-
       <Card style={styles.card}>
         <SectionHeader title="Today's conditions" eyebrow="Offline estimate" />
         <AppText>{conditions.weather.airTempF}°F · wind {conditions.weather.windMph} mph · {conditions.sun.morningBite} morning bite window</AppText>
@@ -106,7 +84,7 @@ export default function HomeScreen() {
       </Card>
 
       <Card style={styles.card}>
-        <SectionHeader title="Recent trips" eyebrow={recommendation?.reason} />
+        <SectionHeader title="Recent trips" />
         {recentTrips.length === 0 ? (
           <EmptyState icon="journal" title="No trips logged yet" body="Log your first trip after fishing to start building your own patterns." />
         ) : (
