@@ -33,48 +33,48 @@ export const spacing = {
 
 export const typography = {
   title: {
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: "900" as const
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: "800" as const
   },
   hero: {
-    fontSize: 42,
-    lineHeight: 48,
-    fontWeight: "900" as const
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: "800" as const
   },
   heading: {
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: "800" as const
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "700" as const
   },
   subheading: {
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: "800" as const
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700" as const
   },
   body: {
-    fontSize: 16,
-    lineHeight: 23
+    fontSize: 15,
+    lineHeight: 21
   },
   caption: {
-    fontSize: 13,
-    lineHeight: 18
+    fontSize: 12,
+    lineHeight: 16
   }
 };
 
 export const radii = {
-  sm: 6,
-  md: 8,
-  lg: 12,
+  sm: 8,
+  md: 14,
+  lg: 20,
   pill: 999
 };
 
 export const shadows = {
   card: {
     shadowColor: "#0b1f1c",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 2
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 1
   }
 };
