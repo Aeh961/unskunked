@@ -1,126 +1,204 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  UIManager,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
-import { Card } from "@/src/components/Card";
-import { Disclaimer } from "@/src/components/Disclaimer";
-import { EmptyState } from "@/src/components/EmptyState";
-import { Screen } from "@/src/components/Screen";
+import { SectionHeader } from "@/src/components/SectionHeader";
 import { colors, radii, spacing } from "@/src/theme";
+import { getDemoSearchHistory, saveRecentSearch } from "@/src/utils/localStore";
 import { answerLocalQuestion } from "@/src/utils/recommendations";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type Message = {
   role: "user" | "assistant";
   text: string;
 };
 
-const examples = [
+const suggestedQuestions = [
   "I have worms and a spinning rod, what can I catch?",
-  "What should I use at Lake Washington?",
-  "What knot should I use?",
+  "What bait should I use for trout?",
+  "Can I keep salmon here?",
+  "What knot should I tie?",
   "I got skunked, what should I change?",
   "What can beginners fish for near Seattle?"
 ];
 
+const searchChips = ["Bait", "Rigs", "Knots", "Regulations", "Beginners"];
+
 export default function AskScreen() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      text: "Ask about bait, rigs, knots, or one of the mock Washington waters. I use local demo data only."
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [recent, setRecent] = useState<string[]>([]);
 
-  function submit(text = input) {
+  useEffect(() => {
+    getDemoSearchHistory().then(setRecent);
+  }, []);
+
+  const filteredQuestions = useMemo(() => {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed) return suggestedQuestions;
+    return suggestedQuestions.filter((question) => question.toLowerCase().includes(trimmed));
+  }, [input]);
+
+  async function submit(text = input) {
     const trimmed = text.trim();
     if (!trimmed) return;
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setMessages((current) => [
       ...current,
       { role: "user", text: trimmed },
       { role: "assistant", text: answerLocalQuestion(trimmed) }
     ]);
     setInput("");
+    const next = await saveRecentSearch(trimmed);
+    setRecent(next);
   }
 
+  const showSuggestions = messages.length === 0;
+
   return (
-    <Screen>
-      <View style={styles.hero}>
-        <AppText variant="title">Ask Unskunked</AppText>
-        <AppText style={styles.heroText}>Rule-based, offline answers from the local fish, rig, and waterbody catalog.</AppText>
-      </View>
-      <Disclaimer />
-      <View style={styles.examples}>
-        {examples.map((example) => (
-          <Pressable key={example} style={styles.exampleButton} onPress={() => submit(example)}>
-            <AppText style={styles.exampleText}>{example}</AppText>
-          </Pressable>
-        ))}
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.header}>
+        <AppText variant="heading">Ask Unskunked</AppText>
+        <AppText variant="caption" style={styles.headerSubtitle}>Offline answers from the local fish, rig, and waterbody catalog.</AppText>
       </View>
 
-      <Card style={styles.chatCard}>
-        {messages.length > 0 ? (
-          messages.map((message, index) => (
-            <View key={`${message.role}-${index}`} style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
-              <AppText style={message.role === "user" ? styles.userText : undefined}>{message.text}</AppText>
+      {showSuggestions ? (
+        <ScrollView style={styles.flex} contentContainerStyle={styles.suggestionContent} keyboardShouldPersistTaps="handled">
+          <SectionHeader title="Suggested questions" />
+          <View style={styles.chipWrap}>
+            {filteredQuestions.map((question) => (
+              <Pressable key={question} accessibilityRole="button" style={styles.suggestionChip} onPress={() => submit(question)}>
+                <AppText style={styles.suggestionText}>{question}</AppText>
+              </Pressable>
+            ))}
+          </View>
+
+          <SectionHeader title="Search by topic" />
+          <View style={styles.chipWrap}>
+            {searchChips.map((chip) => (
+              <Pressable key={chip} accessibilityRole="button" style={styles.topicChip} onPress={() => submit(`What should I know about ${chip.toLowerCase()}?`)}>
+                <AppText variant="caption" style={styles.topicText}>{chip}</AppText>
+              </Pressable>
+            ))}
+          </View>
+
+          {recent.length > 0 ? (
+            <>
+              <SectionHeader title="Recent" />
+              <View style={styles.chipWrap}>
+                {recent.slice(0, 6).map((item) => (
+                  <Pressable key={item} accessibilityRole="button" style={styles.topicChip} onPress={() => submit(item)}>
+                    <AppText variant="caption" style={styles.topicText}>{item}</AppText>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          ) : null}
+        </ScrollView>
+      ) : (
+        <FlatList
+          style={styles.flex}
+          contentContainerStyle={styles.messageContent}
+          data={messages}
+          keyExtractor={(_, index) => String(index)}
+          renderItem={({ item }) => (
+            <View style={[styles.bubble, item.role === "user" ? styles.user : styles.assistant]}>
+              <AppText style={item.role === "user" ? styles.userText : undefined}>{item.text}</AppText>
             </View>
-          ))
-        ) : (
-          <EmptyState icon="chatbubble-ellipses" title="No messages yet" body="Tap an example or ask about bait, rigs, knots, or water." />
-        )}
-      </Card>
-
-      <View style={styles.inputRow}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Ask about bait, rigs, knots, or water..."
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          multiline
+          )}
         />
-        <Pressable style={styles.sendButton} onPress={() => submit()}>
-          <Ionicons name="send" size={20} color="#fff" />
-        </Pressable>
-      </View>
-    </Screen>
+      )}
+
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={8}>
+        <View style={styles.inputRow}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Ask about bait, rigs, knots, or water..."
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            multiline
+          />
+          <Pressable accessibilityRole="button" accessibilityLabel="Send" style={styles.sendButton} onPress={() => submit()}>
+            <Ionicons name="send" size={20} color="#fff" />
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.deepWater,
-    borderRadius: radii.md,
+  safe: {
+    backgroundColor: colors.background,
+    flex: 1
+  },
+  flex: {
+    flex: 1
+  },
+  header: {
+    gap: spacing.xxs,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm
+  },
+  headerSubtitle: {
+    color: colors.muted
+  },
+  suggestionContent: {
     gap: spacing.sm,
-    padding: spacing.lg
+    padding: spacing.md
   },
-  heroText: {
-    color: colors.mist,
-    fontWeight: "700"
+  messageContent: {
+    gap: spacing.sm,
+    padding: spacing.md
   },
-  examples: {
+  chipWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm
+    gap: spacing.sm,
+    marginBottom: spacing.sm
   },
-  exampleButton: {
+  suggestionChip: {
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
     borderRadius: radii.md,
     borderWidth: 1,
-    flexBasis: "48%",
+    flexBasis: "100%",
     padding: spacing.md
   },
-  exampleText: {
+  suggestionText: {
     color: colors.river,
+    fontWeight: "700"
+  },
+  topicChip: {
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  topicText: {
+    color: colors.forest,
     fontWeight: "800"
   },
-  chatCard: {
-    backgroundColor: "#fbf6ea",
-    gap: spacing.sm
-  },
   bubble: {
-    borderRadius: radii.md,
-    maxWidth: "92%",
+    borderRadius: radii.lg,
+    maxWidth: "88%",
     padding: spacing.md
   },
   assistant: {
@@ -136,8 +214,11 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     alignItems: "flex-end",
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
     flexDirection: "row",
-    gap: spacing.sm
+    gap: spacing.sm,
+    padding: spacing.md
   },
   input: {
     backgroundColor: colors.surfaceStrong,
@@ -146,8 +227,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: colors.ink,
     flex: 1,
-    fontSize: 16,
-    minHeight: 54,
+    fontSize: 15,
+    maxHeight: 120,
+    minHeight: 48,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm
   },
@@ -155,8 +237,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.pine,
     borderRadius: radii.md,
-    height: 54,
+    height: 48,
     justifyContent: "center",
-    width: 54
+    width: 48
   }
 });
