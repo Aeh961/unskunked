@@ -3,12 +3,12 @@ import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { Coordinates, distanceMiles } from "@/src/services/location";
 import { calculateTripScore, getMockWeather, getTideSnapshot } from "@/src/services/fishingConditions";
 
-export function buildShellfishPlan(input: { activityType: Extract<ActivityType, "clamming" | "crabbing">; coordinates: Coordinates; experience: "Beginner" | "Intermediate" | "Advanced" }) {
+export function buildShellfishPlan(input: { activityType: Extract<ActivityType, "clamming" | "crabbing">; coordinates: Coordinates; experience: "Beginner" | "Intermediate" | "Advanced"; locationId?: string }) {
   const locations = shellfishLocations
     .filter((location) => location.activityTypes.includes(input.activityType))
     .map((location) => ({ ...location, distanceMiles: Number(distanceMiles(input.coordinates, location).toFixed(1)) }))
     .sort((a, b) => a.distanceMiles - b.distanceMiles);
-  const location = locations[0] ?? shellfishLocations[0];
+  const location = (input.locationId ? locations.find((item) => item.id === input.locationId) : undefined) ?? locations[0] ?? shellfishLocations[0];
   const species = shellfishSpecies.find((item) => item.activityType === input.activityType);
   const weather = getMockWeather({ waterType: location.waterType === "Pier" ? "Pier" : "Saltwater", region: location.region });
   const tide = getTideSnapshot({ waterType: location.waterType === "Pier" ? "Pier" : "Saltwater" });
