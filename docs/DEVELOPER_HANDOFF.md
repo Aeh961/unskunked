@@ -12,6 +12,21 @@ Unskunked is an Expo React Native TypeScript app using Expo Router, local mock d
 - `src/services/`: regulation providers, personalization, and analytics.
 - `src/services/location.ts`: Expo location permission handling, distance math, manual fallback locations, and nearby sorting.
 - `src/services/officialLinks.ts`: WDFW source link definitions and verification copy.
+- `src/services/regulations.ts`: provider-layer regulation data (`RegulationProvider`, `WashingtonRegulationProvider`, `MockRegulationProvider`, `RegulationService`, `EmergencyRuleService`, `WaterbodyRuleService`). This is the source of truth for regulation content.
+- `src/services/regulationEngine.ts`: `getCurrentRegulations()` composes `regulations.ts` summaries with fish/waterbody specifics into the badges and copy the Regulations screen (`app/regulations.tsx`) and Map screen actually render. Add new regulation content in `regulations.ts`, not here.
+- `src/services/fishingConditions.ts`: weather/sun/tide scoring and trip-score helpers.
+- `src/services/conditionProviders.ts`: mock/live weather+tide provider contract and offline condition cache.
+- `src/services/dataTrust.ts`: provider confidence, freshness, and verification workflow metadata for the Data Sources screen.
+- `src/services/mapMarkers.ts`: unified fishing/clamming/crabbing marker and search model for the Map screen.
+- `src/services/shellfishPlanner.ts`: clamming/crabbing trip planning (tide reminders, legal warnings, gear checklists).
+- `src/services/personalization.ts`: recommendation engine driven by onboarding profile, favorites, trip history, and season.
+- `src/services/tripAnalytics.ts`: trip log stats (skunked vs. unskunked, best bait/location/time).
+- `src/services/betaInsights.ts`: local-only usage insights (viewed fish/waterbodies, searches, feedback categories).
+- `src/services/providerFramework.ts`: shared import-provider interface for future live data.
+- `src/services/regionalProviders.ts`: plug-and-play regional provider registry (WA, OR, ID, CA, BC).
+- `src/services/recovery.ts`: fallback copy for GPS/provider/weather/tide/offline/image/regulation failures.
+- `src/services/wdfwImportPipeline.ts`: WDFW snapshot manifest validation and import readiness reporting.
+- `src/services/offlineDownloads.ts`: offline pack definitions.
 - `src/utils/`: storage, local store, recommendations, search, share, and YouTube helpers.
 - `scripts/`: screenshot automation.
 - `docs/`: QA, beta testing, and handoff documentation.
@@ -22,7 +37,10 @@ Mock data lives in `src/data/*`. The app currently uses arrays of typed records 
 
 ## Regulation Providers
 
-Regulation architecture lives in `src/services/regulations.ts`.
+Regulation architecture is split across two layers. Both are live and both matter — this is not
+dead code from an earlier phase.
+
+Provider layer, `src/services/regulations.ts`:
 
 - `RegulationProvider` defines the interface.
 - `WashingtonRegulationProvider` provides mocked Washington rules and WDFW source links.
@@ -31,7 +49,16 @@ Regulation architecture lives in `src/services/regulations.ts`.
 - `EmergencyRuleService` is the future integration point for emergency-rule feeds.
 - `WaterbodyRuleService` formats waterbody warning messages.
 
-Official data should be added as a provider implementation, not hard-coded in screens.
+Presentation layer, `src/services/regulationEngine.ts`:
+
+- `getCurrentRegulations()` calls `regulationService.getSummary()` from the provider layer, then
+  layers on fish-specific catch limits/season overrides, bait-restriction inference, and the
+  `RegulationBadge[]` shown in the UI.
+- `app/regulations.tsx` and the Map screen (`app/(tabs)/map.tsx`) render through this layer, not
+  `regulations.ts` directly.
+
+Official data should be added as a provider implementation in `regulations.ts`, not hard-coded in
+screens or in `regulationEngine.ts`.
 
 ## Local Storage
 

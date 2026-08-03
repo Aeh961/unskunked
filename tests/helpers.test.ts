@@ -63,6 +63,53 @@ describe("regulation helpers", () => {
   });
 });
 
+describe("regulation engine branch coverage", () => {
+  it("flags river waters under a restricted status as artificial-lures-only", () => {
+    const rules = getCurrentRegulations({ waterbodyId: "snoqualmie-river", speciesId: "steelhead" });
+    expect(rules.status).toBe("restricted");
+    expect(rules.baitRestrictions).toContain("Artificial lures only");
+    expect(rules.badges.some((badge) => badge.label === "Limits vary")).toBe(true);
+  });
+
+  it("flags saltwater and pier waters with marine area rules", () => {
+    const rules = getCurrentRegulations({ waterbodyId: "puget-sound", speciesId: "lingcod" });
+    expect(rules.baitRestrictions).toContain("Marine area rules apply");
+  });
+
+  it("flags kokanee-specific scent/bait rules on non-river waters", () => {
+    const rules = getCurrentRegulations({ waterbodyId: "lake-sammamish", speciesId: "kokanee" });
+    expect(rules.status).toBe("restricted");
+    expect(rules.baitRestrictions).toContain("Scent/bait rules vary");
+  });
+
+  it("labels catch-and-release species correctly in badges", () => {
+    const rules = getCurrentRegulations({ waterbodyId: "columbia-river", speciesId: "sturgeon" });
+    expect(rules.badges.some((badge) => badge.label === "Catch and release")).toBe(true);
+  });
+
+  it("treats closed status as not fishable", () => {
+    // No waterbody or fish record in the current mock data ever uses status "closed" -
+    // this only verifies the type-level handling, not an end-to-end closed-water flow.
+    expect(getStatusLabel("closed")).toBe("Closed");
+    expect(isFishable("closed")).toBe(false);
+  });
+});
+
+describe("regulation provider branch coverage", () => {
+  it("detects gear restrictions from restricted river species rules", () => {
+    const provider = new WashingtonRegulationProvider();
+    const summary = provider.getSpeciesRules("steelhead", { state: "WA", waterbodyId: "snoqualmie-river" });
+    expect(summary.status).toBe("restricted");
+    expect(summary.gearRestrictions.length).toBeGreaterThan(0);
+  });
+
+  it("marks sturgeon regulations as catch-and-release from daily limit text", () => {
+    const provider = new WashingtonRegulationProvider();
+    const summary = provider.getSpeciesRules("sturgeon", { state: "WA" });
+    expect(summary.catchAndRelease).toBe(true);
+  });
+});
+
 describe("species recommendations", () => {
   it("recommends worm-friendly species", () => {
     const names = recommendSpeciesFromGear("I have worms and a spinning rod").map((fish) => fish.name);
@@ -282,6 +329,26 @@ describe("trip analytics and personalization", () => {
     expect(analytics.totalTrips).toBe(3);
     expect(analytics.bestBait).toContain("PowerBait");
     expect(analytics.unskunkedRatio).toBeGreaterThan(50);
+  });
+
+  it("calculates trip stats for a brand-new user with no logged trips", () => {
+    const analytics = calculateTripAnalytics([]);
+    expect(analytics.totalTrips).toBe(0);
+    expect(analytics.unskunkedRatio).toBe(0);
+    expect(analytics.bestBait).toEqual([]);
+    expect(analytics.personalRecords.every((record) => record.value === "Not enough data")).toBe(true);
+  });
+
+  it("builds a recommendation for a brand-new user with no favorites or trips", () => {
+    const recommendation = personalizationService.buildRecommendation(
+      { experience: "Beginner", preferredStyle: "Shore", favoriteFishIds: [], favoriteWaterbodyIds: [], month: "July" },
+      [],
+      []
+    );
+    expect(recommendation.waterbody).toBeTruthy();
+    expect(recommendation.targetSpecies).toBeTruthy();
+    expect(recommendation.baitOrLure).toBeTruthy();
+    expect(recommendation.reason).toContain("0 logged trips");
   });
 
   it("generates a personalized next action", () => {
