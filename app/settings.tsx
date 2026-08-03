@@ -93,6 +93,33 @@ export default function SettingsScreen() {
       </Card>
 
       <Card style={styles.card}>
+        <SectionHeader title="More" eyebrow="Everything else" />
+        <View style={styles.actionRow}>
+          <Link href={"/favorites" as Href} asChild>
+            <Button icon="heart" variant="secondary" style={styles.actionButton}>Favorites</Button>
+          </Link>
+          <Link href={"/log" as Href} asChild>
+            <Button icon="journal" variant="secondary" style={styles.actionButton}>Trip log</Button>
+          </Link>
+          <Link href={"/stats" as Href} asChild>
+            <Button icon="stats-chart" variant="secondary" style={styles.actionButton}>Stats</Button>
+          </Link>
+          <Link href={"/weather" as Href} asChild>
+            <Button icon="partly-sunny" variant="secondary" style={styles.actionButton}>Weather</Button>
+          </Link>
+          <Link href={"/regulations" as Href} asChild>
+            <Button icon="shield-checkmark" variant="secondary" style={styles.actionButton}>Regulations</Button>
+          </Link>
+          <Link href={"/learn" as Href} asChild>
+            <Button icon="school" variant="secondary" style={styles.actionButton}>Learn</Button>
+          </Link>
+          <Link href={"/rigs" as Href} asChild>
+            <Button icon="git-branch" variant="secondary" style={styles.actionButton}>Rigs & knots</Button>
+          </Link>
+        </View>
+      </Card>
+
+      <Card style={styles.card}>
         <SectionHeader title="Safety and legal" eyebrow="Global disclaimer" />
         <Stack>
           <AppText>Unskunked is for planning and education only.</AppText>
