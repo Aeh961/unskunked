@@ -7,7 +7,7 @@
     "scheme": "unskunked",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "jsEngine": "jsc",
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Unskunked uses your location to sort nearby fishing spots. You can use manual location fallback instead."
       },
-      "bundleIdentifier": "com.anonymous.unskunked"
+      "bundleIdentifier": "com.unskunked.app",
+      "buildNumber": "1"
     },
     "android": {
       "permissions": [
@@ -29,7 +30,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#123B30"
       },
-      "package": "com.anonymous.unskunked"
+      "package": "com.unskunked.app",
+      "versionCode": 1,
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "plugins": [
       "expo-router",
