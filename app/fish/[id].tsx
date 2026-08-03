@@ -1,10 +1,11 @@
-import { useLocalSearchParams } from "expo-router";
+import { Href, Link, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
+import { ExpandableSection } from "@/src/components/ExpandableSection";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { Button } from "@/src/components/Button";
@@ -68,60 +69,83 @@ export default function FishDetailScreen() {
           <FavoriteButton active={isFavorite("fish", fish.id)} onPress={() => toggle("fish", fish.id)} label={`Favorite ${fish.name}`} />
         </View>
       </View>
+
+      <Card>
+        <View style={styles.grid}>
+          <Fact label="Difficulty" value={fish.difficulty} />
+          <Fact label="Best bait" value={fish.bestBait[0] ?? "See gear"} />
+          <Fact label="Best rig" value={fish.rigs[0] ?? "See gear"} />
+          <Fact label="Best time" value={fish.bestTimeOfDay} />
+        </View>
+        <AppText>Today's recommendation: fish {fish.bestWeather.toLowerCase()} during the {fish.bestSeason.toLowerCase()}.</AppText>
+        <Link href={`/plan?activity=fishing&targetFishId=${fish.id}` as Href} asChild>
+          <Button icon="calendar">Plan a trip for {fish.name}</Button>
+        </Link>
+      </Card>
+
       <Disclaimer />
 
-      <Card>
-        <SectionHeader title="Quick read" eyebrow="Target plan" />
-        <View style={styles.grid}>
-          <Fact label="Season" value={fish.bestSeason} />
-          <Fact label="Weather" value={fish.bestWeather} />
-          <Fact label="Time" value={fish.bestTimeOfDay} />
-          <Fact label="Difficulty" value={fish.difficulty} />
-        </View>
-      </Card>
+      <ExpandableSection title="Gear" eyebrow="Recommended setup">
+        <AppText>Rod: {fish.rodSetup}</AppText>
+        <AppText>Reel: {fish.reel}</AppText>
+        <AppText>Line: {fish.line}</AppText>
+        <AppText>Hook sizes: {fish.hook}</AppText>
+        <AppText>Best bait: {fish.bestBait.join(", ")}</AppText>
+        <AppText>Artificial lures: {fish.bestLures.join(", ")}</AppText>
+        <AppText>Rigs: {fish.rigs.join(", ")}</AppText>
+      </ExpandableSection>
 
-      <Card>
-        <SectionHeader title="Recommended setup" eyebrow="Gear" />
-        <Stack>
-          <AppText>Rod: {fish.rodSetup}</AppText>
-          <AppText>Reel: {fish.reel}</AppText>
-          <AppText>Line: {fish.line}</AppText>
-          <AppText>Hook sizes: {fish.hook}</AppText>
-          <AppText>Best bait: {fish.bestBait.join(", ")}</AppText>
-          <AppText>Artificial lures: {fish.bestLures.join(", ")}</AppText>
-          <AppText>Knots: {fish.knots.join(", ")}</AppText>
-          <AppText>Rigs: {fish.rigs.join(", ")}</AppText>
-        </Stack>
-      </Card>
-      <Button icon="share-social" variant="secondary" onPress={shareFish}>Share fish tip</Button>
+      <ExpandableSection title="Knots" eyebrow="Tie these">
+        <AppText>{fish.knots.join(", ")}</AppText>
+      </ExpandableSection>
 
-      <InfoList title="Where to find them" eyebrow="Habitat" items={fish.whereToFind} />
-      <InfoList title="Casting tips" eyebrow="Technique" items={fish.castingTips} />
-      <InfoList title="Common mistakes" eyebrow="Avoid this" items={fish.commonMistakes} danger />
+      <ExpandableSection title="Regulations" eyebrow="Verify before keeping">
+        <AppText>Legal status: {fish.regulation.status}</AppText>
+        <AppText>Season: {fish.regulation.season}</AppText>
+        <AppText>Daily limit: {fish.regulation.dailyLimit}</AppText>
+        <AppText>Size limit: {fish.regulation.sizeLimit}</AppText>
+        <AppText>Restrictions: {fish.regulation.restrictions.join(" ")}</AppText>
+        <AppText>Catch and release: {regulation.catchAndRelease ? "Yes or likely" : "Not shown in mock summary"}</AppText>
+        <AppText>Gear restrictions: {regulation.gearRestrictions.join(", ") || "Verify by waterbody"}</AppText>
+        <AppText variant="caption" style={styles.warning}>
+          {fish.regulation.warning}
+        </AppText>
+        <OfficialLinks links={regulation.sourceLinks} compact />
+      </ExpandableSection>
 
-      <Card>
-        <SectionHeader title="Rules snapshot" eyebrow="Verify before keeping" />
-        <Stack>
-          <AppText>Legal status: {fish.regulation.status}</AppText>
-          <AppText>Season: {fish.regulation.season}</AppText>
-          <AppText>Daily limit: {fish.regulation.dailyLimit}</AppText>
-          <AppText>Size limit: {fish.regulation.sizeLimit}</AppText>
-          <AppText>Restrictions: {fish.regulation.restrictions.join(" ")}</AppText>
-          <AppText>Catch and release: {regulation.catchAndRelease ? "Yes or likely" : "Not shown in mock summary"}</AppText>
-          <AppText>Gear restrictions: {regulation.gearRestrictions.join(", ") || "Verify by waterbody"}</AppText>
-          <AppText variant="caption" style={styles.warning}>
-            {fish.regulation.warning}
-          </AppText>
-        </Stack>
-      </Card>
-      <OfficialLinks links={regulation.sourceLinks} compact />
+      <ExpandableSection title="Habitat" eyebrow="Where to find them">
+        {fish.whereToFind.map((item) => (
+          <View key={item} style={styles.tipRow}>
+            <View style={styles.tipDot} />
+            <AppText style={styles.tipText}>{item}</AppText>
+          </View>
+        ))}
+      </ExpandableSection>
 
-      <Card>
-        <SectionHeader title="Watch on YouTube" eyebrow="External searches" />
+      <ExpandableSection title="Tips" eyebrow="Technique and mistakes to avoid">
+        <SectionHeader title="Casting tips" />
+        {fish.castingTips.map((item) => (
+          <View key={item} style={styles.tipRow}>
+            <View style={styles.tipDot} />
+            <AppText style={styles.tipText}>{item}</AppText>
+          </View>
+        ))}
+        <SectionHeader title="Common mistakes" />
+        {fish.commonMistakes.map((item) => (
+          <View key={item} style={styles.tipRow}>
+            <View style={[styles.tipDot, styles.dangerDot]} />
+            <AppText style={styles.tipText}>{item}</AppText>
+          </View>
+        ))}
+      </ExpandableSection>
+
+      <ExpandableSection title="Learning" eyebrow="Watch and learn">
         {fish.youtubeSearches.map((query) => (
           <YoutubeLink key={query} query={query} />
         ))}
-      </Card>
+      </ExpandableSection>
+
+      <Button icon="share-social" variant="secondary" onPress={shareFish}>Share fish tip</Button>
     </Screen>
   );
 }
@@ -134,22 +158,6 @@ function Fact({ label, value }: { label: string; value: string }) {
       </AppText>
       <AppText style={styles.factValue}>{value}</AppText>
     </View>
-  );
-}
-
-function InfoList({ title, eyebrow, items, danger = false }: { title: string; eyebrow: string; items: string[]; danger?: boolean }) {
-  return (
-    <Card>
-      <SectionHeader title={title} eyebrow={eyebrow} />
-      <Stack>
-        {items.map((item) => (
-          <View key={item} style={styles.tipRow}>
-            <View style={[styles.tipDot, danger && styles.dangerDot]} />
-            <AppText style={styles.tipText}>{item}</AppText>
-          </View>
-        ))}
-      </Stack>
-    </Card>
   );
 }
 

@@ -41,6 +41,7 @@ export default function MapScreen() {
   const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
   const [locationStatus, setLocationStatus] = useState<"idle" | "granted" | "denied" | "unavailable">("idle");
+  const [showDetails, setShowDetails] = useState(false);
   const { isFavorite, toggle } = useFavorites();
 
   const filtered = useMemo(() => {
@@ -291,63 +292,78 @@ export default function MapScreen() {
             </View>
           </View>
 
-          <AppText variant="subheading">Fish found</AppText>
-          <View style={styles.badgeWrap}>
-            {species.map((name) => (
-              <View key={name} style={styles.speciesBadge}>
-                <AppText variant="caption" style={styles.speciesText}>
-                  {name}
-                </AppText>
-              </View>
-            ))}
-          </View>
-
-          <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
-          <AppText>Distance: {"distanceMiles" in selected ? `${selected.distanceMiles} miles from selected location` : "Set a location to calculate distance"}</AppText>
-          <AppText>Shore access: {selected.shoreAccessDifficulty ?? selected.beginnerDifficulty}</AppText>
-          <AppText>Boat launch: {selected.boatLaunch ? "Yes or nearby" : "Not highlighted"}</AppText>
-          <AppText>Kayak friendly: {selected.kayakFriendly ? "Yes" : "Use caution"}</AppText>
-          <AppText>Bank fishing: {selected.bankFishing ? "Yes" : "Limited"}</AppText>
-          <AppText>Wheelchair accessible: {selected.wheelchairAccessible ? "Likely at some access points" : "Not confirmed"}</AppText>
-          <AppText>Bathrooms: {selected.bathrooms ? "Likely at primary access" : "Not confirmed"}</AppText>
-          <AppText>Camping: {selected.camping ? "Nearby or on-site" : "Not highlighted"}</AppText>
-          <AppText>Fee: {selected.fee}</AppText>
-          <AppText>Parking: {selected.parkingNote ?? "Check local parking before leaving."}</AppText>
-          <AppText>GPS: {selected.latitude.toFixed(4)}, {selected.longitude.toFixed(4)}</AppText>
-          <AppText>Best season: {selected.bestSeason ?? "Verify by waterbody and species."}</AppText>
-          <AppText>Recommended bait: {selected.suggestedBait.join(", ")}</AppText>
-          <AppText>Recommended rigs: {selected.recommendedRigs.join(", ")}</AppText>
-          <AppText>Season check: {regulation.season}</AppText>
-          <AppText>Bag/size: {regulation.dailyLimit} · {regulation.sizeLimit}</AppText>
-          <View style={styles.badgeWrap}>
-            {currentRegulations.badges.map((badge) => (
-              <View key={badge.label} style={[styles.speciesBadge, badge.tone === "caution" && styles.cautionBadge, badge.tone === "bad" && styles.badBadge]}>
-                <AppText variant="caption" style={styles.speciesText}>{badge.label}</AppText>
-              </View>
-            ))}
-          </View>
-          <AppText>Data last updated: {currentRegulations.dataLastUpdated}</AppText>
-          <AppText>WDFW seed ID: {selected.waterbodyId}</AppText>
-          {selected.stocking?.length ? (
-            <Stack>
-              <AppText variant="subheading">Recent stocking</AppText>
-              {selected.stocking.map((stock) => (
-                <AppText key={`${stock.species}-${stock.date}`}>{stock.species}: {stock.count.toLocaleString()} fish on {stock.date}</AppText>
-              ))}
-            </Stack>
-          ) : null}
-          <AppText style={styles.warning}>Regulation warning: {selected.regulationSummary}</AppText>
-          <AppText variant="caption">{selected.notes}</AppText>
-          <YoutubeLink query={selected.youtubeSearch} />
+          {species[0] ? <AppText>Primary species: {species[0]}</AppText> : null}
         </Stack>
 
         <View style={styles.actions}>
-          <Link href={"/plan" as Href} asChild>
+          <Link href={`/plan?waterbodyId=${selected.id}` as Href} asChild>
             <Button icon="calendar" style={styles.actionButton}>
               Plan Trip
             </Button>
           </Link>
-          <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={openDirections}>
+          <Button icon="shield-checkmark" variant="secondary" style={styles.actionButton} onPress={() => Linking.openURL(regulation.sourceLinks.regulations)}>
+            Official Regs
+          </Button>
+        </View>
+
+        {showDetails ? (
+          <Stack>
+            <AppText variant="subheading">Fish found</AppText>
+            <View style={styles.badgeWrap}>
+              {species.map((name) => (
+                <View key={name} style={styles.speciesBadge}>
+                  <AppText variant="caption" style={styles.speciesText}>
+                    {name}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+
+            <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
+            <AppText>Distance: {"distanceMiles" in selected ? `${selected.distanceMiles} miles from selected location` : "Set a location to calculate distance"}</AppText>
+            <AppText>Shore access: {selected.shoreAccessDifficulty ?? selected.beginnerDifficulty}</AppText>
+            <AppText>Boat launch: {selected.boatLaunch ? "Yes or nearby" : "Not highlighted"}</AppText>
+            <AppText>Kayak friendly: {selected.kayakFriendly ? "Yes" : "Use caution"}</AppText>
+            <AppText>Bank fishing: {selected.bankFishing ? "Yes" : "Limited"}</AppText>
+            <AppText>Wheelchair accessible: {selected.wheelchairAccessible ? "Likely at some access points" : "Not confirmed"}</AppText>
+            <AppText>Bathrooms: {selected.bathrooms ? "Likely at primary access" : "Not confirmed"}</AppText>
+            <AppText>Camping: {selected.camping ? "Nearby or on-site" : "Not highlighted"}</AppText>
+            <AppText>Fee: {selected.fee}</AppText>
+            <AppText>Parking: {selected.parkingNote ?? "Check local parking before leaving."}</AppText>
+            <AppText>GPS: {selected.latitude.toFixed(4)}, {selected.longitude.toFixed(4)}</AppText>
+            <AppText>Best season: {selected.bestSeason ?? "Verify by waterbody and species."}</AppText>
+            <AppText>Recommended bait: {selected.suggestedBait.join(", ")}</AppText>
+            <AppText>Recommended rigs: {selected.recommendedRigs.join(", ")}</AppText>
+            <AppText>Season check: {regulation.season}</AppText>
+            <AppText>Bag/size: {regulation.dailyLimit} · {regulation.sizeLimit}</AppText>
+            <View style={styles.badgeWrap}>
+              {currentRegulations.badges.map((badge) => (
+                <View key={badge.label} style={[styles.speciesBadge, badge.tone === "caution" && styles.cautionBadge, badge.tone === "bad" && styles.badBadge]}>
+                  <AppText variant="caption" style={styles.speciesText}>{badge.label}</AppText>
+                </View>
+              ))}
+            </View>
+            <AppText>Data last updated: {currentRegulations.dataLastUpdated}</AppText>
+            <AppText>WDFW seed ID: {selected.waterbodyId}</AppText>
+            {selected.stocking?.length ? (
+              <Stack>
+                <AppText variant="subheading">Recent stocking</AppText>
+                {selected.stocking.map((stock) => (
+                  <AppText key={`${stock.species}-${stock.date}`}>{stock.species}: {stock.count.toLocaleString()} fish on {stock.date}</AppText>
+                ))}
+              </Stack>
+            ) : null}
+            <AppText style={styles.warning}>Regulation warning: {selected.regulationSummary}</AppText>
+            <AppText variant="caption">{selected.notes}</AppText>
+            <YoutubeLink query={selected.youtubeSearch} />
+          </Stack>
+        ) : null}
+
+        <View style={styles.actions}>
+          <Button icon={showDetails ? "chevron-up-outline" : "chevron-down-outline"} variant="ghost" style={styles.actionButton} onPress={() => setShowDetails(!showDetails)}>
+            {showDetails ? "Hide details" : "Details"}
+          </Button>
+          <Button icon="navigate" variant="ghost" style={styles.actionButton} onPress={openDirections}>
             Directions
           </Button>
           <Button icon="share-social" variant="ghost" style={styles.actionButton} onPress={shareWaterbody}>
