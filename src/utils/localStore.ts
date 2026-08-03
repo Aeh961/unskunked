@@ -227,6 +227,14 @@ export const demoOnboardingProfile: OnboardingProfile = {
   favoriteWaterbodyIds: ["green-lake", "lake-washington"]
 };
 
+/** Used for real (non-demo) users who haven't completed onboarding yet - no fake favorites. */
+export const defaultOnboardingProfile: OnboardingProfile = {
+  experience: "Beginner",
+  preferredStyle: "Shore",
+  favoriteFishIds: [],
+  favoriteWaterbodyIds: []
+};
+
 export const demoTripPlans: TripPlanRecord[] = [
   {
     id: "demo-plan-green-lake",
@@ -295,7 +303,7 @@ export async function saveTripPlan(plan: TripPlanRecord) {
 }
 
 export async function getOnboardingProfile() {
-  return storage.readJson<OnboardingProfile>(onboardingProfileKey, demoOnboardingProfile);
+  return storage.readJson<OnboardingProfile>(onboardingProfileKey, defaultOnboardingProfile);
 }
 
 export async function setOnboardingProfile(profile: OnboardingProfile) {
@@ -437,7 +445,7 @@ export async function getDemoRecommendations() {
 }
 
 export async function getDemoSearchHistory() {
-  return storage.readJson<string[]>(searchHistoryKey, demoSearchHistory);
+  return storage.readJson<string[]>(searchHistoryKey, []);
 }
 
 export async function getCachedConditions() {

@@ -1,6 +1,8 @@
+import { Href, Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
+import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen, Stack } from "@/src/components/Screen";
@@ -11,15 +13,30 @@ import { getTrips } from "@/src/utils/localStore";
 
 export default function FishingStatsScreen() {
   const [analytics, setAnalytics] = useState<TripAnalytics | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    getTrips().then((trips) => setAnalytics(calculateTripAnalytics(trips)));
+    getTrips().then((trips) => {
+      setAnalytics(calculateTripAnalytics(trips));
+      setLoaded(true);
+    });
   }, []);
 
-  if (!analytics) {
+  if (!loaded || !analytics) {
     return (
       <Screen>
         <EmptyState icon="stats-chart" title="Loading stats" body="Crunching your local trip history." />
+      </Screen>
+    );
+  }
+
+  if (analytics.totalTrips === 0) {
+    return (
+      <Screen>
+        <EmptyState icon="stats-chart" title="No stats yet" body="Log your first trip and your best bait, locations, and timing patterns will show up here." />
+        <Link href={"/plan" as Href} asChild>
+          <Button icon="calendar">Plan a trip</Button>
+        </Link>
       </Screen>
     );
   }

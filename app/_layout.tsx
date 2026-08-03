@@ -1,16 +1,8 @@
-import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { colors } from "@/src/theme";
-import { seedDemoData } from "@/src/utils/localStore";
 
 export default function RootLayout() {
-  useEffect(() => {
-    if (__DEV__) {
-      seedDemoData();
-    }
-  }, []);
-
   return (
     <>
       <StatusBar style="dark" />

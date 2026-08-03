@@ -135,14 +135,18 @@ export default function SearchScreen() {
           </Pressable>
         ))}
       </View>
-      <SectionHeader title="Recent searches" eyebrow={`${recent.length} saved`} />
-      <View style={styles.filterRow}>
-        {recent.map((item) => (
-          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Repeat search ${item}`} onPress={() => submitSearch(item)} style={styles.recent}>
-            <AppText variant="caption" style={styles.recentText}>{item}</AppText>
-          </Pressable>
-        ))}
-      </View>
+      {recent.length > 0 ? (
+        <>
+          <SectionHeader title="Recent searches" eyebrow={`${recent.length} saved`} />
+          <View style={styles.filterRow}>
+            {recent.map((item) => (
+              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Repeat search ${item}`} onPress={() => submitSearch(item)} style={styles.recent}>
+                <AppText variant="caption" style={styles.recentText}>{item}</AppText>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ) : null}
       <SectionHeader title="Results" eyebrow={`${results.length} matches`} />
       {results.length ? (
         results.map((item) => (
