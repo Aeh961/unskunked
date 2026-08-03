@@ -1,44 +1,56 @@
+import { useState } from "react";
 import { Linking, StyleSheet, View } from "react-native";
 import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { AppText } from "@/src/components/AppText";
-import { RegulationSourceLinks, washingtonSourceLinks } from "@/src/services/regulations";
+import { OfficialSourceLinks } from "@/src/services/officialLinks";
 import { spacing } from "@/src/theme";
 
 type Props = {
-  links?: RegulationSourceLinks;
+  links: OfficialSourceLinks;
+  agencyAbbreviation?: string;
   compact?: boolean;
 };
 
-export function OfficialLinks({ links = washingtonSourceLinks, compact = false }: Props) {
+export function OfficialLinks({ links, agencyAbbreviation, compact = false }: Props) {
+  const [showMore, setShowMore] = useState(false);
+
   return (
     <Card style={styles.card}>
       <SectionHeader title="Official verification" eyebrow="Rules can change" />
       {!compact ? <AppText>Use Unskunked to plan, then verify current official rules before keeping fish.</AppText> : null}
       <View style={styles.actions}>
-        <Button icon="open-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
-          Verify official rules
+        <Button icon="open-outline" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
+          View official regulations
         </Button>
         <Button icon="warning-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.emergencyRules)}>
-          Check emergency rules
+          View emergency rules
         </Button>
         <Button icon="card-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.licenses)}>
-          Buy/check license
-        </Button>
-        <Button icon="fish-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.freshwaterRules)}>
-          Freshwater rules
-        </Button>
-        <Button icon="boat-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.marineAreas)}>
-          Marine areas
-        </Button>
-        <Button icon="leaf-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.shellfishSeaweed)}>
-          Shellfish/seaweed
-        </Button>
-        <Button icon="map-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.fishWashington)}>
-          Fish Washington
+          Buy fishing license
         </Button>
       </View>
+      {showMore ? (
+        <View style={styles.actions}>
+          <Button icon="fish-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.freshwaterRules)}>
+            Freshwater rules
+          </Button>
+          <Button icon="boat-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.marineAreas)}>
+            Marine areas
+          </Button>
+          <Button icon="leaf-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.shellfishSeaweed)}>
+            Shellfish/seaweed
+          </Button>
+          <Button icon="map-outline" variant="ghost" style={styles.button} onPress={() => Linking.openURL(links.locationsDirectory)}>
+            {agencyAbbreviation ? `Find ${agencyAbbreviation} locations` : "Find locations"}
+          </Button>
+        </View>
+      ) : (
+        <Button icon="chevron-down-outline" variant="ghost" onPress={() => setShowMore(true)}>
+          More official links
+        </Button>
+      )}
     </Card>
   );
 }

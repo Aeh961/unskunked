@@ -47,6 +47,18 @@ describe("regulation helpers", () => {
     expect(summary.catchAndRelease).toBe(true);
   });
 
+  it("points each non-Washington region at its own real agency, not WDFW", () => {
+    const oregon = regulationService.getSummary({ state: "OR" });
+    const idaho = regulationService.getSummary({ state: "ID" });
+    const california = regulationService.getSummary({ state: "CA" });
+    expect(oregon.sourceLinks.regulations).toContain("myodfw.com");
+    expect(idaho.sourceLinks.regulations).toContain("idfg.idaho.gov");
+    expect(california.sourceLinks.regulations).toContain("wildlife.ca.gov");
+    for (const summary of [oregon, idaho, california]) {
+      expect(summary.sourceLinks.regulations).not.toContain("wdfw.wa.gov");
+    }
+  });
+
   it("generates WDFW link sets with expanded official sources", () => {
     const links = getOfficialLinksForWaterbody(waterbodies.find((water) => water.id === "puget-sound"));
     expect(links.regulations).toContain("wdfw.wa.gov");

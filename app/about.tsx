@@ -7,6 +7,7 @@ import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { regions } from "@/src/data/regions";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
 
 const roadmap = [
@@ -18,6 +19,8 @@ const roadmap = [
 ];
 
 export default function AboutScreen() {
+  const { officialLinkProvider } = useSelectedRegion();
+
   return (
     <Screen>
       <View style={styles.hero}>
@@ -52,7 +55,7 @@ export default function AboutScreen() {
           ))}
         </Stack>
       </Card>
-      <OfficialLinks />
+      <OfficialLinks links={officialLinkProvider.getLinks()} agencyAbbreviation={officialLinkProvider.agencyAbbreviation} />
       <Link href={"/feedback" as Href} asChild>
         <Button icon="chatbox">Send beta feedback</Button>
       </Link>

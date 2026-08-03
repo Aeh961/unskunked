@@ -1,17 +1,11 @@
 import { fishSpecies } from "@/src/data/fish";
+import { RegionId } from "@/src/data/regions";
 import { Regulation, Status, Waterbody } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
-import { wdfwLinks } from "@/src/services/officialLinks";
+import { getOfficialLinksForRegion, OfficialSourceLinks, wdfwLinks } from "@/src/services/officialLinks";
 
-export type RegulationSourceLinks = {
-  regulations: string;
-  emergencyRules: string;
-  licenses: string;
-  fishWashington: string;
-  shellfishSeaweed: string;
-  marineAreas: string;
-  freshwaterRules: string;
-};
+/** @deprecated use OfficialSourceLinks from src/services/officialLinks - kept as an alias so existing imports don't break. */
+export type RegulationSourceLinks = OfficialSourceLinks;
 
 export type RegulationQuery = {
   state: "WA" | "OR" | "ID" | "CA";
@@ -30,7 +24,7 @@ export type RegulationSummary = {
   catchAndRelease: boolean;
   gearRestrictions: string[];
   emergencyRulePlaceholder: string;
-  sourceLinks: RegulationSourceLinks;
+  sourceLinks: OfficialSourceLinks;
 };
 
 export interface RegulationProvider {
@@ -40,12 +34,15 @@ export interface RegulationProvider {
   getWaterbodyRules(waterbodyId: string, query: RegulationQuery): RegulationSummary;
 }
 
-export const washingtonSourceLinks: RegulationSourceLinks = {
+export const washingtonSourceLinks: OfficialSourceLinks = {
   ...wdfwLinks
 };
 
-const placeholderLinks: RegulationSourceLinks = {
-  ...wdfwLinks
+const stateToRegion: Record<RegulationQuery["state"], RegionId> = {
+  WA: "washington",
+  OR: "oregon",
+  ID: "idaho",
+  CA: "california"
 };
 
 function fromRegulation(regulation: Regulation, water?: Waterbody): RegulationSummary {
@@ -61,7 +58,7 @@ function fromRegulation(regulation: Regulation, water?: Waterbody): RegulationSu
     catchAndRelease: regulation.dailyLimit.toLowerCase().includes("release") || regulation.restrictions.some((item) => item.toLowerCase().includes("release")),
     gearRestrictions: regulation.restrictions.filter((item) => /barbless|single|bait|gear|hook/i.test(item)),
     emergencyRulePlaceholder: "No official emergency-rule feed is connected yet. Always verify WDFW emergency rules before keeping fish.",
-    sourceLinks: washingtonSourceLinks
+    sourceLinks: getOfficialLinksForRegion("washington", water)
   };
 }
 
@@ -114,7 +111,7 @@ export class MockRegulationProvider implements RegulationProvider {
       catchAndRelease: true,
       gearRestrictions: ["Verify official state rules before fishing."],
       emergencyRulePlaceholder: "Emergency rules are not connected for this placeholder region.",
-      sourceLinks: placeholderLinks
+      sourceLinks: getOfficialLinksForRegion(stateToRegion[this.state])
     };
   }
 
