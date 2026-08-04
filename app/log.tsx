@@ -123,7 +123,7 @@ export default function TripLogScreen() {
         <AppText variant="subheading">Activity</AppText>
         <View style={styles.resultRow}>
           {activityTypes.map((activityType) => (
-            <Pressable key={activityType} onPress={() => setForm({ ...form, activityType })} style={[styles.result, form.activityType === activityType && styles.resultActive]}>
+            <Pressable key={activityType} accessibilityRole="button" accessibilityLabel={`Set activity to ${activityType}`} onPress={() => setForm({ ...form, activityType })} style={[styles.result, form.activityType === activityType && styles.resultActive]}>
               <AppText variant="caption" style={[styles.resultText, form.activityType === activityType && styles.resultTextActive]}>
                 {activityType}
               </AppText>
@@ -141,7 +141,7 @@ export default function TripLogScreen() {
         <AppText variant="subheading">Trip result</AppText>
         <View style={styles.resultRow}>
           {results.map((result) => (
-            <Pressable key={result} onPress={() => setForm({ ...form, result })} style={[styles.result, form.result === result && styles.resultActive]}>
+            <Pressable key={result} accessibilityRole="button" accessibilityLabel={`Set trip result to ${result}`} onPress={() => setForm({ ...form, result })} style={[styles.result, form.result === result && styles.resultActive]}>
               <AppText variant="caption" style={[styles.resultText, form.result === result && styles.resultTextActive]}>
                 {result}
               </AppText>

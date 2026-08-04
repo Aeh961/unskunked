@@ -60,7 +60,7 @@ export default function FeedbackScreen() {
         <SectionHeader title="What kind of feedback?" eyebrow="Local beta" />
         <View style={styles.options}>
           {feedbackTypes.map((item) => (
-            <Pressable key={item} onPress={() => setType(item)} style={[styles.option, type === item && styles.optionActive]}>
+            <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Select feedback type ${item}`} onPress={() => setType(item)} style={[styles.option, type === item && styles.optionActive]}>
               <AppText variant="caption" style={[styles.optionText, type === item && styles.optionTextActive]}>{item}</AppText>
             </Pressable>
           ))}

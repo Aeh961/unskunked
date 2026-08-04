@@ -87,7 +87,7 @@ export default function RigsScreen() {
       <SectionHeader title="Rig and knot library" eyebrow="Searchable" />
       <View style={styles.segment}>
         {(["all", "knot", "rig"] as const).map((item) => (
-          <Pressable key={item} onPress={() => setMode(item)} style={[styles.segmentButton, mode === item && styles.active]}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Show ${item === "all" ? "all rigs and knots" : item === "knot" ? "knots only" : "rigs only"}`} onPress={() => setMode(item)} style={[styles.segmentButton, mode === item && styles.active]}>
             <AppText style={[styles.segmentText, mode === item && styles.activeText]}>
               {item === "all" ? "All" : item === "knot" ? "Knots" : "Rigs"}
             </AppText>
@@ -143,7 +143,7 @@ function BuilderGroup<T extends string>({ label, value, options, onSelect }: { l
       <AppText variant="subheading">{label}</AppText>
       <View style={styles.optionRow}>
         {options.map((option) => (
-          <Pressable key={option} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
+          <Pressable key={option} accessibilityRole="button" accessibilityLabel={`Select ${option} for ${label}`} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
             <AppText variant="caption" style={[styles.optionText, value === option && styles.optionTextActive]}>
               {option}
             </AppText>

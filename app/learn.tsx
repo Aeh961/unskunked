@@ -38,7 +38,7 @@ export default function LearningCenterScreen() {
 
       <View style={styles.categoryRow}>
         {categories.map((item) => (
-          <Pressable key={item} onPress={() => setCategory(item)} style={[styles.category, category === item && styles.categoryActive]}>
+          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter by ${item}`} onPress={() => setCategory(item)} style={[styles.category, category === item && styles.categoryActive]}>
             <AppText variant="caption" style={[styles.categoryText, category === item && styles.categoryTextActive]}>
               {item}
             </AppText>
