@@ -67,6 +67,13 @@ describe("regulation helpers", () => {
     expect(links.freshwaterRules).toContain("freshwater");
   });
 
+  it("routes saltwater/pier waterbodies to the marine areas page instead of the generic locations page", () => {
+    const marine = getOfficialLinksForWaterbody(waterbodies.find((water) => water.id === "puget-sound"));
+    expect(marine.locationsDirectory).toContain("marine-areas");
+    const freshwater = getOfficialLinksForWaterbody(waterbodies.find((water) => water.id === "green-lake"));
+    expect(freshwater.locationsDirectory).toContain("/fishing/locations");
+  });
+
   it("returns current regulation badges for a waterbody", () => {
     const rules = getCurrentRegulations({ waterbodyId: "green-lake", speciesId: "rainbow-trout" });
     expect(rules.badges.map((badge) => badge.label)).toContain("Open");

@@ -12,13 +12,15 @@ export type OfficialSourceLinks = {
   freshwaterRules: string;
 };
 
+type WaterbodyLinkContext = Pick<Waterbody, "officialLink" | "waterType">;
+
 export interface OfficialLinkProvider {
   readonly state: RegionId;
   readonly agencyName: string;
   readonly agencyAbbreviation: string;
   readonly confidence: SourceConfidence;
   readonly note: string;
-  getLinks(waterbody?: Pick<Waterbody, "officialLink">): OfficialSourceLinks;
+  getLinks(waterbody?: WaterbodyLinkContext): OfficialSourceLinks;
 }
 
 class WashingtonOfficialLinkProvider implements OfficialLinkProvider {
@@ -38,10 +40,16 @@ class WashingtonOfficialLinkProvider implements OfficialLinkProvider {
     freshwaterRules: "https://wdfw.wa.gov/fishing/regulations/freshwater"
   };
 
-  getLinks(waterbody?: Pick<Waterbody, "officialLink">): OfficialSourceLinks {
+  getLinks(waterbody?: WaterbodyLinkContext): OfficialSourceLinks {
+    const isMarine = waterbody?.waterType === "Saltwater" || waterbody?.waterType === "Pier";
+    // Every waterbody record currently sets officialLink to the same generic locations-directory
+    // URL (no per-waterbody deep links exist yet), so it can't be used to detect a real override.
+    // A specific marine area page is always more useful than that generic freshwater directory
+    // for saltwater/pier waterbodies, so route there directly rather than falling back to it.
+    const locationsDirectory = isMarine ? this.base.marineAreas : (waterbody?.officialLink ?? this.base.locationsDirectory);
     return {
       ...this.base,
-      locationsDirectory: waterbody?.officialLink ?? this.base.locationsDirectory
+      locationsDirectory
     };
   }
 }
@@ -115,14 +123,14 @@ export function getOfficialLinkProvider(state: RegionId): OfficialLinkProvider {
   return officialLinkProviders.find((provider) => provider.state === state) ?? officialLinkProviders[0];
 }
 
-export function getOfficialLinksForRegion(state: RegionId, waterbody?: Pick<Waterbody, "officialLink">): OfficialSourceLinks {
+export function getOfficialLinksForRegion(state: RegionId, waterbody?: WaterbodyLinkContext): OfficialSourceLinks {
   return getOfficialLinkProvider(state).getLinks(waterbody);
 }
 
 /** Washington's links, used as the default when no region context is available yet. */
 export const wdfwLinks: OfficialSourceLinks = new WashingtonOfficialLinkProvider().getLinks();
 
-export function getOfficialLinksForWaterbody(waterbody?: Pick<Waterbody, "officialLink">): OfficialSourceLinks {
+export function getOfficialLinksForWaterbody(waterbody?: WaterbodyLinkContext): OfficialSourceLinks {
   return getOfficialLinkProvider("washington").getLinks(waterbody);
 }
 
