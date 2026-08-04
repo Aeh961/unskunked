@@ -73,8 +73,17 @@ export default function AskScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <AppText variant="heading">Ask Unskunked</AppText>
-        <AppText variant="caption" style={styles.headerSubtitle}>Offline answers from the local fish, rig, and waterbody catalog.</AppText>
+        <View style={styles.headerRow}>
+          <View style={styles.flex}>
+            <AppText variant="heading">Ask Unskunked</AppText>
+            <AppText variant="caption" style={styles.headerSubtitle}>Offline answers from the local fish, rig, and waterbody catalog.</AppText>
+          </View>
+          {messages.length > 0 ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Clear conversation" style={styles.clearButton} onPress={() => setMessages([])}>
+              <Ionicons name="trash-outline" size={18} color={colors.muted} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       {showSuggestions ? (
@@ -152,13 +161,25 @@ const styles = StyleSheet.create({
     flex: 1
   },
   header: {
-    gap: spacing.xxs,
     paddingBottom: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm
   },
+  headerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
   headerSubtitle: {
     color: colors.muted
+  },
+  clearButton: {
+    alignItems: "center",
+    backgroundColor: colors.mist,
+    borderRadius: radii.pill,
+    height: 36,
+    justifyContent: "center",
+    width: 36
   },
   suggestionContent: {
     gap: spacing.sm,
