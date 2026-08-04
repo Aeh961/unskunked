@@ -29,7 +29,7 @@ export default function OfflineScreen() {
       </View>
       <Card>
         <SectionHeader title="Offline status" eyebrow="Local first" />
-        <AppText>{downloaded.length ? `${downloaded.length} packs marked for offline use.` : "No packs downloaded yet. Core demo data still works offline."}</AppText>
+        <AppText>{downloaded.length ? `${downloaded.length} packs marked for offline use.` : "No packs downloaded yet. The app's local fish, waterbody, and regulation catalog already works offline by default."}</AppText>
       </Card>
       <Stack>
         {packs.map((pack) => (

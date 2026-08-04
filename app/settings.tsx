@@ -175,10 +175,14 @@ export default function SettingsScreen() {
         </Card>
       ) : null}
 
-      <DemoSection title="Profiles" items={profiles} />
-      <DemoSection title="Sample notifications" items={notifications} />
-      <DemoSection title="Example recommendations" items={recommendations} />
-      <DemoSection title="Example search history" items={searchHistory} />
+      {enabled ? (
+        <>
+          <DemoSection title="Sample profiles" items={profiles} />
+          <DemoSection title="Sample notifications" items={notifications} />
+          <DemoSection title="Example recommendations" items={recommendations} />
+          <DemoSection title="Example search history" items={searchHistory} />
+        </>
+      ) : null}
     </Screen>
   );
 }

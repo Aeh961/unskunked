@@ -28,18 +28,34 @@ export default function BetaInsightsScreen() {
     );
   }
 
+  const categories = [
+    insights.mostViewedFish,
+    insights.mostViewedWaterbodies,
+    insights.mostUsedRigs,
+    insights.plannerChoices,
+    insights.searchedTerms,
+    insights.feedbackCategories
+  ];
+  const hasAnyActivity = categories.some((items) => items.length > 0);
+
   return (
     <Screen>
       <View style={styles.hero}>
         <AppText variant="title" style={styles.lightText}>Beta Insights</AppText>
         <AppText style={styles.heroText}>Local-only product analytics. Nothing leaves this device.</AppText>
       </View>
-      <Insight title="Most viewed fish" items={insights.mostViewedFish} />
-      <Insight title="Most viewed waterbodies" items={insights.mostViewedWaterbodies} />
-      <Insight title="Most used rigs" items={insights.mostUsedRigs} />
-      <Insight title="Trip planner choices" items={insights.plannerChoices} />
-      <Insight title="Search terms" items={insights.searchedTerms} />
-      <Insight title="Feedback categories" items={insights.feedbackCategories} />
+      {hasAnyActivity ? (
+        <>
+          <Insight title="Most viewed fish" items={insights.mostViewedFish} />
+          <Insight title="Most viewed waterbodies" items={insights.mostViewedWaterbodies} />
+          <Insight title="Most used rigs" items={insights.mostUsedRigs} />
+          <Insight title="Trip planner choices" items={insights.plannerChoices} />
+          <Insight title="Search terms" items={insights.searchedTerms} />
+          <Insight title="Feedback categories" items={insights.feedbackCategories} />
+        </>
+      ) : (
+        <EmptyState icon="analytics" title="No activity yet" body="Browse fish, plan a trip, or search the app - your local usage patterns will show up here." />
+      )}
     </Screen>
   );
 }
