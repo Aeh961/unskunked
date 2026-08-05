@@ -1,104 +1,93 @@
-import { Href, Link } from "expo-router";
+import { Href, Link, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
-import { Card } from "@/src/components/Card";
+import { Autocomplete } from "@/src/components/Autocomplete";
 import { Disclaimer } from "@/src/components/Disclaimer";
-import { EmptyState } from "@/src/components/EmptyState";
+import { MissionCard } from "@/src/components/MissionCard";
 import { Screen } from "@/src/components/Screen";
-import { SectionHeader } from "@/src/components/SectionHeader";
-import { ActivityType } from "@/src/data/types";
-import { waterbodies } from "@/src/data/waterbodies";
-import { getMockWeather, getSunWindows } from "@/src/services/fishingConditions";
-import { colors, radii, spacing } from "@/src/theme";
+import { SearchInput } from "@/src/components/SearchInput";
+import { getSuggestions } from "@/src/utils/autocomplete";
+import { colors, spacing } from "@/src/theme";
 import { getTrips, TripLog } from "@/src/utils/localStore";
 
-const activityButtons: Array<{ activity: ActivityType; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
-  { activity: "fishing", label: "Go Fishing", icon: "fish" },
-  { activity: "crabbing", label: "Go Crabbing", icon: "boat" },
-  { activity: "clamming", label: "Go Clamming", icon: "sunny" }
-];
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
 export default function HomeScreen() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [draftTrip, setDraftTrip] = useState<TripLog | null>(null);
   const [recentTrips, setRecentTrips] = useState<TripLog[]>([]);
 
   useEffect(() => {
-    getTrips().then((trips) => setRecentTrips(trips.slice(-3).reverse()));
+    getTrips().then((trips) => {
+      setDraftTrip(trips.find((trip) => trip.status === "draft") ?? null);
+      setRecentTrips(trips.filter((trip) => trip.status !== "draft").slice(0, 3));
+    });
   }, []);
 
-  // Generic ambient conditions only - not tied to any specific waterbody, since the
-  // app should never pick a destination for the user before they choose one themselves.
-  const conditions = useMemo(() => {
-    const weather = getMockWeather(waterbodies[0]);
-    const sun = getSunWindows();
-    return { weather, sun };
-  }, []);
+  const suggestions = useMemo(() => getSuggestions(query), [query]);
+
+  function goBuildPlan() {
+    const trimmed = query.trim();
+    router.push((trimmed ? `/plan?q=${encodeURIComponent(trimmed)}` : "/plan") as Href);
+  }
+
+  function selectSuggestion(route: string) {
+    setQuery("");
+    router.push(route as Href);
+  }
 
   return (
     <Screen>
       <View style={styles.topRow}>
-        <AppText variant="heading">{getGreeting()}</AppText>
-        <View style={styles.iconRow}>
-          <Link href={"/search" as Href} asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel="Search" style={styles.iconButton}>
-              <Ionicons name="search" size={20} color={colors.forest} />
-            </Pressable>
-          </Link>
-          <Link href={"/settings" as Href} asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel="Settings and more" style={styles.iconButton}>
-              <Ionicons name="settings-outline" size={20} color={colors.forest} />
-            </Pressable>
-          </Link>
+        <AppText variant="displayLarge">UNSKUNKED</AppText>
+        <Link href={"/settings" as Href} asChild>
+          <Pressable accessibilityRole="button" accessibilityLabel="Settings and more" style={styles.iconButton}>
+            <Ionicons name="settings-outline" size={20} color={colors.amber} />
+          </Pressable>
+        </Link>
+      </View>
+
+      <AppText variant="display" style={styles.question}>WHAT ARE YOU GOING AFTER?</AppText>
+
+      <SearchInput
+        accessibilityLabel="Type what you're fishing, clamming, or crabbing for"
+        value={query}
+        onChangeText={setQuery}
+        onClear={() => setQuery("")}
+        onSubmitEditing={goBuildPlan}
+        placeholder="Rainbow trout, Dungeness crab, Green Lake..."
+        returnKeyType="go"
+      />
+      <Autocomplete items={suggestions} onSelect={(item) => item.route && selectSuggestion(item.route)} />
+
+      <Pressable accessibilityRole="button" accessibilityLabel="Build my plan" style={styles.buildButton} onPress={goBuildPlan}>
+        <AppText style={styles.buildButtonText}>BUILD MY PLAN</AppText>
+      </Pressable>
+
+      {draftTrip ? (
+        <MissionCard
+          eyebrow="Continue Mission"
+          title={`${draftTrip.speciesCaught} at ${draftTrip.location}`}
+          meta={[draftTrip.date, draftTrip.weather]}
+          onPress={() => router.push("/plan" as Href)}
+        />
+      ) : null}
+
+      {recentTrips.length > 0 ? (
+        <View style={styles.recentSection}>
+          <AppText variant="caption" style={styles.recentLabel}>FIELD NOTES</AppText>
+          {recentTrips.map((trip) => (
+            <MissionCard
+              key={trip.id}
+              eyebrow={trip.date}
+              title={`${trip.speciesCaught} at ${trip.location}`}
+              meta={[`${trip.numberCaught} caught`, trip.result]}
+              onPress={() => router.push("/log" as Href)}
+            />
+          ))}
         </View>
-      </View>
-      <AppText variant="title" style={styles.question}>What would you like to do today?</AppText>
-
-      <View style={styles.activityGrid}>
-        {activityButtons.map((item) => (
-          <Link key={item.activity} href={`/plan?activity=${item.activity}` as Href} asChild>
-            <Pressable style={styles.activityButton} accessibilityRole="button" accessibilityLabel={item.label}>
-              <Ionicons name={item.icon} size={32} color="#fff" />
-              <AppText style={styles.activityLabel}>{item.label}</AppText>
-            </Pressable>
-          </Link>
-        ))}
-      </View>
-
-      <Card style={styles.card}>
-        <SectionHeader title="Today's conditions" eyebrow="Offline estimate" />
-        <AppText>{conditions.weather.airTempF}°F · wind {conditions.weather.windMph} mph · {conditions.sun.morningBite} morning bite window</AppText>
-        <Link href={"/weather" as Href} asChild>
-          <Pressable accessibilityRole="button" style={styles.cardLink}>
-            <AppText style={styles.cardLinkText}>Full forecast</AppText>
-            <Ionicons name="chevron-forward" size={16} color={colors.pine} />
-          </Pressable>
-        </Link>
-      </Card>
-
-      <Card style={styles.card}>
-        <SectionHeader title="Recent trips" />
-        {recentTrips.length === 0 ? (
-          <EmptyState icon="journal" title="No trips logged yet" body="Log your first trip after fishing to start building your own patterns." />
-        ) : (
-          recentTrips.map((trip) => (
-            <AppText key={trip.id}>{trip.location}: {trip.numberCaught} {trip.speciesCaught} ({trip.result})</AppText>
-          ))
-        )}
-        <Link href={"/log" as Href} asChild>
-          <Pressable accessibilityRole="button" style={styles.cardLink}>
-            <AppText style={styles.cardLinkText}>Trip log</AppText>
-            <Ionicons name="chevron-forward" size={16} color={colors.pine} />
-          </Pressable>
-        </Link>
-      </Card>
+      ) : null}
 
       <Disclaimer />
     </Screen>
@@ -111,49 +100,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between"
   },
-  iconRow: {
-    flexDirection: "row",
-    gap: spacing.sm
-  },
   iconButton: {
     alignItems: "center",
-    backgroundColor: colors.mist,
-    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 2,
     height: 40,
     justifyContent: "center",
     width: 40
   },
   question: {
-    marginBottom: spacing.xs
+    marginTop: spacing.md
   },
-  activityGrid: {
-    flexDirection: "row",
+  buildButton: {
+    alignItems: "center",
+    backgroundColor: colors.pine,
+    borderColor: colors.forest,
+    borderRadius: 4,
+    borderWidth: 2,
+    justifyContent: "center",
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  buildButtonText: {
+    color: colors.ink,
+    fontWeight: "900",
+    letterSpacing: 1
+  },
+  recentSection: {
     gap: spacing.sm
   },
-  activityButton: {
-    alignItems: "center",
-    backgroundColor: colors.forest,
-    borderRadius: radii.md,
-    flex: 1,
-    gap: spacing.sm,
-    paddingVertical: spacing.lg
-  },
-  activityLabel: {
-    color: "#fff",
-    fontWeight: "800",
-    textAlign: "center"
-  },
-  card: {
-    gap: spacing.sm
-  },
-  cardLink: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: spacing.xxs
-  },
-  cardLinkText: {
-    color: colors.pine,
-    fontWeight: "900"
+  recentLabel: {
+    color: colors.amber,
+    fontWeight: "900",
+    letterSpacing: 1
   }
 });

@@ -7,6 +7,7 @@ export type AutocompleteItem = {
   kind: string;
   label: string;
   subtitle?: string;
+  route?: string;
 };
 
 type Props = {
