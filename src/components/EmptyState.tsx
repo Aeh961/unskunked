@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
-import { colors, spacing } from "@/src/theme";
+import { colors, radii, spacing } from "@/src/theme";
 
 type Props = {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -12,7 +12,7 @@ type Props = {
 export function EmptyState({ icon = "search", title, body }: Props) {
   return (
     <View style={styles.wrap}>
-      <Ionicons name={icon} size={28} color={colors.river} />
+      <Ionicons name={icon} size={28} color={colors.amber} />
       <AppText variant="heading" style={styles.title}>
         {title}
       </AppText>
@@ -24,11 +24,11 @@ export function EmptyState({ icon = "search", title, body }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderColor: colors.line,
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderStyle: "dashed",
-    borderWidth: 1,
+    borderWidth: 2,
     gap: spacing.sm,
     padding: spacing.lg
   },

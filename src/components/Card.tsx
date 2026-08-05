@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
-import { Platform, Pressable, StyleSheet, View, ViewProps } from "react-native";
-import { colors, radii, shadows, spacing } from "@/src/theme";
+import { Pressable, StyleSheet, View, ViewProps } from "react-native";
+import { colors, radii, spacing } from "@/src/theme";
 
 type Props = PropsWithChildren<ViewProps & { onPress?: () => void }>;
 
@@ -25,12 +25,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.line,
     borderRadius: radii.md,
-    borderWidth: Platform.OS === "android" ? 0 : StyleSheet.hairlineWidth,
-    padding: spacing.md,
-    ...shadows.card
+    borderWidth: 2,
+    padding: spacing.md
   },
   pressed: {
-    opacity: 0.78,
-    transform: [{ scale: 0.99 }]
+    opacity: 0.8,
+    borderColor: colors.amber
   }
 });

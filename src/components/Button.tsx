@@ -9,17 +9,33 @@ type Props = PropsWithChildren<{
   onPress?: () => void;
   variant?: "primary" | "secondary" | "ghost" | "danger";
   style?: ViewStyle;
+  accessibilityLabel?: string;
 }>;
 
-export function Button({ children, icon, onPress, variant = "primary", style }: Props) {
+const iconColor: Record<NonNullable<Props["variant"]>, string> = {
+  primary: colors.ink,
+  secondary: colors.forest,
+  ghost: colors.amber,
+  danger: colors.ink
+};
+
+const textStyleForVariant: Record<NonNullable<Props["variant"]>, object> = {
+  primary: { color: colors.ink },
+  secondary: { color: colors.forest },
+  ghost: { color: colors.amber },
+  danger: { color: colors.ink }
+};
+
+export function Button({ children, icon, onPress, variant = "primary", style, accessibilityLabel }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? (typeof children === "string" ? children : undefined)}
       onPress={onPress}
       style={({ pressed }) => [styles.base, styles[variant], pressed && styles.pressed, style]}
     >
-      {icon ? <Ionicons name={icon} size={18} color={variant === "primary" || variant === "danger" ? "#fff" : colors.pine} /> : null}
-      <AppText style={[styles.text, (variant === "primary" || variant === "danger") && styles.lightText]}>{children}</AppText>
+      {icon ? <Ionicons name={icon} size={18} color={iconColor[variant]} /> : null}
+      <AppText style={[styles.text, textStyleForVariant[variant]]}>{children}</AppText>
     </Pressable>
   );
 }
@@ -41,26 +57,22 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: colors.sky,
     borderColor: colors.river,
-    borderWidth: 1
+    borderWidth: 2
   },
   ghost: {
     backgroundColor: "transparent",
     borderColor: colors.line,
-    borderWidth: 1
+    borderWidth: 2
   },
   danger: {
-    backgroundColor: colors.danger
+    backgroundColor: colors.dangerFill
   },
   pressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }]
   },
   text: {
-    color: colors.pine,
     fontWeight: "900",
     textAlign: "center"
-  },
-  lightText: {
-    color: "#fff"
   }
 });

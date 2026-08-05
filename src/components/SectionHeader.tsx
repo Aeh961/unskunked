@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   eyebrow: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   }

@@ -1,14 +1,14 @@
 import { StyleSheet, View } from "react-native";
 import { Status } from "@/src/data/types";
 import { getStatusLabel, getStatusTone } from "@/src/utils/regulations";
-import { colors, spacing } from "@/src/theme";
+import { colors, radii, spacing } from "@/src/theme";
 import { AppText } from "./AppText";
 
 export function StatusBadge({ status }: { status: Status }) {
   const tone = getStatusTone(status);
   return (
-    <View style={[styles.badge, styles[tone]]}>
-      <AppText style={styles.text}>{getStatusLabel(status)}</AppText>
+    <View style={[styles.badge, styles[tone]]} accessibilityLabel={`Status: ${getStatusLabel(status)}`}>
+      <AppText style={[styles.text, tone === "bad" ? styles.lightText : styles.darkText]}>{getStatusLabel(status)}</AppText>
     </View>
   );
 }
@@ -16,15 +16,20 @@ export function StatusBadge({ status }: { status: Status }) {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: "flex-start",
-    borderRadius: 999,
+    borderRadius: radii.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4
   },
   text: {
-    color: "#fff",
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 16
+  },
+  lightText: {
+    color: colors.ink
+  },
+  darkText: {
+    color: "#14170f"
   },
   good: {
     backgroundColor: colors.good
@@ -33,6 +38,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.caution
   },
   bad: {
-    backgroundColor: colors.danger
+    backgroundColor: colors.dangerFill
   }
 });

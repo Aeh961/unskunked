@@ -8,15 +8,19 @@ type Props = {
   compact?: boolean;
 };
 
+const darkTextTones = new Set(["verified", "needs"]);
+
 export function ConfidenceBadge({ confidence, compact = false }: Props) {
+  const tone = toneFor(confidence);
+  const textStyle = darkTextTones.has(tone) ? styles.darkText : styles.lightText;
   return (
     <Pressable
       accessibilityRole="text"
       accessibilityLabel={`${confidence}. ${confidenceDescriptions[confidence]}`}
-      style={[styles.badge, styles[toneFor(confidence)]]}
+      style={[styles.badge, styles[tone]]}
     >
-      <AppText variant="caption" style={styles.text}>{confidence}</AppText>
-      {!compact ? <AppText variant="caption" style={styles.body}>{confidenceDescriptions[confidence]}</AppText> : null}
+      <AppText variant="caption" style={[styles.text, textStyle]}>{confidence}</AppText>
+      {!compact ? <AppText variant="caption" style={[styles.body, textStyle]}>{confidenceDescriptions[confidence]}</AppText> : null}
     </Pressable>
   );
 }
@@ -31,11 +35,11 @@ export function ConfidenceRow({ confidence }: Props) {
 }
 
 function toneFor(confidence: SourceConfidence) {
-  if (confidence === "Verified" || confidence === "Official Source") return "verified";
-  if (confidence === "Community Verified" || confidence === "Imported") return "imported";
-  if (confidence === "Needs Verification") return "needs";
-  if (confidence === "Demo Data") return "demo";
-  return "unknown";
+  if (confidence === "Verified" || confidence === "Official Source") return "verified" as const;
+  if (confidence === "Community Verified" || confidence === "Imported") return "imported" as const;
+  if (confidence === "Needs Verification") return "needs" as const;
+  if (confidence === "Demo Data") return "demo" as const;
+  return "unknown" as const;
 }
 
 const styles = StyleSheet.create({
@@ -48,11 +52,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm
   },
   text: {
-    color: "#fff",
     fontWeight: "900"
   },
+  darkText: {
+    color: "#14170f"
+  },
+  lightText: {
+    color: colors.ink
+  },
   body: {
-    color: "#fff",
     maxWidth: 280
   },
   row: {
@@ -74,9 +82,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.caution
   },
   demo: {
-    backgroundColor: colors.clay
+    backgroundColor: colors.dangerFill
   },
   unknown: {
-    backgroundColor: colors.muted
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderWidth: 2
   }
 });

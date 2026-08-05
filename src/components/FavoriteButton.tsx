@@ -11,7 +11,7 @@ type Props = {
 export function FavoriteButton({ active, onPress, label = "Toggle favorite" }: Props) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.button}>
-      <Ionicons name={active ? "heart" : "heart-outline"} size={22} color={active ? colors.danger : colors.pine} />
+      <Ionicons name={active ? "heart" : "heart-outline"} size={22} color={active ? colors.danger : colors.muted} />
     </Pressable>
   );
 }
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
     borderRadius: radii.pill,
-    borderWidth: 1,
+    borderWidth: 2,
     height: 44,
     justifyContent: "center",
     width: 44

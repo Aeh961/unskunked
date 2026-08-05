@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs
   },
   text: {
-    color: colors.river,
+    color: colors.amber,
     flex: 1,
     fontWeight: "700"
   }

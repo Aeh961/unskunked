@@ -1,11 +1,28 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
+import { useFonts, PressStart2P_400Regular } from "@expo-google-fonts/press-start-2p";
 import { colors } from "@/src/theme";
 
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => undefined);
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           contentStyle: { backgroundColor: colors.background },
@@ -17,6 +34,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="fish/[id]" options={{ title: "Fish details" }} />
+        <Stack.Screen name="species" options={{ title: "Species Reference" }} />
         <Stack.Screen name="log" options={{ title: "Trip Log" }} />
         <Stack.Screen name="journal" options={{ title: "Fishing Journal" }} />
         <Stack.Screen name="learn" options={{ title: "Learning Center" }} />
