@@ -1,10 +1,11 @@
 import { Href, Link } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen } from "@/src/components/Screen";
+import { SearchInput } from "@/src/components/SearchInput";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { fishSpecies } from "@/src/data/fish";
 import { learningArticles } from "@/src/data/learning";
@@ -17,7 +18,6 @@ import { getDemoSearchHistory, getTrips, saveRecentSearch, trackBetaEvent, TripL
 import { searchByFields } from "@/src/utils/search";
 
 const filters = ["All", "Fish", "Shellfish", "Water", "Rigs", "Knots", "Learning", "Regulations", "Trips"] as const;
-const popularSearches = ["Lake Washington", "Dungeness crab", "razor clam", "marine area", "trout regulations", "family friendly pier"];
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
@@ -112,26 +112,18 @@ export default function SearchScreen() {
         <AppText variant="title" style={styles.lightText}>Search Unskunked</AppText>
         <AppText style={styles.heroText}>Find fish, waters, rigs, knots, lessons, and logged trip patterns.</AppText>
       </View>
-      <TextInput
+      <SearchInput
+        accessibilityLabel="Search fish, water, rigs, knots, lessons, or trips"
         value={query}
         onChangeText={setQuery}
+        onClear={() => setQuery("")}
         onSubmitEditing={() => submitSearch()}
         placeholder="Search worms, Green Lake, Palomar, bass..."
-        placeholderTextColor={colors.muted}
-        style={styles.search}
       />
       <View style={styles.filterRow}>
         {filters.map((item) => (
           <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter search results by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
             <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</AppText>
-          </Pressable>
-        ))}
-      </View>
-      <SectionHeader title="Popular searches" eyebrow="Phase 10" />
-      <View style={styles.filterRow}>
-        {popularSearches.map((item) => (
-          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Search ${item}`} onPress={() => submitSearch(item)} style={styles.recent}>
-            <AppText variant="caption" style={styles.recentText}>{item}</AppText>
           </Pressable>
         ))}
       </View>
@@ -179,16 +171,6 @@ const styles = StyleSheet.create({
     color: colors.mist,
     fontWeight: "700"
   },
-  search: {
-    backgroundColor: colors.surfaceStrong,
-    borderColor: colors.line,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 16,
-    minHeight: 54,
-    paddingHorizontal: spacing.md
-  },
   filterRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -223,7 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   resultType: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   }

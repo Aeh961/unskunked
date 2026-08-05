@@ -1,12 +1,13 @@
 import { Link } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { Screen } from "@/src/components/Screen";
+import { SearchInput } from "@/src/components/SearchInput";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { fishSpecies } from "@/src/data/fish";
@@ -40,12 +41,12 @@ export default function FishScreen() {
       </View>
       <Disclaimer />
 
-      <TextInput
+      <SearchInput
+        accessibilityLabel="Search fish species, bait, lures, or habitat"
         value={query}
         onChangeText={setQuery}
+        onClear={() => setQuery("")}
         placeholder="Search trout, worms, jig, docks..."
-        placeholderTextColor={colors.muted}
-        style={styles.search}
       />
 
       <View style={styles.filterRow}>
@@ -112,16 +113,6 @@ const styles = StyleSheet.create({
   heroText: {
     color: colors.mist,
     fontWeight: "700"
-  },
-  search: {
-    backgroundColor: colors.surfaceStrong,
-    borderColor: colors.line,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 16,
-    minHeight: 54,
-    paddingHorizontal: spacing.md
   },
   filterRow: {
     flexDirection: "row",

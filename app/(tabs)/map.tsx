@@ -1,6 +1,6 @@
 import { Href, Link } from "expo-router";
 import { useMemo, useState } from "react";
-import { Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
@@ -10,6 +10,7 @@ import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
+import { SearchInput } from "@/src/components/SearchInput";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
@@ -148,22 +149,13 @@ export default function MapScreen() {
         </View>
       </Card>
 
-      <TextInput
+      <SearchInput
         accessibilityLabel="Search waterbodies, shellfish locations, bait, county, or water type"
         value={query}
         onChangeText={setQuery}
+        onClear={() => setQuery("")}
         placeholder="Search lakes, rivers, piers, parks, bait..."
-        placeholderTextColor={colors.muted}
-        style={styles.search}
       />
-
-      <View style={styles.suggestionRow}>
-        {["trout", "pier", "worms", "bass"].map((suggestion) => (
-          <Pressable key={suggestion} accessibilityRole="button" accessibilityLabel={`Search ${suggestion}`} onPress={() => setQuery(suggestion)} style={styles.suggestion}>
-            <AppText variant="caption" style={styles.suggestionText}>{suggestion}</AppText>
-          </Pressable>
-        ))}
-      </View>
 
       <View style={styles.filterRow}>
         {activityFilters.map((item) => (
@@ -440,16 +432,6 @@ const styles = StyleSheet.create({
   heroText: {
     color: colors.mist,
     fontWeight: "700"
-  },
-  search: {
-    backgroundColor: colors.surfaceStrong,
-    borderColor: colors.line,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 16,
-    minHeight: 54,
-    paddingHorizontal: spacing.md
   },
   locationCard: {
     gap: spacing.md
