@@ -34,7 +34,7 @@ export default function FishingStatsScreen() {
     return (
       <Screen>
         <EmptyState icon="stats-chart" title="No stats yet" body="Log your first trip and your best bait, locations, and timing patterns will show up here." />
-        <Link href={"/plan" as Href} asChild>
+        <Link href={"/trips" as Href} asChild>
           <Button icon="calendar">Plan a trip</Button>
         </Link>
       </Screen>

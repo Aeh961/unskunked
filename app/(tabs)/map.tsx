@@ -288,7 +288,7 @@ export default function MapScreen() {
         </Stack>
 
         <View style={styles.actions}>
-          <Link href={`/plan?waterbodyId=${selected.id}` as Href} asChild>
+          <Link href={`/trips?waterbodyId=${selected.id}` as Href} asChild>
             <Button icon="calendar" style={styles.actionButton}>
               Plan Trip
             </Button>
@@ -405,7 +405,7 @@ export default function MapScreen() {
             ))}
           </Stack>
           <View style={styles.actions}>
-            <Link href={"/plan" as Href} asChild>
+            <Link href={"/trips" as Href} asChild>
               <Button icon="calendar" style={styles.actionButton}>Plan Shellfish</Button>
             </Link>
             <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={() => Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(selectedShellfishLocation.name)}&ll=${selectedShellfishLocation.latitude},${selectedShellfishLocation.longitude}`)}>

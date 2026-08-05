@@ -29,7 +29,7 @@ export default function HomeScreen() {
 
   function goBuildPlan() {
     const trimmed = query.trim();
-    router.push((trimmed ? `/plan?q=${encodeURIComponent(trimmed)}` : "/plan") as Href);
+    router.push((trimmed ? `/trips?q=${encodeURIComponent(trimmed)}` : "/trips") as Href);
   }
 
   function selectSuggestion(route: string) {
@@ -70,7 +70,7 @@ export default function HomeScreen() {
           eyebrow="Continue Mission"
           title={`${draftTrip.speciesCaught} at ${draftTrip.location}`}
           meta={[draftTrip.date, draftTrip.weather]}
-          onPress={() => router.push("/plan" as Href)}
+          onPress={() => router.push("/trips" as Href)}
         />
       ) : null}
 

@@ -62,7 +62,7 @@ export default function SearchScreen() {
         type: "Shellfish",
         title: item.name,
         subtitle: `${item.activityType} · ${item.difficulty} · ${item.seasonNotes}`,
-        href: "/plan" as Href
+        href: "/trips" as Href
       })),
       ...searchByFields(shellfishLocations, query, [(item) => item.name, (item) => item.county, (item) => item.region, (item) => item.waterType, (item) => item.activityTypes, (item) => item.regulationWarning]).map((item) => ({
         type: "Shellfish",

@@ -78,7 +78,7 @@ export default function FishDetailScreen() {
           <Fact label="Best time" value={fish.bestTimeOfDay} />
         </View>
         <AppText>Today's recommendation: fish {fish.bestWeather.toLowerCase()} during the {fish.bestSeason.toLowerCase()}.</AppText>
-        <Link href={`/plan?activity=fishing&targetFishId=${fish.id}` as Href} asChild>
+        <Link href={`/trips?activity=fishing&targetFishId=${fish.id}` as Href} asChild>
           <Button icon="calendar">Plan a trip for {fish.name}</Button>
         </Link>
       </Card>

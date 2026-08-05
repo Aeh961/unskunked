@@ -1,59 +1,106 @@
-import { useLocalSearchParams } from "expo-router";
+import { Href, Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
+import { Autocomplete } from "@/src/components/Autocomplete";
 import { Card } from "@/src/components/Card";
 import { Button } from "@/src/components/Button";
 import { ConfidenceBadge } from "@/src/components/ConfidenceBadge";
+import { EmptyState } from "@/src/components/EmptyState";
+import { ExpandableSection } from "@/src/components/ExpandableSection";
+import { MissionCard } from "@/src/components/MissionCard";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { RigDiagram } from "@/src/components/RigDiagram";
+import { SearchInput } from "@/src/components/SearchInput";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
-import { RegionId, regions } from "@/src/data/regions";
 import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { ActivityType } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
-import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
-import { saveTrip, saveTripPlan, trackBetaEvent } from "@/src/utils/localStore";
+import { getSuggestions } from "@/src/utils/autocomplete";
+import { getTripPlans, getTrips, saveTrip, saveTripPlan, trackBetaEvent, TripLog, TripPlanRecord } from "@/src/utils/localStore";
 import { buildTripPlan } from "@/src/utils/recommendations";
 import { formatTripPlanShare, shareText } from "@/src/utils/share";
 import { Coordinates, defaultManualLocation, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { buildShellfishPlan } from "@/src/services/shellfishPlanner";
 import { cacheConditionsForLocation } from "@/src/services/conditionProviders";
 import { getFreshnessState, getProviderById } from "@/src/services/dataTrust";
+import { FollowUp, mergeFollowUpAnswer, nextFollowUp, ParsedTrip, parseTripText } from "@/src/utils/tripParser";
 
 const months = ["June", "July", "August", "September"] as const;
 const activityOptions: ActivityType[] = ["fishing", "clamming", "crabbing"];
 const accessOptions = ["Shore", "Boat"] as const;
 const experienceOptions = ["Beginner", "Intermediate", "Advanced"] as const;
 const timeOptions = ["1 hour", "2 hours", "Half day", "All day"] as const;
-const stepLabels = ["Activity", "State", "Waterbody", "Species", "Date", "Gear"];
+const stepLabels = ["Target", "Date", "Loadout"];
 
-export default function PlanTripScreen() {
-  const params = useLocalSearchParams<{ activity?: string; waterbodyId?: string; targetFishId?: string }>();
-  const initialActivity = activityOptions.includes(params.activity as ActivityType) ? (params.activity as ActivityType) : "fishing";
-  const initialWaterbodyId = waterbodies.some((water) => water.id === params.waterbodyId) ? (params.waterbodyId as string) : waterbodies[0].id;
-  const initialTargetFishId = fishSpecies.some((fish) => fish.id === params.targetFishId)
-    ? (params.targetFishId as string)
-    : waterbodies.find((water) => water.id === initialWaterbodyId)?.speciesIds[0] ?? waterbodies[0].speciesIds[0];
+function applyParsedToState(
+  parsed: ParsedTrip,
+  setters: {
+    setActivityType: (value: ActivityType) => void;
+    setWaterbodyId: (value: string) => void;
+    setShellfishLocationId: (value: string | undefined) => void;
+    setTargetFishId: (value: string) => void;
+    setAccess: (value: (typeof accessOptions)[number]) => void;
+  }
+) {
+  if (parsed.activityType) setters.setActivityType(parsed.activityType);
+  if (parsed.waterbodyId) setters.setWaterbodyId(parsed.waterbodyId);
+  if (parsed.shellfishLocationId) setters.setShellfishLocationId(parsed.shellfishLocationId);
+  if (parsed.targetFishId) setters.setTargetFishId(parsed.targetFishId);
+  if (parsed.accessType) setters.setAccess(parsed.accessType === "Boat" ? "Boat" : "Shore");
+}
 
-  const { region: storedRegion } = useSelectedRegion();
-  const [step, setStep] = useState(params.waterbodyId || params.targetFishId ? stepLabels.length - 1 : 0);
+export default function TripsScreen() {
+  const params = useLocalSearchParams<{ q?: string; activity?: string; activityType?: string; waterbodyId?: string; targetFishId?: string; targetShellfishId?: string; shellfishLocationId?: string }>();
+  const parsedFromQuery = useMemo(() => (params.q ? parseTripText(params.q) : null), [params.q]);
+
+  const hasDeepLinkParams = Boolean(
+    params.q || params.activity || params.activityType || params.waterbodyId || params.targetFishId || params.targetShellfishId || params.shellfishLocationId
+  );
+
+  const initialActivity = ((params.activityType || params.activity || parsedFromQuery?.activityType) && activityOptions.includes((params.activityType || params.activity || parsedFromQuery?.activityType) as ActivityType))
+    ? ((params.activityType || params.activity || parsedFromQuery?.activityType) as ActivityType)
+    : "fishing";
+  const initialWaterbodyId = params.waterbodyId ?? parsedFromQuery?.waterbodyId;
+  const initialTargetFishId = params.targetFishId ?? parsedFromQuery?.targetFishId;
+  const initialShellfishLocationId = params.shellfishLocationId ?? parsedFromQuery?.shellfishLocationId;
+  const initialTargetShellfishId = params.targetShellfishId ?? parsedFromQuery?.targetShellfishId;
+
+  const initialParsedForFollowUp: ParsedTrip | null = hasDeepLinkParams
+    ? {
+        raw: params.q ?? "",
+        activityType: initialActivity,
+        waterbodyId: initialWaterbodyId,
+        shellfishLocationId: initialShellfishLocationId,
+        targetFishId: initialTargetFishId,
+        targetShellfishId: initialTargetShellfishId
+      }
+    : null;
+  const initialFollowUp = initialParsedForFollowUp ? nextFollowUp(initialParsedForFollowUp) : null;
+
+  const [savedPlans, setSavedPlans] = useState<TripPlanRecord[]>([]);
+  const [fieldNotes, setFieldNotes] = useState<TripLog[]>([]);
+  const [showLanding, setShowLanding] = useState(!hasDeepLinkParams);
+  const [landingQuery, setLandingQuery] = useState("");
+
+  const [step, setStep] = useState(hasDeepLinkParams && !initialFollowUp ? stepLabels.length - 1 : 0);
   const [generated, setGenerated] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>(initialActivity);
-  const [region, setRegion] = useState<RegionId>("washington");
   const [month, setMonth] = useState<(typeof months)[number]>("July");
-  const [waterbodyId, setWaterbodyId] = useState(initialWaterbodyId);
-  const [shellfishLocationId, setShellfishLocationId] = useState(
-    shellfishLocations.find((location) => location.activityTypes.includes(activityType === "crabbing" ? "crabbing" : "clamming"))?.id ?? shellfishLocations[0]?.id
+  const [waterbodyId, setWaterbodyId] = useState(initialWaterbodyId ?? waterbodies[0].id);
+  const [shellfishLocationId, setShellfishLocationId] = useState<string | undefined>(
+    initialShellfishLocationId ?? shellfishLocations.find((location) => location.activityTypes.includes(initialActivity === "crabbing" ? "crabbing" : "clamming"))?.id
   );
   const [access, setAccess] = useState<(typeof accessOptions)[number]>("Shore");
   const [experience, setExperience] = useState<(typeof experienceOptions)[number]>("Beginner");
-  const [targetFishId, setTargetFishId] = useState(initialTargetFishId);
+  const [targetFishId, setTargetFishId] = useState(
+    initialTargetFishId ?? waterbodies.find((water) => water.id === (initialWaterbodyId ?? waterbodies[0].id))?.speciesIds[0] ?? waterbodies[0].speciesIds[0]
+  );
   const [availableBait, setAvailableBait] = useState("");
   const [availableGear, setAvailableGear] = useState("");
   const [savedMessage, setSavedMessage] = useState("");
@@ -61,9 +108,57 @@ export default function PlanTripScreen() {
   const [timeAvailable, setTimeAvailable] = useState<(typeof timeOptions)[number]>("2 hours");
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual location.");
 
+  const [targetText, setTargetText] = useState(params.q ?? "");
+  const [pendingParsed, setPendingParsed] = useState<ParsedTrip | null>(initialFollowUp ? initialParsedForFollowUp : null);
+  const [pendingFollowUp, setPendingFollowUp] = useState<FollowUp | null>(initialFollowUp);
+  const [followUpText, setFollowUpText] = useState("");
+
   useEffect(() => {
-    setRegion(storedRegion);
-  }, [storedRegion]);
+    Promise.all([getTripPlans(), getTrips()]).then(([plans, trips]) => {
+      setSavedPlans(plans);
+      setFieldNotes(trips.filter((trip) => trip.status !== "draft"));
+    });
+  }, []);
+
+  const setters = { setActivityType, setWaterbodyId, setShellfishLocationId, setTargetFishId, setAccess };
+
+  function continueResolving(parsed: ParsedTrip) {
+    const followUp = nextFollowUp(parsed);
+    if (followUp) {
+      setPendingParsed(parsed);
+      setPendingFollowUp(followUp);
+      return;
+    }
+    applyParsedToState(parsed, setters);
+    setPendingParsed(null);
+    setPendingFollowUp(null);
+    setStep(1);
+  }
+
+  function resolveTarget(text: string) {
+    setTargetText(text);
+    continueResolving(parseTripText(text));
+  }
+
+  function submitFollowUp() {
+    if (!pendingParsed || !followUpText.trim()) return;
+    const merged = mergeFollowUpAnswer(pendingParsed, followUpText);
+    setFollowUpText("");
+    continueResolving(merged);
+  }
+
+  function startNewMission() {
+    setShowLanding(false);
+    setGenerated(false);
+    setStep(0);
+    setTargetText("");
+    setPendingParsed(null);
+    setPendingFollowUp(null);
+    setSavedMessage("");
+  }
+
+  const suggestions = useMemo(() => getSuggestions(targetText), [targetText]);
+  const followUpSuggestions = useMemo(() => getSuggestions(followUpText), [followUpText]);
 
   const isFishing = activityType === "fishing";
   const shellfishActivity = activityType === "crabbing" ? "crabbing" : "clamming";
@@ -74,7 +169,6 @@ export default function PlanTripScreen() {
   const selectedWaterbody = waterbodies.find((water) => water.id === waterbodyId) ?? waterbodies[0];
   const selectedShellfishLocation = shellfishOptions.find((location) => location.id === shellfishLocationId) ?? shellfishOptions[0];
   const targetShellfishSpecies = shellfishSpecies.find((item) => item.activityType === shellfishActivity);
-  const regionInfo = regions.find((item) => item.id === region);
 
   const plan = useMemo(
     () => buildTripPlan({ month, waterbodyId, access, experience, targetFishId, availableBait, availableGear, userLocation: coordinates, timeAvailable }),
@@ -125,7 +219,7 @@ export default function PlanTripScreen() {
         backupPlan: activityType === "crabbing" ? "If pots are empty, move depth or scent trail and verify legal soak/location." : "If the beach is crowded or closed, switch to a verified nearby open beach.",
         youtubeLinks: shellfishPlan.species?.youtubeSearches ?? [`Washington ${activityType} beginner`]
       });
-      setSavedMessage(`${activityType} plan saved locally.`);
+      setSavedMessage(`${activityType} mission saved.`);
       return;
     }
     await trackBetaEvent("planner-choice", `${plan.water.name} · ${plan.fish.name} · ${plan.suggestedRig}`);
@@ -147,7 +241,7 @@ export default function PlanTripScreen() {
       backupPlan: plan.backupPlan,
       youtubeLinks: plan.youtubeLinks
     });
-    setSavedMessage("Trip plan saved locally.");
+    setSavedMessage("Mission saved.");
   }
 
   async function startTrip() {
@@ -164,9 +258,10 @@ export default function PlanTripScreen() {
         rig: activityType === "crabbing" ? "Crab ring/pot" : "Clam shovel/rake",
         tide: shellfishPlan.tide ? `${shellfishPlan.tide.movement} · high ${shellfishPlan.tide.high} · low ${shellfishPlan.tide.low}` : undefined,
         notes: `Draft ${activityType} trip from planner. ${shellfishPlan.explanation}`,
-        result: "Skunked"
+        result: "Skunked",
+        status: "draft"
       });
-      setSavedMessage(`Draft ${activityType} trip started in Trip Log.`);
+      setSavedMessage(`Draft ${activityType} mission started in Field Notes.`);
       return;
     }
     await saveTrip({
@@ -180,9 +275,10 @@ export default function PlanTripScreen() {
       bait: plan.suggestedBait,
       rig: plan.suggestedRig,
       notes: `Draft trip from planner. Backup plan: ${plan.backupPlan}`,
-      result: "Skunked"
+      result: "Skunked",
+      status: "draft"
     });
-    setSavedMessage("Draft trip started in Trip Log.");
+    setSavedMessage("Draft mission started in Field Notes.");
   }
 
   async function sharePlan() {
@@ -215,96 +311,173 @@ export default function PlanTripScreen() {
     if (step > 0) setStep(step - 1);
   }
 
+  if (showLanding) {
+    return (
+      <Screen>
+        <View style={styles.hero}>
+          <AppText variant="display" style={styles.lightText}>MISSIONS</AppText>
+          <AppText style={styles.heroText}>What are you targeting?</AppText>
+        </View>
+        <SearchInput
+          accessibilityLabel="Type what you're fishing, clamming, or crabbing for"
+          value={landingQuery}
+          onChangeText={setLandingQuery}
+          onClear={() => setLandingQuery("")}
+          onSubmitEditing={() => resolveTarget(landingQuery)}
+          placeholder="Rainbow trout, Dungeness crab, Green Lake..."
+        />
+        <Autocomplete
+          items={getSuggestions(landingQuery)}
+          onSelect={(item) => resolveTarget(item.label)}
+        />
+        <Button icon="add-circle" onPress={startNewMission}>New Mission</Button>
+
+        {savedPlans.length > 0 ? (
+          <View style={styles.listSection}>
+            <SectionHeader title="Saved Missions" eyebrow={`${savedPlans.length}`} />
+            {savedPlans.map((item) => (
+              <MissionCard
+                key={item.id}
+                eyebrow={item.activityType ?? "fishing"}
+                title={`${item.targetSpecies} at ${item.location}`}
+                meta={[item.bestTime, item.rigSetup, item.regulationSummary]}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {fieldNotes.length > 0 ? (
+          <View style={styles.listSection}>
+            <SectionHeader title="Field Notes" eyebrow={`${fieldNotes.length}`} />
+            {fieldNotes.slice(0, 5).map((trip) => (
+              <Link key={trip.id} href={"/log" as Href} asChild>
+                <MissionCard
+                  eyebrow={trip.date}
+                  title={`${trip.speciesCaught} at ${trip.location}`}
+                  meta={[`${trip.numberCaught} caught`, trip.result]}
+                  onPress={() => {}}
+                />
+              </Link>
+            ))}
+          </View>
+        ) : null}
+
+        {savedPlans.length === 0 && fieldNotes.length === 0 ? (
+          <EmptyState icon="flag" title="No missions yet" body="Type what you're going after above to build your first plan." />
+        ) : null}
+      </Screen>
+    );
+  }
+
   if (generated) {
     return (
       <Screen>
         <View style={styles.hero}>
-          <AppText variant="title" style={styles.lightText}>Your Trip Plan</AppText>
+          <AppText variant="display" style={styles.lightText}>MISSION READY</AppText>
           <AppText style={styles.heroText}>Generated from what you chose - nothing picked for you.</AppText>
         </View>
         <Button icon="chevron-back-outline" variant="ghost" onPress={goBack}>Edit choices</Button>
 
         {!isFishing ? (
           <Card style={styles.plan}>
-            <SectionHeader title={`${activityType === "clamming" ? "Clam" : "Crab"} plan at ${shellfishPlan.location.name}`} eyebrow={`${shellfishPlan.score}/100 trip score`} />
+            <View style={styles.summaryTop}>
+              <View style={styles.flex}>
+                <AppText variant="caption" style={styles.eyebrow}>{activityType === "crabbing" ? "CRAB MISSION" : "CLAM MISSION"}</AppText>
+                <AppText variant="heading">{shellfishPlan.species?.name ?? activityType} at {shellfishPlan.location.name}</AppText>
+              </View>
+              <View style={styles.scoreBadge}>
+                <AppText variant="caption" style={styles.scoreText}>{shellfishPlan.score}/100</AppText>
+              </View>
+            </View>
             {recommendationSource ? (
               <View style={styles.sourceRow}>
                 <ConfidenceBadge confidence={recommendationSource.confidence} compact />
                 <AppText variant="caption" style={styles.sourceCopy}>{recommendationSource.label} · {sourceFreshness?.warning}</AppText>
               </View>
             ) : null}
-            <Stack>
-              <AppText>Target: {shellfishPlan.species?.name ?? activityType}</AppText>
-              <AppText>Best window: {shellfishPlan.bestTime}</AppText>
+            <AppText>Best window: {shellfishPlan.bestTime}</AppText>
+            <AppText style={styles.warning}>Regulation: {shellfishPlan.location.regulationWarning}</AppText>
+
+            <View style={styles.actions}>
+              <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save Mission</Button>
+              <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Launch Trip</Button>
+            </View>
+            {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
+
+            <ExpandableSection title="Conditions" eyebrow="Weather & tide">
               <AppText>Weather: {shellfishPlan.weather.airTempF}F · wind {shellfishPlan.weather.windMph} mph · rain {shellfishPlan.weather.rainChancePercent}%</AppText>
               <AppText>Tide: {shellfishPlan.tide ? `${shellfishPlan.tide.current} · ${shellfishPlan.tide.movement} · high ${shellfishPlan.tide.high} · low ${shellfishPlan.tide.low}` : "No tide data"}</AppText>
               <AppText>{shellfishPlan.explanation}</AppText>
-              <AppText style={styles.warning}>Regulation: {shellfishPlan.location.regulationWarning}</AppText>
-            </Stack>
-            <SectionHeader title="Checklist" eyebrow="Before you leave" />
-            <Stack>
+            </ExpandableSection>
+            <ExpandableSection title="Gear Check" eyebrow="Before you leave">
               {[...shellfishPlan.whatToBring, ...shellfishPlan.regulationReminders, ...shellfishPlan.safetyNotes].map((item) => (
                 <View key={item} style={styles.bullet}>
                   <View style={styles.dot} />
                   <AppText style={styles.flex}>{item}</AppText>
                 </View>
               ))}
-            </Stack>
-            <SectionHeader title="Watch and learn" eyebrow="External searches" />
-            {(shellfishPlan.species?.youtubeSearches ?? [`Washington ${activityType} beginner`]).map((query) => (
-              <YoutubeLink key={query} query={query} />
-            ))}
-            <View style={styles.actions}>
-              <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save plan</Button>
-              <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Start Trip</Button>
-            </View>
-            <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share shellfish plan</Button>
-            {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
+            </ExpandableSection>
+            <ExpandableSection title="Watch and Learn" eyebrow="External searches">
+              {(shellfishPlan.species?.youtubeSearches ?? [`Washington ${activityType} beginner`]).map((query) => (
+                <YoutubeLink key={query} query={query} />
+              ))}
+            </ExpandableSection>
+            <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share mission</Button>
           </Card>
         ) : (
           <Card style={styles.plan}>
-            <SectionHeader title={`${plan.bestFish} at ${plan.water.name}`} eyebrow={`${plan.estimatedSuccess}% confidence`} />
+            <View style={styles.summaryTop}>
+              <View style={styles.flex}>
+                <AppText variant="caption" style={styles.eyebrow}>FISHING MISSION</AppText>
+                <AppText variant="heading">{plan.bestFish} at {plan.water.name}</AppText>
+              </View>
+              <StatusBadge status={plan.water.status} />
+            </View>
             {recommendationSource ? (
               <View style={styles.sourceRow}>
                 <ConfidenceBadge confidence={recommendationSource.confidence} compact />
                 <AppText variant="caption" style={styles.sourceCopy}>{recommendationSource.label} · {sourceFreshness?.warning}</AppText>
               </View>
             ) : null}
-            <Stack>
-              <AppText>Suggested gear: {plan.suggestedGear}</AppText>
-              <AppText>Suggested bait: {plan.suggestedBait}</AppText>
-              <AppText>Suggested rig: {plan.suggestedRig}</AppText>
+            <AppText>Setup: {plan.suggestedGear} · {plan.suggestedBait} · {plan.suggestedRig}</AppText>
+            <AppText>Best time: {plan.bestTime}</AppText>
+            <AppText style={styles.warning}>Regulation reminder: {plan.regulationReminder}</AppText>
+
+            <View style={styles.actions}>
+              <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save Mission</Button>
+              <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Launch Trip</Button>
+            </View>
+            {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
+
+            <ExpandableSection title="Rig Diagram" eyebrow="Suggested setup">
               <AppText>Suggested knot: {plan.suggestedKnot}</AppText>
-              <AppText>Best time: {plan.bestTime}</AppText>
+              <RigDiagram parts={plan.rig.parts} />
+            </ExpandableSection>
+            <ExpandableSection title="Conditions" eyebrow="Weather & advice">
               <AppText>{plan.beginnerAdvice}</AppText>
               <AppText>Weather reminder: {plan.weatherReminder}</AppText>
-              <AppText style={styles.warning}>Regulation reminder: {plan.regulationReminder}</AppText>
               <AppText>Safety: {plan.safetyReminder}</AppText>
               <AppText>Backup plan: {plan.backupPlan}</AppText>
-            </Stack>
-            <RigDiagram parts={plan.rig.parts} />
-            <SectionHeader title="Gear checklist" eyebrow="Before you leave" />
-            <Stack>
+            </ExpandableSection>
+            <ExpandableSection title="Gear Check" eyebrow="Before you leave">
               {[...plan.checklist, ...plan.baitChecklist.map((bait) => `Bait/lure: ${bait}`)].map((item) => (
                 <View key={item} style={styles.bullet}>
                   <View style={styles.dot} />
                   <AppText style={styles.flex}>{item}</AppText>
                 </View>
               ))}
-            </Stack>
-            <SectionHeader title="Watch and learn" eyebrow="External searches" />
-            {plan.youtubeLinks.map((query) => (
-              <YoutubeLink key={query} query={query} />
-            ))}
-            <View style={styles.actions}>
-              <Button icon="save" style={styles.actionButton} onPress={saveCurrentPlan}>Save plan</Button>
-              <Button icon="play" variant="secondary" style={styles.actionButton} onPress={startTrip}>Start Trip</Button>
-            </View>
-            <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share trip plan</Button>
-            {savedMessage ? <AppText variant="caption" style={styles.saved}>{savedMessage}</AppText> : null}
+            </ExpandableSection>
+            <ExpandableSection title="Watch and Learn" eyebrow="External searches">
+              {plan.youtubeLinks.map((query) => (
+                <YoutubeLink key={query} query={query} />
+              ))}
+            </ExpandableSection>
+            <ExpandableSection title="Full Regulations" eyebrow="Official sources">
+              <OfficialLinks links={plan.regulation.sourceLinks} />
+            </ExpandableSection>
+            <Button icon="share-social" variant="ghost" onPress={sharePlan}>Share mission</Button>
           </Card>
         )}
-        <OfficialLinks links={plan.regulation.sourceLinks} />
       </Screen>
     );
   }
@@ -312,7 +485,7 @@ export default function PlanTripScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <AppText variant="title" style={styles.lightText}>Plan a Trip</AppText>
+        <AppText variant="display" style={styles.lightText}>NEW MISSION</AppText>
         <View style={styles.progressRow}>
           {stepLabels.map((label, index) => (
             <View key={label} style={[styles.progressDot, index <= step && styles.progressDotActive]} />
@@ -324,40 +497,42 @@ export default function PlanTripScreen() {
       <Card style={styles.form}>
         {step === 0 ? (
           <View style={styles.group}>
-            <AppText variant="subheading">What do you want to do?</AppText>
-            <View style={styles.activityGrid}>
-              {activityOptions.map((option) => (
-                <Pressable
-                  key={option}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Choose ${option}`}
-                  onPress={() => setActivityType(option)}
-                  style={[styles.activityCard, activityType === option && styles.activityCardActive]}
-                >
-                  <Ionicons name={option === "fishing" ? "fish" : option === "crabbing" ? "boat" : "sunny"} size={28} color={activityType === option ? "#fff" : colors.forest} />
-                  <AppText style={[styles.activityLabel, activityType === option && styles.activityLabelActive]}>
-                    {option === "fishing" ? "Fishing" : option === "crabbing" ? "Crabbing" : "Clamming"}
-                  </AppText>
-                </Pressable>
-              ))}
-            </View>
+            <AppText variant="subheading">What are you targeting?</AppText>
+            <SearchInput
+              accessibilityLabel="What are you fishing, clamming, or crabbing for"
+              value={targetText}
+              onChangeText={setTargetText}
+              onClear={() => setTargetText("")}
+              onSubmitEditing={() => resolveTarget(targetText)}
+              placeholder="Rainbow trout, Dungeness crab, Green Lake..."
+            />
+            <Autocomplete items={suggestions} onSelect={(item) => resolveTarget(item.label)} />
+            <Button icon="chevron-forward-outline" onPress={() => resolveTarget(targetText)}>Continue</Button>
+
+            {pendingFollowUp ? (
+              <View style={styles.followUp}>
+                <AppText variant="subheading">{pendingFollowUp.question}</AppText>
+                <TextInput
+                  value={followUpText}
+                  onChangeText={setFollowUpText}
+                  onSubmitEditing={submitFollowUp}
+                  placeholder="Type your answer..."
+                  placeholderTextColor={colors.muted}
+                  style={styles.input}
+                  accessibilityLabel={pendingFollowUp.question}
+                />
+                <Autocomplete items={followUpSuggestions} onSelect={(item) => { setFollowUpText(item.label); }} />
+                <Button icon="chevron-forward-outline" onPress={submitFollowUp}>Continue</Button>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
         {step === 1 ? (
           <View style={styles.group}>
-            <AppText variant="subheading">Which state?</AppText>
-            <ChoiceRow label="" value={region} options={regions.map((item) => item.id)} labels={Object.fromEntries(regions.map((item) => [item.id, item.name]))} onSelect={setRegion} />
-            {regionInfo && regionInfo.status !== "Mocked" ? (
-              <AppText variant="caption" style={styles.warning}>{regionInfo.note} Showing Washington sample data below until real {regionInfo.name} data is connected.</AppText>
-            ) : null}
-          </View>
-        ) : null}
-
-        {step === 2 ? (
-          <View style={styles.group}>
-            <AppText variant="subheading">Where would you like to go?</AppText>
+            <AppText variant="subheading">When are you heading out?</AppText>
             <View style={styles.nearbyCard}>
+              <AppText variant="caption" style={styles.eyebrow}>YOUR LOCATION (for weather & tide accuracy)</AppText>
               <AppText>{locationMessage}</AppText>
               <View style={styles.actions}>
                 <Button icon="locate" style={styles.actionButton} onPress={useCurrentLocation}>Use my location</Button>
@@ -370,49 +545,24 @@ export default function PlanTripScreen() {
                 ))}
               </View>
             </View>
-            {isFishing ? (
-              <ChoiceRow label="Waterbody" value={waterbodyId} options={waterbodies.map((water) => water.id)} labels={Object.fromEntries(waterbodies.map((water) => [water.id, water.name]))} onSelect={setWaterbodyId} />
-            ) : (
-              <ChoiceRow label="Location" value={shellfishLocationId ?? ""} options={shellfishOptions.map((location) => location.id)} labels={Object.fromEntries(shellfishOptions.map((location) => [location.id, location.name]))} onSelect={setShellfishLocationId} />
-            )}
-          </View>
-        ) : null}
-
-        {step === 3 ? (
-          <View style={styles.group}>
-            <AppText variant="subheading">What are you targeting?</AppText>
-            {isFishing ? (
-              <ChoiceRow
-                label="Target fish"
-                value={targetFishId}
-                options={selectedWaterbody.speciesIds}
-                labels={Object.fromEntries(fishSpecies.map((fish) => [fish.id, fish.name]))}
-                onSelect={setTargetFishId}
-              />
-            ) : (
-              <Card style={styles.confirmCard}>
-                <AppText variant="heading">{targetShellfishSpecies?.name ?? shellfishActivity}</AppText>
-                <AppText variant="caption">The only legal target at {selectedShellfishLocation?.name} for {shellfishActivity}.</AppText>
-              </Card>
-            )}
-          </View>
-        ) : null}
-
-        {step === 4 ? (
-          <View style={styles.group}>
-            <AppText variant="subheading">When are you going?</AppText>
             <ChoiceRow label="Month" value={month} options={months} onSelect={setMonth} />
             <ChoiceRow label="Time available" value={timeAvailable} options={timeOptions} onSelect={setTimeAvailable} />
           </View>
         ) : null}
 
-        {step === 5 ? (
+        {step === 2 ? (
           <View style={styles.group}>
-            <AppText variant="subheading">What gear do you have?</AppText>
+            <AppText variant="subheading">Loadout</AppText>
             <ChoiceRow label="Shore or boat" value={access} options={accessOptions} onSelect={setAccess} />
             <ChoiceRow label="Experience" value={experience} options={experienceOptions} onSelect={setExperience} />
             <Field label={isFishing ? "Available bait" : "Available gear/bait"} value={availableBait} onChangeText={setAvailableBait} placeholder={isFishing ? "worms, PowerBait, jigs..." : "clam shovel, crab pot, gauge, bait..."} />
             <Field label="Available gear" value={availableGear} onChangeText={setAvailableGear} placeholder="light spinning rod, 6 lb mono..." />
+            {!isFishing ? (
+              <Card style={styles.confirmCard}>
+                <AppText variant="subheading">{targetShellfishSpecies?.name ?? shellfishActivity}</AppText>
+                <AppText variant="caption">The only legal target at {selectedShellfishLocation?.name} for {shellfishActivity}.</AppText>
+              </Card>
+            ) : null}
           </View>
         ) : null}
       </Card>
@@ -421,23 +571,25 @@ export default function PlanTripScreen() {
         {step > 0 ? (
           <Button icon="chevron-back-outline" variant="secondary" style={styles.actionButton} onPress={goBack}>Back</Button>
         ) : null}
-        <Button icon={step === stepLabels.length - 1 ? "sparkles" : "chevron-forward-outline"} style={styles.actionButton} onPress={goNext}>
-          {step === stepLabels.length - 1 ? "Generate Trip Plan" : "Next"}
-        </Button>
+        {step > 0 ? (
+          <Button icon={step === stepLabels.length - 1 ? "sparkles" : "chevron-forward-outline"} style={styles.actionButton} onPress={goNext}>
+            {step === stepLabels.length - 1 ? "Launch Trip" : "Next"}
+          </Button>
+        ) : null}
       </View>
     </Screen>
   );
 }
 
-function ChoiceRow<T extends string>({ label, value, options, labels, onSelect }: { label: string; value: T; options: readonly T[]; labels?: Record<string, string>; onSelect: (value: T) => void }) {
+function ChoiceRow<T extends string>({ label, value, options, onSelect }: { label: string; value: T; options: readonly T[]; onSelect: (value: T) => void }) {
   return (
     <View style={styles.group}>
       {label ? <AppText variant="subheading">{label}</AppText> : null}
       <View style={styles.options}>
         {options.map((option) => (
-          <Pressable key={option} accessibilityRole="button" accessibilityLabel={`Select ${labels?.[option] ?? option} for ${label}`} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
+          <Pressable key={option} accessibilityRole="button" accessibilityLabel={`Select ${option} for ${label}`} onPress={() => onSelect(option)} style={[styles.option, value === option && styles.optionActive]}>
             <AppText variant="caption" style={[styles.optionText, value === option && styles.optionTextActive]}>
-              {labels?.[option] ?? option}
+              {option}
             </AppText>
           </Pressable>
         ))}
@@ -458,12 +610,14 @@ function Field({ label, ...props }: { label: string; value: string; placeholder:
 const styles = StyleSheet.create({
   hero: {
     backgroundColor: colors.forest,
+    borderColor: colors.line,
     borderRadius: radii.md,
+    borderWidth: 2,
     gap: spacing.sm,
     padding: spacing.lg
   },
   lightText: {
-    color: "#fff"
+    color: colors.ink
   },
   heroText: {
     color: colors.mist,
@@ -474,46 +628,36 @@ const styles = StyleSheet.create({
     gap: spacing.xs
   },
   progressDot: {
-    backgroundColor: "rgba(255,255,255,0.35)",
-    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: radii.sm,
     flex: 1,
     height: 4
   },
   progressDotActive: {
-    backgroundColor: "#fff"
+    backgroundColor: colors.amber
   },
   form: {
     gap: spacing.md
   },
-  activityGrid: {
-    flexDirection: "row",
+  followUp: {
+    borderColor: colors.line,
+    borderTopWidth: 2,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm
+  },
+  listSection: {
     gap: spacing.sm
   },
-  activityCard: {
-    alignItems: "center",
-    backgroundColor: colors.mist,
-    borderRadius: radii.md,
-    flex: 1,
-    gap: spacing.xs,
-    paddingVertical: spacing.lg
-  },
-  activityCardActive: {
-    backgroundColor: colors.forest
-  },
-  activityLabel: {
-    color: colors.forest,
-    fontWeight: "800"
-  },
-  activityLabelActive: {
-    color: "#fff"
-  },
   confirmCard: {
-    backgroundColor: colors.mist,
+    backgroundColor: colors.surfaceStrong,
     gap: spacing.xs
   },
   nearbyCard: {
-    backgroundColor: colors.mist,
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
     borderRadius: radii.md,
+    borderWidth: 2,
     gap: spacing.md,
     padding: spacing.md
   },
@@ -528,8 +672,8 @@ const styles = StyleSheet.create({
   option: {
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
-    borderRadius: radii.pill,
-    borderWidth: 1,
+    borderRadius: radii.md,
+    borderWidth: 2,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm
   },
@@ -541,13 +685,13 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   optionTextActive: {
-    color: "#fff"
+    color: colors.ink
   },
   input: {
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
     borderRadius: radii.md,
-    borderWidth: 1,
+    borderWidth: 2,
     color: colors.ink,
     fontSize: 16,
     minHeight: 48,
@@ -559,6 +703,26 @@ const styles = StyleSheet.create({
   },
   plan: {
     gap: spacing.md
+  },
+  summaryTop: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  eyebrow: {
+    color: colors.amber,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  scoreBadge: {
+    backgroundColor: colors.good,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4
+  },
+  scoreText: {
+    color: "#14170f",
+    fontWeight: "900"
   },
   actions: {
     flexDirection: "row",
@@ -581,7 +745,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm
   },
   dot: {
-    backgroundColor: colors.river,
+    backgroundColor: colors.amber,
     borderRadius: radii.pill,
     height: 8,
     marginTop: 7,

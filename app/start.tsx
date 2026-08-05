@@ -175,7 +175,7 @@ export default function StartHereScreen() {
         <SectionHeader title="Start Fishing Smarter" eyebrow="Ready" />
         <AppText>Save your beta profile, then start with a plan that matches your region, fish, style, and experience.</AppText>
         <Button icon="checkmark-circle" onPress={() => saveProfile()}>{saved ? "Profile saved" : "Save beta profile"}</Button>
-        <Link href={"/plan" as Href} asChild>
+        <Link href={"/trips" as Href} asChild>
           <Button icon="calendar" variant="secondary">Plan first trip</Button>
         </Link>
       </Card>
