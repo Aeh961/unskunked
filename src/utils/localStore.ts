@@ -27,6 +27,8 @@ export type TripLog = {
   photoUri?: string;
   tide?: string;
   result: TripResult;
+  /** Set to "draft" when created from the planner's "Start Trip" action, so Home can offer to continue it. */
+  status?: "draft" | "logged";
 };
 
 export type TripPlanRecord = {
