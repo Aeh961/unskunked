@@ -5,9 +5,9 @@ import { colors } from "@/src/theme";
 const icons = {
   index: "home",
   map: "map",
-  plan: "calendar",
-  fish: "fish",
-  ask: "chatbubble-ellipses"
+  trips: "flag",
+  ask: "chatbubble-ellipses",
+  more: "menu"
 } as const;
 
 export default function TabsLayout() {
@@ -15,11 +15,12 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.pine,
+        tabBarActiveTintColor: colors.amber,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.line,
+          borderTopWidth: 2,
           height: 82,
           paddingBottom: 24,
           paddingTop: 8
@@ -32,8 +33,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: "Home" }} />
       <Tabs.Screen name="map" options={{ title: "Map" }} />
       <Tabs.Screen name="trips" options={{ title: "Trips" }} />
-      <Tabs.Screen name="fish" options={{ title: "Fish" }} />
       <Tabs.Screen name="ask" options={{ title: "Ask" }} />
+      <Tabs.Screen name="more" options={{ title: "More" }} />
     </Tabs>
   );
 }

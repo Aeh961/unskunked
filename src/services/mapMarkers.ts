@@ -2,6 +2,7 @@ import { shellfishLocations } from "@/src/data/shellfish";
 import { ActivityType, WaterType } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
 import { Coordinates, distanceMiles } from "@/src/services/location";
+import { colors } from "@/src/theme";
 
 export type MapMarkerKind = ActivityType;
 
@@ -80,7 +81,7 @@ export function getMapMarkers(filters: MarkerFilters = {}): UnskunkedMapMarker[]
 }
 
 export function getMarkerTint(kind: MapMarkerKind) {
-  if (kind === "clamming") return "#C96F3B";
-  if (kind === "crabbing") return "#A23E48";
-  return "#176B87";
+  if (kind === "clamming") return colors.amber;
+  if (kind === "crabbing") return colors.dangerFill;
+  return colors.river;
 }

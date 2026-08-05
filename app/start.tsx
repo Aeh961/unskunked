@@ -24,7 +24,7 @@ const steps = [
   {
     title: "Choose one target",
     body: "Trout, perch, and bluegill are friendly first targets. Avoid complex salmon rules until you are ready.",
-    href: "/fish",
+    href: "/species",
     icon: "fish" as const
   },
   {

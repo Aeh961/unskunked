@@ -1,6 +1,6 @@
 import { Href, Link } from "expo-router";
 import { useMemo, useState } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
@@ -10,6 +10,7 @@ import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
+import { PixelMarker } from "@/src/components/PixelMarker";
 import { SearchInput } from "@/src/components/SearchInput";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
@@ -43,6 +44,7 @@ export default function MapScreen() {
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
   const [locationStatus, setLocationStatus] = useState<"idle" | "granted" | "denied" | "unavailable">("idle");
   const [showDetails, setShowDetails] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const { isFavorite, toggle } = useFavorites();
 
   const filtered = useMemo(() => {
@@ -157,25 +159,45 @@ export default function MapScreen() {
         placeholder="Search lakes, rivers, piers, parks, bait..."
       />
 
-      <View style={styles.filterRow}>
-        {activityFilters.map((item) => (
-          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item === "all" ? "all activities" : item}`} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
-            <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
-              {item === "all" ? "All activity" : item}
-            </AppText>
-          </Pressable>
-        ))}
-      </View>
+      <Pressable accessibilityRole="button" accessibilityLabel="Open map filters" style={styles.filtersToggle} onPress={() => setShowFilters(true)}>
+        <Ionicons name="options" size={16} color={colors.amber} />
+        <AppText variant="caption" style={styles.filtersToggleText}>
+          Filters: {activityFilter === "all" ? "All activity" : activityFilter} · {filter}
+        </AppText>
+      </Pressable>
 
-      <View style={styles.filterRow}>
-        {filters.map((item) => (
-          <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
-            <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
-              {item}
-            </AppText>
-          </Pressable>
-        ))}
-      </View>
+      <Modal visible={showFilters} animationType="slide" transparent onRequestClose={() => setShowFilters(false)}>
+        <Pressable style={styles.modalBackdrop} accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)} />
+        <View style={styles.modalSheet}>
+          <View style={styles.sheetHandle} />
+          <SectionHeader title="Filters" action={
+            <Pressable accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)}>
+              <Ionicons name="close" size={20} color={colors.muted} />
+            </Pressable>
+          } />
+          <AppText variant="subheading">Activity</AppText>
+          <View style={styles.filterRow}>
+            {activityFilters.map((item) => (
+              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item === "all" ? "all activities" : item}`} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
+                <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
+                  {item === "all" ? "All activity" : item}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+          <AppText variant="subheading">Water type</AppText>
+          <View style={styles.filterRow}>
+            {filters.map((item) => (
+              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
+                <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
+                  {item}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+          <Button icon="checkmark" onPress={() => setShowFilters(false)}>Apply</Button>
+        </View>
+      </Modal>
 
       <View style={styles.mapCanvas}>
         <MapView
@@ -191,9 +213,10 @@ export default function MapScreen() {
               coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
               title={marker.name}
               description={marker.subtitle}
-              pinColor={getMarkerTint(marker.kind)}
               onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
-            />
+            >
+              <PixelMarker kind={marker.kind} tint={getMarkerTint(marker.kind)} />
+            </Marker>
           ))}
         </MapView>
         <View style={styles.mapOverlay}>
@@ -201,7 +224,7 @@ export default function MapScreen() {
             Live GPS map · {markers.length} markers
           </AppText>
           <AppText variant="caption" style={styles.mapSubLabel}>
-            Blue fishing · orange clams · red crab
+            Cyan fishing · amber clams · red crab
           </AppText>
         </View>
       </View>
@@ -277,7 +300,7 @@ export default function MapScreen() {
 
         <Stack>
           <View style={styles.recommendation}>
-            <Ionicons name="sunny" size={20} color={colors.forest} />
+            <Ionicons name="sunny" size={20} color={colors.amber} />
             <View style={styles.flex}>
               <AppText variant="subheading">Today&apos;s recommendation</AppText>
               <AppText>{selected.todayRecommendation}</AppText>
@@ -380,7 +403,7 @@ export default function MapScreen() {
           </View>
           <Stack>
             <View style={styles.recommendation}>
-              <Ionicons name="boat" size={20} color={colors.forest} />
+              <Ionicons name="boat" size={20} color={colors.amber} />
               <View style={styles.flex}>
                 <AppText variant="subheading">Best shellfish plan</AppText>
                 <AppText>{selectedShellfishLocation.tideDependency}</AppText>
@@ -435,6 +458,36 @@ const styles = StyleSheet.create({
   },
   locationCard: {
     gap: spacing.md
+  },
+  filtersToggle: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    flexDirection: "row",
+    gap: spacing.xs,
+    minHeight: 44,
+    paddingHorizontal: spacing.md
+  },
+  filtersToggleText: {
+    color: colors.ink,
+    fontWeight: "800",
+    textTransform: "capitalize"
+  },
+  modalBackdrop: {
+    backgroundColor: "rgba(0,0,0,0.6)",
+    flex: 1
+  },
+  modalSheet: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    borderWidth: 2,
+    gap: spacing.sm,
+    padding: spacing.lg
   },
   filterRow: {
     flexDirection: "row",
@@ -562,8 +615,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   recommendation: {
-    backgroundColor: "#fff3d5",
-    borderColor: colors.sunrise,
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.amber,
+    borderLeftWidth: 4,
     borderRadius: radii.md,
     borderWidth: 1,
     flexDirection: "row",

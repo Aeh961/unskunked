@@ -1,5 +1,3 @@
-import { AccessibilityInfo } from "react-native";
-
 /**
  * Original arcade / field-terminal palette. `background`/`surface`/`surfaceStrong` are the
  * dark charcoal-olive chrome. `mist`/`sky` stay light sand/sage washes on purpose - they're
@@ -99,18 +97,4 @@ export const shadows = {
     shadowOffset: { width: 0, height: 0 },
     elevation: 0
   }
-};
-
-let reduceMotionEnabled = false;
-AccessibilityInfo.isReduceMotionEnabled?.()
-  .then((enabled) => {
-    reduceMotionEnabled = enabled;
-  })
-  .catch(() => undefined);
-AccessibilityInfo.addEventListener?.("reduceMotionChanged", (enabled: boolean) => {
-  reduceMotionEnabled = enabled;
-});
-
-export const motion = {
-  isReduceMotionEnabled: () => reduceMotionEnabled
 };
