@@ -25,6 +25,24 @@ Home, Ask, and the Trips builder all funnel through the same two utilities inste
 
 Phase 10 defines import providers around `fetch`, `validate`, `transform`, `cache`, and `metadata`. Provider domains include fishing, clamming, crabbing, weather, tides, waterbody information, and emergency rules.
 
+## Multi-Region Data Architecture
+
+`src/data/regions.ts` defines `RegionId` and a `Region` record with `country` (`"US" | "SE"`), `status` (`"Mocked" | "Placeholder"`), and a short `note`. Washington, Florida, and Ronneby (Sweden) are `"Mocked"` - they ship real named waterbodies and species. Oregon, Idaho, and California stay `"Placeholder"` until real data is added the same way.
+
+Region-scoped data lives one file per region under a shared directory, each exporting a region-tagged array plus a small builder function (`wa()` for Washington, `fl()` for Florida, `rb()` for Ronneby) that stamps `regionId` and fills in the region's default source/link metadata:
+
+- `src/data/waterbodies/{washington,florida,ronneby}.ts`, merged by `src/data/waterbodies/index.ts` into `getWaterbodiesForRegion(region)` (and a flat `waterbodies` export for code that intentionally wants every region at once, e.g. autocomplete indexing).
+- `src/data/fish/{washington,florida,ronneby}.ts`, merged the same way by `src/data/fish/index.ts` into `getSpeciesForRegion(region)`.
+
+Two more provider registries key off the same `RegionId` and follow the existing array + `find()` pattern:
+
+- `src/services/officialLinks.ts` - one `OfficialLinkProvider` class per region (`WashingtonOfficialLinkProvider`, `FloridaOfficialLinkProvider`, `RonnebyOfficialLinkProvider`, ...), registered in `officialLinkProviders` and looked up with `getOfficialLinkProvider(region)`.
+- `src/services/regulations.ts` - `MockedRegionRegulationProvider` is a shared abstract base class (statewide/species/waterbody rule lookup logic) that `WashingtonRegulationProvider`, `FloridaRegulationProvider`, and `RonnebyRegulationProvider` extend by only supplying `state`, `region`, and a couple of copy strings. `regionToRegulationState` maps a `RegionId` to the `RegulationQuery.state` code these providers key off.
+
+**Adding a region** (a new US state, or another Swedish municipality/country alongside Ronneby) means: add one `Region` entry in `regions.ts`, one waterbody file, one species file, one `OfficialLinkProvider` subclass, and one `RegulationProvider` subclass - no changes to UI screens, which already read through `useSelectedRegion()` + the `getXForRegion()` accessors rather than importing a specific region's data directly.
+
+The primary browsing screens (Map, Search, Species, Weather, Regulations, Start Here, Offline, Data Sources) read the active region from `useSelectedRegion()` and call the region-scoped accessors above. The trip planner (`app/(tabs)/trips.tsx`) and its supporting recommendation/autocomplete/natural-language-parsing engines still operate on the flat all-regions lists; deeper region-scoping there is tracked as follow-up work.
+
 ## Data Trust Flow
 
 Source metadata lives in `src/services/dataTrust.ts`. Every provider can expose organization, source type, confidence, verification status, update frequency, imported date, last verified date, expiration, and stale warning.
@@ -39,7 +57,7 @@ Recommendations are local and rule-based. They should always disclose whether th
 
 ## Map Architecture
 
-`src/services/mapMarkers.ts` merges waterbodies and shellfish locations into one searchable marker shape. The Map tab renders native markers and keeps a chip/list fallback.
+`src/services/mapMarkers.ts` merges the selected region's waterbodies (via `getWaterbodiesForRegion`) with shellfish locations into one searchable marker shape. Shellfish/clamming/crabbing markers are Washington-specific today and are only included when `region === "washington"`. The Map tab renders native markers and keeps a chip/list fallback.
 
 ## Storage
 
