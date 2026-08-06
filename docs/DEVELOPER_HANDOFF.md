@@ -11,8 +11,8 @@ Skunked is an Expo React Native TypeScript app using Expo Router, local mock dat
 - `src/hooks/`: reusable app hooks.
 - `src/services/`: regulation providers, personalization, and analytics.
 - `src/services/location.ts`: Expo location permission handling, distance math, manual fallback locations, and nearby sorting.
-- `src/services/officialLinks.ts`: WDFW source link definitions and verification copy.
-- `src/services/regulations.ts`: provider-layer regulation data (`RegulationProvider`, `WashingtonRegulationProvider`, `MockRegulationProvider`, `RegulationService`, `EmergencyRuleService`, `WaterbodyRuleService`). This is the source of truth for regulation content.
+- `src/services/officialLinks.ts`: one `OfficialLinkProvider` per region (WDFW, FWC, HaV, plus OR/ID/CA homepage placeholders) and verification copy.
+- `src/services/regulations.ts`: provider-layer regulation data (`RegulationProvider`, `MockedRegionRegulationProvider` base class, `WashingtonRegulationProvider`/`FloridaRegulationProvider`/`RonnebyRegulationProvider`, `MockRegulationProvider`, `RegulationService`, `EmergencyRuleService`, `WaterbodyRuleService`). This is the source of truth for regulation content.
 - `src/services/regulationEngine.ts`: `getCurrentRegulations()` composes `regulations.ts` summaries with fish/waterbody specifics into the badges and copy the Regulations screen (`app/regulations.tsx`) and Map screen actually render. Add new regulation content in `regulations.ts`, not here.
 - `src/services/fishingConditions.ts`: weather/sun/tide scoring and trip-score helpers.
 - `src/services/conditionProviders.ts`: mock/live weather+tide provider contract and offline condition cache.
@@ -23,7 +23,7 @@ Skunked is an Expo React Native TypeScript app using Expo Router, local mock dat
 - `src/services/tripAnalytics.ts`: trip log stats (skunked vs. unskunked, best bait/location/time).
 - `src/services/betaInsights.ts`: local-only usage insights (viewed fish/waterbodies, searches, feedback categories).
 - `src/services/providerFramework.ts`: shared import-provider interface for future live data.
-- `src/services/regionalProviders.ts`: plug-and-play regional provider registry (WA, OR, ID, CA, BC).
+- `src/services/regionalProviders.ts`: plug-and-play regional provider registry (WA, FL, Ronneby/SE, OR, ID, CA, BC).
 - `src/services/recovery.ts`: fallback copy for GPS/provider/weather/tide/offline/image/regulation failures.
 - `src/services/wdfwImportPipeline.ts`: WDFW snapshot manifest validation and import readiness reporting.
 - `src/services/offlineDownloads.ts`: offline pack definitions.
@@ -43,8 +43,8 @@ dead code from an earlier phase.
 Provider layer, `src/services/regulations.ts`:
 
 - `RegulationProvider` defines the interface.
-- `WashingtonRegulationProvider` provides mocked Washington rules and WDFW source links.
-- `MockRegulationProvider` marks unsupported states as placeholders.
+- `MockedRegionRegulationProvider` is the shared base class for every region with real mock data; `WashingtonRegulationProvider`, `FloridaRegulationProvider`, and `RonnebyRegulationProvider` extend it with WDFW/FWC/HaV source links respectively.
+- `MockRegulationProvider` marks unsupported states (OR/ID/CA) as placeholders.
 - `RegulationService` selects the right provider for statewide, species, or waterbody summaries.
 - `EmergencyRuleService` is the future integration point for emergency-rule feeds.
 - `WaterbodyRuleService` formats waterbody warning messages.

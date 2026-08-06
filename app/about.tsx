@@ -11,7 +11,7 @@ import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
 
 const roadmap = [
-  "Official WDFW data import with source timestamps",
+  "Official regulation data import per region (WDFW, FWC, HaV) with source timestamps",
   "Real map provider and GPS-based waterbody search",
   "Weather, tide, and seasonal context",
   "Photo attachments for trip logs",

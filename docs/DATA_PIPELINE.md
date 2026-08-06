@@ -1,6 +1,6 @@
 # Skunked Data Pipeline
 
-Phase 9 keeps Skunked offline-first while preparing the app for official Washington imports.
+Phase 9 keeps Skunked offline-first while preparing the app for official regional imports (Washington/WDFW, Florida/FWC, Ronneby/HaV).
 
 ## Current Sources
 
