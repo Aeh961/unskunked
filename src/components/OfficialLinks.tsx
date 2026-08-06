@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Linking, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { AppText } from "@/src/components/AppText";
 import { OfficialSourceLinks } from "@/src/services/officialLinks";
-import { spacing } from "@/src/theme";
+import { colors, spacing } from "@/src/theme";
 
 type Props = {
   links: OfficialSourceLinks;
@@ -19,7 +20,7 @@ export function OfficialLinks({ links, agencyAbbreviation, compact = false, cont
 
   return (
     <Card style={styles.card}>
-      <SectionHeader title="Rules can change" eyebrow="Check before you go" />
+      <SectionHeader title="Rules can change" eyebrow="Check before you go" action={<Ionicons name="warning-outline" size={18} color={colors.amber} />} />
       {!compact ? <AppText>Verify current official rules and emergency updates before you go.</AppText> : null}
       <View style={styles.actions}>
         {context === "shellfish" ? (
