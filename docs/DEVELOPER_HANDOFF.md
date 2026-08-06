@@ -1,6 +1,6 @@
-# Unskunked Developer Handoff
+# Skunked Developer Handoff
 
-Unskunked is an Expo React Native TypeScript app using Expo Router, local mock data, AsyncStorage, and typed service layers. It is designed to stay local-first until the beta proves the product flow.
+Skunked is an Expo React Native TypeScript app using Expo Router, local mock data, AsyncStorage, and typed service layers. It is designed to stay local-first until the beta proves the product flow.
 
 ## Architecture Overview
 

@@ -94,20 +94,20 @@ export type DemoRecommendation = {
   body: string;
 };
 
-const favoritesKey = "unskunked:favorites";
-const tripsKey = "unskunked:trips";
-const tripPlansKey = "unskunked:trip-plans";
-const onboardingProfileKey = "unskunked:onboarding-profile";
-const feedbackKey = "unskunked:feedback";
-const betaEventsKey = "unskunked:beta-events";
-const offlinePackIdsKey = "unskunked:offline-pack-ids";
-const demoEnabledKey = "unskunked:demo-enabled";
-const profilesKey = "unskunked:demo-profiles";
-const notificationsKey = "unskunked:demo-notifications";
-const recommendationsKey = "unskunked:demo-recommendations";
-const searchHistoryKey = "unskunked:demo-search-history";
-const selectedRegionKey = "unskunked:selected-region";
-const cachedConditionsKey = "unskunked:cached-conditions";
+const favoritesKey = "skunked:favorites";
+const tripsKey = "skunked:trips";
+const tripPlansKey = "skunked:trip-plans";
+const onboardingProfileKey = "skunked:onboarding-profile";
+const feedbackKey = "skunked:feedback";
+const betaEventsKey = "skunked:beta-events";
+const offlinePackIdsKey = "skunked:offline-pack-ids";
+const demoEnabledKey = "skunked:demo-enabled";
+const profilesKey = "skunked:demo-profiles";
+const notificationsKey = "skunked:demo-notifications";
+const recommendationsKey = "skunked:demo-recommendations";
+const searchHistoryKey = "skunked:demo-search-history";
+const selectedRegionKey = "skunked:selected-region";
+const cachedConditionsKey = "skunked:cached-conditions";
 
 export type CachedConditionSnapshot = {
   id: string;
@@ -337,7 +337,7 @@ export async function getBetaExportData() {
   ]);
   return {
     exportedAt: new Date().toISOString(),
-    app: "Unskunked",
+    app: "Skunked",
     version: "0.1.0",
     selectedRegion: region,
     profile,

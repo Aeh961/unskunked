@@ -46,7 +46,7 @@ export default function FeedbackScreen() {
   }
 
   async function exportFeedback() {
-    await shareText(formatJsonExport({ exportedAt: new Date().toISOString(), feedback }), "Unskunked feedback export");
+    await shareText(formatJsonExport({ exportedAt: new Date().toISOString(), feedback }), "Skunked feedback export");
   }
 
   return (

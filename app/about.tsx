@@ -24,17 +24,17 @@ export default function AboutScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <AppText variant="title" style={styles.lightText}>About Unskunked</AppText>
+        <AppText variant="title" style={styles.lightText}>About Skunked</AppText>
         <AppText style={styles.heroText}>A beginner-first fishing assistant for planning smarter trips and learning what worked.</AppText>
       </View>
       <Card>
         <SectionHeader title="Mission" eyebrow="Why this exists" />
-        <AppText>Unskunked helps new anglers turn confusing fishing choices into a simple plan: where to go, what to target, what to tie, what to bring, and what to log afterward.</AppText>
+        <AppText>Skunked helps new anglers turn confusing fishing choices into a simple plan: where to go, what to target, what to tie, what to bring, and what to log afterward.</AppText>
       </Card>
       <Card>
         <SectionHeader title="Safety and legal disclaimer" eyebrow="Important" />
         <Stack>
-          <AppText>Unskunked is for planning and education only.</AppText>
+          <AppText>Skunked is for planning and education only.</AppText>
           <AppText>Do not rely on this app as legal advice.</AppText>
           <AppText>Always verify official rules, emergency rules, license requirements, seasons, limits, size rules, closures, and gear restrictions before fishing or keeping fish.</AppText>
         </Stack>

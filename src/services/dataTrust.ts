@@ -89,9 +89,9 @@ export const providerMetadata: DataProviderMetadata[] = [
     notes: "Snapshot manifest is present; beach health closures still require official verification."
   },
   {
-    id: "unskunked-waterbodies",
+    id: "skunked-waterbodies",
     label: "Waterbody Information",
-    organization: "Unskunked local seed data",
+    organization: "Skunked local seed data",
     sourceType: "Mock",
     confidence: "Demo Data",
     verificationStatus: "reviewed",
@@ -105,7 +105,7 @@ export const providerMetadata: DataProviderMetadata[] = [
   {
     id: "mock-weather-tides",
     label: "Weather and Tides",
-    organization: "Unskunked mock conditions provider",
+    organization: "Skunked mock conditions provider",
     sourceType: "Mock",
     confidence: "Demo Data",
     verificationStatus: "imported",
@@ -156,7 +156,7 @@ export const verificationWorkflow: VerificationRecord[] = [
     subjectId: "wdfw-regulations",
     subjectType: "provider",
     status: "reviewed",
-    reviewer: "Unskunked beta team",
+    reviewer: "Skunked beta team",
     reviewedAt: "2026-06-30",
     notes: "Official links and disclaimers are present. Local summaries are still not legal advice."
   },
@@ -165,7 +165,7 @@ export const verificationWorkflow: VerificationRecord[] = [
     subjectId: "wdfw-shellfish",
     subjectType: "provider",
     status: "imported",
-    reviewer: "Unskunked beta team",
+    reviewer: "Skunked beta team",
     reviewedAt: "2026-06-30",
     notes: "Source manifest exists; beach status and toxin closures need live official verification."
   }

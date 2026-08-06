@@ -47,7 +47,7 @@ export default function FishDetailScreen() {
   const regulation = regulationService.getSummary({ state: "WA", speciesId: selectedFish.id, date: new Date().toISOString() });
 
   async function shareFish() {
-    await shareText(formatFishShare(selectedFish), `Unskunked ${selectedFish.name} tip`);
+    await shareText(formatFishShare(selectedFish), `Skunked ${selectedFish.name} tip`);
   }
 
   return (

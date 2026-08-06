@@ -109,7 +109,7 @@ export default function MapScreen() {
   }
 
   async function shareWaterbody() {
-    await shareText(formatWaterbodyShare(selected), "Unskunked waterbody recommendation");
+    await shareText(formatWaterbodyShare(selected), "Skunked waterbody recommendation");
   }
 
   async function useCurrentLocation() {
@@ -434,7 +434,7 @@ export default function MapScreen() {
             <Button icon="navigate" variant="secondary" style={styles.actionButton} onPress={() => Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(selectedShellfishLocation.name)}&ll=${selectedShellfishLocation.latitude},${selectedShellfishLocation.longitude}`)}>
               Directions
             </Button>
-            <Button icon="share-social" variant="ghost" style={styles.actionButton} onPress={() => shareText(`Unskunked shellfish pick: ${selectedShellfishLocation.name}. Verify WDFW shellfish, emergency, license, and health advisories before harvesting.`, "Unskunked shellfish location")}>
+            <Button icon="share-social" variant="ghost" style={styles.actionButton} onPress={() => shareText(`Skunked shellfish pick: ${selectedShellfishLocation.name}. Verify WDFW shellfish, emergency, license, and health advisories before harvesting.`, "Skunked shellfish location")}>
               Share
             </Button>
           </View>

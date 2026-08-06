@@ -1,6 +1,6 @@
 # Provider Setup
 
-Unskunked Phase 9 has provider seams for live data without requiring paid APIs.
+Skunked Phase 9 has provider seams for live data without requiring paid APIs.
 
 ## Conditions Providers
 

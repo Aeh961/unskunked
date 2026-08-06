@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Unskunked",
+    "name": "Skunked",
     "slug": "unskunked",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Unskunked uses your location to sort nearby fishing spots. You can use manual location fallback instead."
+        "NSLocationWhenInUseUsageDescription": "Skunked uses your location to sort nearby fishing spots. You can use manual location fallback instead."
       },
       "bundleIdentifier": "com.unskunked.app",
       "buildNumber": "1"

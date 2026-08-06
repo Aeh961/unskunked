@@ -175,7 +175,7 @@ export default function TripLogScreen() {
               <AppText>Bait/Rig: {trip.bait} · {trip.rig}</AppText>
               {trip.tide ? <AppText>Tide: {trip.tide}</AppText> : null}
               <AppText variant="caption">{trip.notes}</AppText>
-              <Button icon="share-social" variant="ghost" onPress={() => shareText(formatTripLogShare(trip), "Unskunked trip result")}>Share result</Button>
+              <Button icon="share-social" variant="ghost" onPress={() => shareText(formatTripLogShare(trip), "Skunked trip result")}>Share result</Button>
               <View style={styles.photoPlaceholder}>
                 <AppText variant="caption">Photo placeholder</AppText>
               </View>

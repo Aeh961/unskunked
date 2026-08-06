@@ -6,7 +6,7 @@ import { colors } from "@/src/theme";
 
 export type MapMarkerKind = ActivityType;
 
-export type UnskunkedMapMarker = {
+export type SkunkedMapMarker = {
   id: string;
   sourceId: string;
   kind: MapMarkerKind;
@@ -33,8 +33,8 @@ export type MarkerFilters = {
   coordinates?: Coordinates;
 };
 
-export function getMapMarkers(filters: MarkerFilters = {}): UnskunkedMapMarker[] {
-  const fishingMarkers: UnskunkedMapMarker[] = waterbodies.map((water) => ({
+export function getMapMarkers(filters: MarkerFilters = {}): SkunkedMapMarker[] {
+  const fishingMarkers: SkunkedMapMarker[] = waterbodies.map((water) => ({
     id: `fishing:${water.id}`,
     sourceId: water.id,
     kind: "fishing",
@@ -50,7 +50,7 @@ export function getMapMarkers(filters: MarkerFilters = {}): UnskunkedMapMarker[]
     subtitle: `${water.waterType} · ${water.county ?? "WA"} · ${water.beginnerDifficulty}`
   }));
 
-  const shellfishMarkers: UnskunkedMapMarker[] = shellfishLocations.flatMap((location) =>
+  const shellfishMarkers: SkunkedMapMarker[] = shellfishLocations.flatMap((location) =>
     location.activityTypes.map((kind) => ({
       id: `${kind}:${location.id}`,
       sourceId: location.id,

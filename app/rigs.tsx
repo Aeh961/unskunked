@@ -48,7 +48,7 @@ export default function RigsScreen() {
     <Screen>
       <View style={styles.hero}>
         <AppText variant="title">Rig Builder</AppText>
-        <AppText style={styles.heroText}>Answer a few basics and Unskunked picks a simple setup from local rules.</AppText>
+        <AppText style={styles.heroText}>Answer a few basics and Skunked picks a simple setup from local rules.</AppText>
       </View>
       <Disclaimer />
 

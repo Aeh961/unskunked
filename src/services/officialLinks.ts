@@ -136,5 +136,5 @@ export function getOfficialLinksForWaterbody(waterbody?: WaterbodyLinkContext): 
 
 export function getOfficialVerificationCopy(waterbody?: Pick<Waterbody, "name" | "waterType">) {
   const subject = waterbody ? `${waterbody.name} (${waterbody.waterType})` : "this water";
-  return `Use Unskunked for planning only. Verify current WDFW rules, emergency rules, license requirements, seasons, limits, closures, and gear restrictions for ${subject} before fishing or keeping fish.`;
+  return `Use Skunked for planning only. Verify current WDFW rules, emergency rules, license requirements, seasons, limits, closures, and gear restrictions for ${subject} before fishing or keeping fish.`;
 }

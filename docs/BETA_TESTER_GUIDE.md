@@ -1,6 +1,6 @@
-# Unskunked Beta Tester Guide
+# Skunked Beta Tester Guide
 
-Thank you for testing Unskunked. The goal of this beta is to learn whether the app helps beginner anglers plan better trips and understand what to try next.
+Thank you for testing Skunked. The goal of this beta is to learn whether the app helps beginner anglers plan better trips and understand what to try next.
 
 ## How To Install Or Run
 
@@ -72,4 +72,4 @@ Include the screen name, what happened, and what you expected.
 
 ## Safety And Regulation Reminder
 
-Unskunked is for planning and education only. Do not rely on this app as legal advice. Always verify official rules, emergency rules, licenses, seasons, limits, size rules, closures, and gear restrictions with the official fish and wildlife agency before fishing or keeping fish.
+Skunked is for planning and education only. Do not rely on this app as legal advice. Always verify official rules, emergency rules, licenses, seasons, limits, size rules, closures, and gear restrictions with the official fish and wildlife agency before fishing or keeping fish.

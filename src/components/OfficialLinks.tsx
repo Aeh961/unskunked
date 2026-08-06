@@ -19,7 +19,7 @@ export function OfficialLinks({ links, agencyAbbreviation, compact = false }: Pr
   return (
     <Card style={styles.card}>
       <SectionHeader title="Official verification" eyebrow="Rules can change" />
-      {!compact ? <AppText>Use Unskunked to plan, then verify current official rules before keeping fish.</AppText> : null}
+      {!compact ? <AppText>Use Skunked to plan, then verify current official rules before keeping fish.</AppText> : null}
       <View style={styles.actions}>
         <Button icon="open-outline" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
           View official regulations

@@ -122,7 +122,7 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <SectionHeader title="Safety and legal" eyebrow="Global disclaimer" />
         <Stack>
-          <AppText>Unskunked is for planning and education only.</AppText>
+          <AppText>Skunked is for planning and education only.</AppText>
           <AppText>Do not rely on this app as legal advice. Always verify official rules, emergency rules, license requirements, seasons, limits, size rules, closures, and gear restrictions before fishing or keeping fish.</AppText>
         </Stack>
         <View style={styles.actionRow}>

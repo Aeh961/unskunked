@@ -40,7 +40,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.topRow}>
-        <AppText variant="displayLarge">UNSKUNKED</AppText>
+        <AppText variant="displayLarge">SKUNKED</AppText>
         <Link href={"/settings" as Href} asChild>
           <Pressable accessibilityRole="button" accessibilityLabel="Settings and more" style={styles.iconButton}>
             <Ionicons name="settings-outline" size={20} color={colors.amber} />

@@ -1,6 +1,6 @@
 # Privacy
 
-Unskunked is local-first for public beta.
+Skunked is local-first for public beta.
 
 ## Location
 

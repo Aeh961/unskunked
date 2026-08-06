@@ -3,13 +3,13 @@
 Manual test pass for a real iPhone and a real Android phone, before inviting outside beta
 testers. Run this after every development build you install, not just once.
 
-Unskunked is fully local-first: there is no backend, no network calls in the app code, and no
+Skunked is fully local-first: there is no backend, no network calls in the app code, and no
 account system. Everything below tests local logic, on-device GPS, and native modules
 (`react-native-maps`, `expo-location`, `AsyncStorage`, share sheet) - not server integration.
 
 ## Before you start
 
-- [ ] Confirm you're testing the build you think you are: check **Settings → About Unskunked**
+- [ ] Confirm you're testing the build you think you are: check **Settings → About Skunked**
       or the onboarding version string against the `version`/`buildNumber`/`versionCode` in
       `app.json`.
 - [ ] Android only: confirm a real Google Maps API key is set in `app.json`

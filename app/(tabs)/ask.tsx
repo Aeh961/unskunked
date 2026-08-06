@@ -171,7 +171,7 @@ export default function AskScreen() {
             placeholderTextColor={colors.muted}
             style={styles.input}
             multiline
-            accessibilityLabel="Ask Unskunked"
+            accessibilityLabel="Ask Skunked"
           />
           <Pressable accessibilityRole="button" accessibilityLabel="Send" style={styles.sendButton} onPress={() => submit()}>
             <Ionicons name="send" size={20} color={colors.ink} />

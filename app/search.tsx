@@ -109,7 +109,7 @@ export default function SearchScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <AppText variant="title" style={styles.lightText}>Search Unskunked</AppText>
+        <AppText variant="title" style={styles.lightText}>Search Skunked</AppText>
         <AppText style={styles.heroText}>Find fish, waters, rigs, knots, lessons, and logged trip patterns.</AppText>
       </View>
       <SearchInput

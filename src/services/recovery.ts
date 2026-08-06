@@ -12,12 +12,12 @@ export function getRecoveryMessage(scenario: RecoveryScenario) {
   const messages: Record<RecoveryScenario, { title: string; body: string; action: string }> = {
     "gps-unavailable": {
       title: "Location is unavailable",
-      body: "Use a manual Washington location and Unskunked will still sort nearby waters locally.",
+      body: "Use a manual Washington location and Skunked will still sort nearby waters locally.",
       action: "Choose manual location"
     },
     "provider-unavailable": {
       title: "Live provider unavailable",
-      body: "Unskunked is showing the latest local fallback data and source links.",
+      body: "Skunked is showing the latest local fallback data and source links.",
       action: "View data sources"
     },
     "weather-unavailable": {

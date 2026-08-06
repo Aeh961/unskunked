@@ -1,6 +1,6 @@
-# Unskunked Data Pipeline
+# Skunked Data Pipeline
 
-Phase 9 keeps Unskunked offline-first while preparing the app for official Washington imports.
+Phase 9 keeps Skunked offline-first while preparing the app for official Washington imports.
 
 ## Current Sources
 
@@ -25,7 +25,7 @@ The first manifest lives at `data/snapshots/wdfw-shellfish-sources.json`.
 
 ## Regulation Safety
 
-Unskunked must never present local data as legal advice. Regulation cards should keep:
+Skunked must never present local data as legal advice. Regulation cards should keep:
 
 - verify official rules
 - check emergency rules

@@ -179,7 +179,7 @@ export default function TripsScreen() {
     () => buildShellfishPlan({ activityType: shellfishActivity, coordinates, experience, locationId: shellfishLocationId }),
     [shellfishActivity, coordinates, experience, shellfishLocationId]
   );
-  const recommendationSource = getProviderById(isFishing ? "unskunked-waterbodies" : "wdfw-shellfish");
+  const recommendationSource = getProviderById(isFishing ? "skunked-waterbodies" : "wdfw-shellfish");
   const sourceFreshness = recommendationSource ? getFreshnessState(recommendationSource.freshness) : null;
 
   async function useCurrentLocation() {
@@ -284,7 +284,7 @@ export default function TripsScreen() {
 
   async function sharePlan() {
     if (!isFishing) {
-      await shareText(`Unskunked helped me plan a ${activityType} trip at ${shellfishPlan.location.name}. Score: ${shellfishPlan.score}/100. Best window: ${shellfishPlan.bestTime}. Verify WDFW rules, emergency rules, license, and health advisories before harvesting.`, "Unskunked shellfish plan");
+      await shareText(`Skunked helped me plan a ${activityType} trip at ${shellfishPlan.location.name}. Score: ${shellfishPlan.score}/100. Best window: ${shellfishPlan.bestTime}. Verify WDFW rules, emergency rules, license, and health advisories before harvesting.`, "Skunked shellfish plan");
       return;
     }
     await shareText(formatTripPlanShare({
@@ -293,7 +293,7 @@ export default function TripsScreen() {
       rigSetup: plan.suggestedRig,
       knot: plan.suggestedKnot,
       baitChecklist: plan.baitChecklist
-    }), "Unskunked trip plan");
+    }), "Skunked trip plan");
   }
 
   function goNext() {

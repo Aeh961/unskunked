@@ -1,8 +1,8 @@
-# Unskunked
+# Skunked
 
-![Unskunked logo placeholder](screenshots/logo-placeholder.svg)
+![Skunked logo](screenshots/logo-placeholder.svg)
 
-Unskunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
+Skunked is a local-first Expo React Native fishing assistant for beginner anglers. It helps users choose a waterbody, pick a target species, build a simple rig, plan a trip, learn the basics, and log what worked.
 
 The current app is a polished Phase 10 Washington-focused public-beta candidate with WDFW-sourced metadata scaffolding, a native GPS map, clamming/crabbing readiness, source confidence badges, data freshness warnings, current-regulation summaries, offline weather/tide/sun scoring, local storage, and native share/export flows.
 
@@ -41,13 +41,13 @@ The interaction model is text-first: instead of tapping through preselected sugg
 - Trip Log with saved plans, local history, skunked versus unskunked stats, most successful bait, and most successful location
 - Fishing Stats screen with best locations, bait, rigs, time of day, species, monthly activity, and personal records
 - Favorites for fish, waterbodies, rigs, and knots
-- Ask Unskunked rule-based local assistant
+- Ask Skunked rule-based local assistant
 - Learning Center with beginner, species, rod, reel, line, hook, lure, safety, etiquette, and Washington basics articles
 - Region selection for Washington, Oregon, Idaho, and California, with non-Washington regions clearly marked demo-only
 - Global search across fish, waterbodies, rigs, knots, learning articles, and trip logs
 - Feedback system for bug reports, feature requests, confusing regulations, wrong recommendations, wrong waterbody info, and general notes
 - Native share-sheet support for trip plans, fish tips, waterbody recommendations, trip log results, feedback, and beta data export
-- About Unskunked page with mission, disclaimers, current region support, roadmap, and contact/feedback entry point
+- About Skunked page with mission, disclaimers, current region support, roadmap, and contact/feedback entry point
 - Local-only Beta Insights for viewed fish, viewed waterbodies, rig use, planner choices, searches, and feedback categories
 - Screenshot automation for iOS and Android
 - PNG app icon, adaptive icon, splash image, store graphic placeholder, and EAS build profiles for development, preview, and production
@@ -99,7 +99,7 @@ flowchart TD
 
 ## Data Flow
 
-Unskunked currently ships WDFW-sourced metadata scaffolding as local fixtures and snapshot manifests. Screens read local data and services first, then link users out to official WDFW pages for verification. No backend is required, and no location or analytics data is sent anywhere.
+Skunked currently ships WDFW-sourced metadata scaffolding as local fixtures and snapshot manifests. Screens read local data and services first, then link users out to official WDFW pages for verification. No backend is required, and no location or analytics data is sent anywhere.
 
 ## Verification Workflow
 
@@ -122,7 +122,7 @@ Core waterbodies, fish, shellfish locations, regulation summaries, trip logs, tr
 
 ## GPS Support
 
-Location is optional. If permission is denied or unavailable, Unskunked falls back to manual Washington locations and continues to sort nearby waterbodies and shellfish locations locally.
+Location is optional. If permission is denied or unavailable, Skunked falls back to manual Washington locations and continues to sort nearby waterbodies and shellfish locations locally.
 
 ## Shellfish Support
 
@@ -199,8 +199,8 @@ npm run typecheck
 Compile bundle checks:
 
 ```bash
-npx expo export --platform ios --output-dir /private/tmp/unskunked-export-ios
-npx expo export --platform android --output-dir /private/tmp/unskunked-export-android
+npx expo export --platform ios --output-dir /private/tmp/skunked-export-ios
+npx expo export --platform android --output-dir /private/tmp/skunked-export-android
 ```
 
 ## Screenshot Automation
@@ -268,7 +268,7 @@ The screenshots previously tracked here showed the pre-redesign light theme and 
 
 ## Contributing
 
-Keep Unskunked Expo-compatible, TypeScript-clean, beginner-friendly, and local-first unless a feature explicitly requires integration. Regulation-related content must clearly distinguish mock guidance from official legal guidance.
+Keep Skunked Expo-compatible, TypeScript-clean, beginner-friendly, and local-first unless a feature explicitly requires integration. Regulation-related content must clearly distinguish mock guidance from official legal guidance.
 
 ## GitHub
 
@@ -276,4 +276,4 @@ Repository: `https://github.com/Aeh961/unskunked`
 
 ## Disclaimer
 
-Unskunked is for planning and education only. Always verify current regulations with official fish and wildlife agencies before fishing or keeping fish.
+Skunked is for planning and education only. Always verify current regulations with official fish and wildlife agencies before fishing or keeping fish.

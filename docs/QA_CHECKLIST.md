@@ -1,4 +1,4 @@
-# Unskunked QA Checklist
+# Skunked QA Checklist
 
 Use this checklist before sharing a beta build with testers.
 

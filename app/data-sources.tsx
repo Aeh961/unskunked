@@ -18,7 +18,7 @@ export default function DataSourcesScreen() {
     <Screen>
       <View style={styles.hero}>
         <AppText variant="title" style={styles.lightText}>Data Sources</AppText>
-        <AppText style={styles.heroText}>See where Unskunked guidance comes from, how fresh it is, and what still needs official verification.</AppText>
+        <AppText style={styles.heroText}>See where Skunked guidance comes from, how fresh it is, and what still needs official verification.</AppText>
       </View>
 
       <View style={styles.stats}>

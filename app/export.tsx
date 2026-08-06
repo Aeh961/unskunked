@@ -21,13 +21,13 @@ export default function ExportScreen() {
 
   async function exportAll() {
     if (!data) return;
-    await shareText(formatJsonExport(data), "Unskunked beta export");
+    await shareText(formatJsonExport(data), "Skunked beta export");
     setStatus("Opened native share sheet with beta export JSON.");
   }
 
   async function exportSection(key: keyof ExportData) {
     if (!data) return;
-    await shareText(formatJsonExport({ exportedAt: new Date().toISOString(), [key]: data[key] }), `Unskunked ${String(key)} export`);
+    await shareText(formatJsonExport({ exportedAt: new Date().toISOString(), [key]: data[key] }), `Skunked ${String(key)} export`);
     setStatus(`Opened export for ${String(key)}.`);
   }
 

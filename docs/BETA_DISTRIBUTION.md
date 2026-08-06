@@ -1,6 +1,6 @@
-# Unskunked Beta Distribution
+# Skunked Beta Distribution
 
-This guide prepares Unskunked for real beta testing with friends, anglers, and early users.
+This guide prepares Skunked for real beta testing with friends, anglers, and early users.
 
 ## Environment Requirements
 

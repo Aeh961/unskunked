@@ -1,6 +1,6 @@
 # Beta Release Plan
 
-This is the plan of record for taking Unskunked from "runs on my own two phones" to "outside
+This is the plan of record for taking Skunked from "runs on my own two phones" to "outside
 testers can install it." It assumes physical-device testing (`docs/PHYSICAL_DEVICE_QA.md`) has
 already passed on both platforms.
 
