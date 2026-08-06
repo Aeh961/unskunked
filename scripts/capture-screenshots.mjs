@@ -16,12 +16,10 @@ const adbPath = findAdb();
 const screens = [
   ["home", ""],
   ["trips-empty-state", "trips"],
-  ["nearby-waters", "map"],
-  ["live-gps-map", "map"],
-  ["gps-permission", "map"],
-  ["nearby-waterbodies", "map"],
-  ["waterbody-detail", "map"],
-  ["shellfish-map", "map"],
+  // The Map screen is a single unified region selector + map + result-list view now (no
+  // separate "nearby waterbodies" section) - one static-route screenshot represents it;
+  // GPS-granted/denied and a specific selected waterbody/shellfish card need manual capture.
+  ["map", "map"],
   ["species", "species"],
   ["fish-detail", "fish/rainbow-trout"],
   ["ask", "ask"],
