@@ -45,7 +45,12 @@ export function MissionCard({ eyebrow, title, meta, statusLabel, statusTone = "g
 
   if (onPress) {
     return (
-      <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${eyebrow}, ${title}, ${meta.join(", ")}`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
+      >
         {Content}
       </Pressable>
     );

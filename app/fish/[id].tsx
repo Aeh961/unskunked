@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     padding: spacing.md
   },
   factLabel: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   },

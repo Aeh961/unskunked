@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   categoryLabel: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   },

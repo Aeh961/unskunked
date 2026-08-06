@@ -5,7 +5,7 @@ import { colors, spacing } from "@/src/theme";
 export function LoadingState({ label = "Loading the best fishing intel..." }: { label?: string }) {
   return (
     <View style={styles.wrap}>
-      <ActivityIndicator color={colors.river} />
+      <ActivityIndicator color={colors.amber} />
       <AppText variant="caption" style={styles.label}>
         {label}
       </AppText>

@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     gap: spacing.xxs
   },
   saveText: {
-    color: colors.pine,
+    color: colors.amber,
     fontWeight: "900"
   },
   flex: {

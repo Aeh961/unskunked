@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   optionText: { fontWeight: "900" },
   optionTextActive: { color: "#fff" },
   field: { gap: spacing.xs },
-  label: { color: colors.river, fontWeight: "900", textTransform: "uppercase" },
+  label: { color: colors.amber, fontWeight: "900", textTransform: "uppercase" },
   input: {
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
@@ -141,5 +141,5 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 112, paddingTop: spacing.sm, textAlignVertical: "top" },
   saved: { color: colors.good, fontWeight: "900" },
-  type: { color: colors.river, fontWeight: "900", textTransform: "uppercase" }
+  type: { color: colors.amber, fontWeight: "900", textTransform: "uppercase" }
 });

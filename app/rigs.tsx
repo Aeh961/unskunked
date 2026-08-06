@@ -246,7 +246,8 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   recommendation: {
-    backgroundColor: "#fff6df",
+    borderColor: colors.amber,
+    borderWidth: 2,
     gap: spacing.md
   },
   segment: {
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   type: {
-    color: colors.pine,
+    color: colors.amber,
     fontWeight: "900"
   },
   stepRow: {

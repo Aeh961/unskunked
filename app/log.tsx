@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs
   },
   insightLabel: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   },
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs
   },
   fieldLabel: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900",
     textTransform: "uppercase"
   },

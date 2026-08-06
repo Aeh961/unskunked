@@ -31,10 +31,10 @@ export function ErrorState({ title = "Something needs attention", body, actionLa
 const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
-    backgroundColor: "#fff4ef",
+    backgroundColor: colors.surface,
     borderColor: colors.danger,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 4,
+    borderWidth: 2,
     gap: spacing.sm,
     padding: spacing.lg
   },

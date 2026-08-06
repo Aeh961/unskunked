@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   sourceLink: {
     alignSelf: "flex-start",
-    borderColor: colors.river,
+    borderColor: colors.amber,
     borderRadius: radii.pill,
     borderWidth: 1,
     minHeight: 44,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm
   },
   sourceText: {
-    color: colors.river,
+    color: colors.amber,
     fontWeight: "900"
   },
   statusPill: {

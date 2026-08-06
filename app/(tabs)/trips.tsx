@@ -11,6 +11,7 @@ import { ExpandableSection } from "@/src/components/ExpandableSection";
 import { MissionCard } from "@/src/components/MissionCard";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { RigDiagram } from "@/src/components/RigDiagram";
+import { Scanlines } from "@/src/components/Scanlines";
 import { SearchInput } from "@/src/components/SearchInput";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
@@ -373,6 +374,7 @@ export default function TripsScreen() {
     return (
       <Screen>
         <View style={styles.hero}>
+          <Scanlines />
           <AppText variant="display" style={styles.lightText}>MISSION READY</AppText>
           <AppText style={styles.heroText}>Generated from what you chose - nothing picked for you.</AppText>
         </View>
@@ -614,6 +616,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 2,
     gap: spacing.sm,
+    overflow: "hidden",
     padding: spacing.lg
   },
   lightText: {

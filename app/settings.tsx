@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   recommendation: {
-    color: colors.pine,
+    color: colors.amber,
     fontWeight: "900"
   },
   actionRow: {
