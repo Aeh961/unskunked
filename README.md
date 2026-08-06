@@ -6,14 +6,26 @@ Skunked is a local-first Expo React Native fishing assistant for beginner angler
 
 The current app is a polished public-beta candidate covering three regions - Washington, Florida, and Ronneby, Sweden - behind a generalized region/provider architecture, with a native GPS map, clamming/crabbing readiness (Washington), source confidence badges, data freshness warnings, current-regulation summaries, offline weather/tide/sun scoring, local storage, and native share/export flows.
 
-The interaction model is text-first: instead of tapping through preselected suggestion cards, users type what they're fishing, clamming, or crabbing for and get typed autocomplete plus a local (fully offline, no LLM/network dependency) natural-language parser that extracts activity/species/location/gear/date and asks one short follow-up question at a time. The visual identity is an original 1990s-arcade / military-field-terminal theme (dark charcoal-olive palette, a pixel-inspired display font reserved for short headings only, blockier bordered panels) - not a reproduction of any existing game's assets.
+The interaction model is text-first: instead of tapping through preselected suggestion cards, users type what they're fishing, clamming, or crabbing for and get typed autocomplete plus a local (fully offline, no LLM/network dependency) natural-language parser that extracts activity/species/location/gear/date and asks one short follow-up question at a time. The visual identity is an original 1990s-arcade / military-field-terminal theme (dark charcoal-olive palette, a pixel-inspired display font reserved for short headings only, blockier bordered panels, an original pixel-art skunk-with-fishing-rod mascot used sparingly for empty/success/loading states) - not a reproduction of any existing game's assets or characters.
+
+## Data Sources & Coverage
+
+Waterbody data is imported through a re-runnable pipeline (`scripts/data-pipeline/`) that validates and dedupes real records from public government sources, rather than being hand-invented:
+
+| Region | Waterbodies | Sources | Verification |
+| --- | --- | --- | --- |
+| Washington | 335 | WDFW "Water Access Sites" and "Shore Fishing Sites" live ArcGIS feeds (251 imported), plus 84 hand-curated launch/park entries | All imported records carry a real `sourceUrl`; hand-curated entries predate verification tracking |
+| Florida | 138 | FWC's public "Florida Boat Ramp Inventory" ArcGIS feed (89 records) and 14 individually-sourced public piers, plus 35 hand-curated entries | 99 imported, 4 needs-verification (piers with uncertain post-storm status or approximate coordinates) |
+| Ronneby, Sweden | 11 | Ronneby kommun's official fishing pages and Havs- och vattenmyndigheten (HaV), cross-checked against Wikipedia infobox coordinates | 2 imported, 9 needs-verification (small dataset, no bulk GIS feed available at this scale) |
+
+Coverage is not claimed to be complete - it reflects what has actually been sourced and imported so far (see the in-app Data Sources screen for a live breakdown, and the comments in `scripts/data-pipeline/generate.mjs` for how to re-run or extend it: `node scripts/data-pipeline/generate.mjs <washington|florida> [--input path.json]`). Known gaps: Washington has no site in Garfield County (WDFW has none listed in either feed used); Florida pier coverage leans Atlantic/Panhandle, thinner on the Gulf Coast south of Tampa and in the Keys; Ronneby's small size means it's covered by hand-sourced entries rather than a bulk import.
 
 ## Feature Overview
 
-- Demo Mode that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history
+- Demo Mode (off by default, isolated under a collapsed "Developer / Demo Mode" section in Settings) that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history for screenshots/walkthroughs, and prunes those records back out when turned off
 - First-launch beta onboarding with region, experience, fishing style, favorite fish, favorite waterbodies, and a final Start Fishing Smarter flow
 - GPS-aware nearby fishing with permission handling, denied/unavailable fallbacks, manual city locations, distance sorting, and water-type filters
-- Native `react-native-maps` GPS map with fishing, clamming, crabbing, beach, pier, launch, and waterbody markers plus chip-based fallback results
+- Native `react-native-maps` GPS map with a top-of-screen region selector (Washington/Florida/Ronneby), fishing/clamming/crabbing/beach/pier/launch markers, and a single row-based result list (`WaterbodyListRow`, `FlatList`-backed) that both the map and the fallback list read from - no separate "nearby" section, and a web/render-failure fallback that degrades to the same list
 - Data Sources center showing providers, source organizations, last imported date, last verified date, source type, confidence, and update frequency
 - Confidence badges for Official Source, Verified, Imported, Community Verified, Needs Verification, Demo Data, and Unknown
 - Data freshness warnings for recommendations, regulations, weather/tide fallbacks, and source snapshots
@@ -21,7 +33,7 @@ The interaction model is text-first: instead of tapping through preselected sugg
 - Import provider framework for future `fetch`, `validate`, `transform`, `cache`, and `metadata` live sync
 - Multi-region data architecture: `getWaterbodiesForRegion()`/`getSpeciesForRegion()` accessors plus per-region `OfficialLinkProvider` and `RegulationProvider` implementations for Washington, Florida, and Ronneby (Sweden), with Oregon, Idaho, California, and British Columbia as explicit placeholders - see [Architecture](docs/ARCHITECTURE.md)
 - Washington shellfish support for clamming and crabbing with species, beach/pier locations, tide reminders, legal warnings, gear checklists, and official WDFW source links
-- Washington mock waterbody dataset with 84 locations; Florida with 35; Ronneby with 9 - all with counties/regions, coordinates, access notes, parking notes, seasons, rigs, bait, and regulation warnings
+- Washington waterbody dataset with 335 locations; Florida with 138; Ronneby with 11 - all with counties/regions, coordinates, access notes, parking notes, seasons, rigs, bait, and regulation warnings (see Data Sources & Coverage above)
 - Region-appropriate waterbody metadata including `waterbodyId`, source, `lastUpdated`, regulation references, stocking examples (Washington), and launch/access fields
 - Current regulation engine with open/restricted/closed status, season, catch limits, bait restrictions, emergency-rule reminders, and badge summaries, region-aware via each waterbody's `regionId`
 - Smart fishing conditions score using weather, wind, temperature, pressure, cloud cover, rain, UV, waterbody type, season, time windows, experience, and target species
@@ -255,7 +267,8 @@ The full set of 27 captured routes lives in `screenshots/ios/` (see the list abo
 - Regulation content is agency-source-linked local guidance (WDFW, FWC, or HaV depending on region) and must still be verified with official agencies.
 - Shellfish content is Washington-only local planning guidance; users must verify WDFW shellfish rules, emergency rules, licenses, catch record card requirements, and health closures before harvesting.
 - Confidence badges explain source quality; they do not guarantee legal correctness.
-- Washington, Florida, and Ronneby (Sweden) have complete mock data; Oregon, Idaho, and California are placeholders.
+- Washington, Florida, and Ronneby (Sweden) have real, sourced waterbody data of varying depth (see Data Sources & Coverage above) plus mock fish/regulation content; Oregon, Idaho, and California remain placeholders with no data.
+- Pipeline-imported waterbody records (`verificationStatus: "imported"`) have real coordinates and a real source link, but generic bait/rig/season copy ("Verify locally") rather than field-verified tips - only the hand-curated entries and a few individually-researched records carry specific guidance.
 - The trip planner (Trips tab) and its recommendation/autocomplete/natural-language-parsing engines still operate on the combined all-regions catalog rather than the selected region; deeper region-scoping there is tracked as follow-up work.
 - No backend, account sync, live weather API, live tides API, or live official regulation feed is connected yet.
 - GPS is used only locally for distance sorting and native map display, with manual fallback locations.
