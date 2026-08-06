@@ -10,20 +10,23 @@ import { Screen } from "@/src/components/Screen";
 import { SearchInput } from "@/src/components/SearchInput";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
-import { fishSpecies } from "@/src/data/fish";
+import { getSpeciesForRegion } from "@/src/data/fish";
 import { useFavorites } from "@/src/hooks/useFavorites";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
 
 const difficultyFilters = ["All", "Easy", "Moderate", "Advanced"] as const;
 
 export default function FishScreen() {
+  const { region } = useSelectedRegion();
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState<(typeof difficultyFilters)[number]>("All");
   const { isFavorite, toggle } = useFavorites();
 
   const filtered = useMemo(() => {
-    const byDifficulty = difficulty === "All" ? fishSpecies : fishSpecies.filter((fish) => fish.difficulty === difficulty);
+    const regionSpecies = getSpeciesForRegion(region);
+    const byDifficulty = difficulty === "All" ? regionSpecies : regionSpecies.filter((fish) => fish.difficulty === difficulty);
     return searchByFields(byDifficulty, query, [
       (fish) => fish.name,
       (fish) => fish.bestBait,
@@ -31,7 +34,7 @@ export default function FishScreen() {
       (fish) => fish.rigs,
       (fish) => fish.whereToFind
     ]);
-  }, [difficulty, query]);
+  }, [difficulty, query, region]);
 
   return (
     <Screen>

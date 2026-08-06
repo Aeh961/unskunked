@@ -11,23 +11,36 @@ export type RegionProvider = {
   notes: string;
 };
 
+const completeMockDomains: Record<string, ProviderDomain[]> = {
+  washington: ["fishing", "clamming", "crabbing", "weather", "tides", "waterbodies", "emergency-rules"],
+  florida: ["fishing", "weather", "tides", "waterbodies"],
+  ronneby: ["fishing", "weather", "waterbodies"]
+};
+
+const completeMockOrganization: Record<string, string> = {
+  washington: "Washington Department of Fish & Wildlife",
+  florida: "Florida Fish and Wildlife Conservation Commission",
+  ronneby: "Havs- och vattenmyndigheten"
+};
+
 export const regionalProviders: RegionProvider[] = [
-  {
-    region: "washington",
-    name: "Washington",
-    status: "complete-mock",
-    supportedDomains: ["fishing", "clamming", "crabbing", "weather", "tides", "waterbodies", "emergency-rules"],
-    sourceOrganization: "Washington Department of Fish & Wildlife",
-    notes: "Primary beta region with WDFW-ready source metadata and local snapshots."
-  },
-  ...regions.filter((region) => region.id !== "washington").map((region) => ({
-    region: region.id,
-    name: region.name,
-    status: "placeholder" as const,
-    supportedDomains: ["fishing", "waterbodies"] as ProviderDomain[],
-    sourceOrganization: `${region.name} fish and wildlife agency placeholder`,
-    notes: region.note
-  })),
+  ...regions.map((region) => region.status === "Mocked"
+    ? {
+        region: region.id,
+        name: region.name,
+        status: "complete-mock" as const,
+        supportedDomains: completeMockDomains[region.id] ?? (["fishing", "waterbodies"] as ProviderDomain[]),
+        sourceOrganization: completeMockOrganization[region.id] ?? `${region.name} fish and wildlife agency`,
+        notes: region.note
+      }
+    : {
+        region: region.id,
+        name: region.name,
+        status: "placeholder" as const,
+        supportedDomains: ["fishing", "waterbodies"] as ProviderDomain[],
+        sourceOrganization: `${region.name} fish and wildlife agency placeholder`,
+        notes: region.note
+      }),
   {
     region: "british-columbia",
     name: "British Columbia",

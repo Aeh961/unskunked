@@ -1,3 +1,5 @@
+import { RegionId } from "@/src/data/regions";
+
 export type Status = "open" | "closed" | "restricted";
 export type ActivityType = "fishing" | "clamming" | "crabbing";
 
@@ -13,6 +15,7 @@ export type Regulation = {
 export type FishSpecies = {
   id: string;
   name: string;
+  regionId: RegionId;
   waterKind?: "Freshwater" | "Saltwater" | "Anadromous";
   status: Status;
   difficulty: "Easy" | "Moderate" | "Advanced";
@@ -82,6 +85,7 @@ export type Waterbody = {
   id: string;
   waterbodyId?: string;
   name: string;
+  regionId: RegionId;
   region: string;
   county?: string;
   city?: string;

@@ -8,9 +8,9 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
-import { fishSpecies } from "@/src/data/fish";
+import { getSpeciesForRegion } from "@/src/data/fish";
 import { regions, RegionId } from "@/src/data/regions";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion } from "@/src/data/waterbodies";
 import { colors, radii, spacing } from "@/src/theme";
 import { ExperienceLevel, getOnboardingProfile, getSelectedRegion, setOnboardingProfile, setSelectedRegion } from "@/src/utils/localStore";
 
@@ -125,7 +125,7 @@ export default function StartHereScreen() {
       <Card style={styles.planCard}>
         <SectionHeader title="Favorite fish" eyebrow={`${favoriteFishIds.length} selected`} />
         <View style={styles.regionGrid}>
-          {fishSpecies.slice(0, 8).map((fish) => (
+          {getSpeciesForRegion(region).slice(0, 8).map((fish) => (
             <Pressable key={fish.id} onPress={() => toggleItem(fish.id, favoriteFishIds, setFavoriteFishIds)} style={[styles.regionCard, favoriteFishIds.includes(fish.id) && styles.regionActive]}>
               <AppText variant="subheading" style={favoriteFishIds.includes(fish.id) && styles.regionActiveText}>{fish.name}</AppText>
               <AppText variant="caption" style={favoriteFishIds.includes(fish.id) && styles.regionActiveText}>{fish.difficulty}</AppText>
@@ -137,7 +137,7 @@ export default function StartHereScreen() {
       <Card style={styles.planCard}>
         <SectionHeader title="Favorite waterbodies" eyebrow={`${favoriteWaterbodyIds.length} selected`} />
         <View style={styles.regionGrid}>
-          {waterbodies.slice(0, 6).map((water) => (
+          {getWaterbodiesForRegion(region).slice(0, 6).map((water) => (
             <Pressable key={water.id} onPress={() => toggleItem(water.id, favoriteWaterbodyIds, setFavoriteWaterbodyIds)} style={[styles.regionCard, favoriteWaterbodyIds.includes(water.id) && styles.regionActive]}>
               <AppText variant="subheading" style={favoriteWaterbodyIds.includes(water.id) && styles.regionActiveText}>{water.name}</AppText>
               <AppText variant="caption" style={favoriteWaterbodyIds.includes(water.id) && styles.regionActiveText}>{water.waterType} · {water.beginnerDifficulty}</AppText>

@@ -73,6 +73,32 @@ function placeholderAgencyLinks(homepage: string): OfficialSourceLinks {
   };
 }
 
+class FloridaOfficialLinkProvider implements OfficialLinkProvider {
+  readonly state = "florida" as const;
+  readonly agencyName = "Florida Fish and Wildlife Conservation Commission";
+  readonly agencyAbbreviation = "FWC";
+  readonly confidence: SourceConfidence = "Needs Verification";
+  readonly note = "Points to FWC's homepage until specific regulation/license page paths are verified, the same honest-placeholder approach used for OR/ID/CA.";
+  private readonly links = placeholderAgencyLinks("https://myfwc.com");
+
+  getLinks(): OfficialSourceLinks {
+    return this.links;
+  }
+}
+
+class RonnebyOfficialLinkProvider implements OfficialLinkProvider {
+  readonly state = "ronneby" as const;
+  readonly agencyName = "Havs- och vattenmyndigheten (Swedish Agency for Marine and Water Management)";
+  readonly agencyAbbreviation = "HaV";
+  readonly confidence: SourceConfidence = "Needs Verification";
+  readonly note = "Points to HaV's homepage until specific regulation/license page paths are verified. Sweden regulates fishing nationally/regionally rather than per-municipality, so Ronneby shares this provider with any future Swedish municipality until a more specific source is added.";
+  private readonly links = placeholderAgencyLinks("https://www.havochvatten.se");
+
+  getLinks(): OfficialSourceLinks {
+    return this.links;
+  }
+}
+
 class OregonOfficialLinkProvider implements OfficialLinkProvider {
   readonly state = "oregon" as const;
   readonly agencyName = "Oregon Department of Fish and Wildlife";
@@ -114,6 +140,8 @@ class CaliforniaOfficialLinkProvider implements OfficialLinkProvider {
 
 export const officialLinkProviders: OfficialLinkProvider[] = [
   new WashingtonOfficialLinkProvider(),
+  new FloridaOfficialLinkProvider(),
+  new RonnebyOfficialLinkProvider(),
   new OregonOfficialLinkProvider(),
   new IdahoOfficialLinkProvider(),
   new CaliforniaOfficialLinkProvider()

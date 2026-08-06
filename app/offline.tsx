@@ -5,13 +5,15 @@ import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { getOfflinePacks } from "@/src/services/offlineDownloads";
 import { colors, radii, spacing } from "@/src/theme";
 import { getDownloadedOfflinePackIds, toggleOfflinePack } from "@/src/utils/localStore";
 
 export default function OfflineScreen() {
   const [downloaded, setDownloaded] = useState<string[]>([]);
-  const packs = getOfflinePacks();
+  const { region } = useSelectedRegion();
+  const packs = getOfflinePacks(region);
 
   useEffect(() => {
     getDownloadedOfflinePackIds().then(setDownloaded);

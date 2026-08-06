@@ -6,15 +6,18 @@ import { ConfidenceBadge } from "@/src/components/ConfidenceBadge";
 import { ErrorState } from "@/src/components/ErrorState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion, waterbodies } from "@/src/data/waterbodies";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { calculateTripScore, getHourlyWeather, getMockWeather, getSevenDayWeather, getSunWindows, getTideSnapshot } from "@/src/services/fishingConditions";
 import { getFreshnessState, getProviderById } from "@/src/services/dataTrust";
 import { getRecoveryMessage } from "@/src/services/recovery";
 import { colors, radii, spacing } from "@/src/theme";
 
 export default function WeatherScreen() {
+  const { region } = useSelectedRegion();
+  const regionWaterbodies = useMemo(() => getWaterbodiesForRegion(region), [region]);
   const [waterbodyId, setWaterbodyId] = useState("green-lake");
-  const water = waterbodies.find((item) => item.id === waterbodyId) ?? waterbodies[0];
+  const water = regionWaterbodies.find((item) => item.id === waterbodyId) ?? regionWaterbodies[0] ?? waterbodies[0];
   const weather = useMemo(() => getMockWeather(water), [water]);
   const score = calculateTripScore({ weather, waterbody: water, userExperience: "Beginner", targetSpecies: water.speciesIds[0] });
   const sun = getSunWindows();
@@ -39,7 +42,7 @@ export default function WeatherScreen() {
         ) : null}
         <ErrorState title={weatherRecovery.title} body={weatherRecovery.body} />
         <View style={styles.options}>
-          {waterbodies.slice(0, 8).map((item) => (
+          {regionWaterbodies.slice(0, 8).map((item) => (
             <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={`Show conditions for ${item.name}`} onPress={() => setWaterbodyId(item.id)} style={[styles.option, waterbodyId === item.id && styles.optionActive]}>
               <AppText variant="caption" style={[styles.optionText, waterbodyId === item.id && styles.optionTextActive]}>{item.name}</AppText>
             </Pressable>

@@ -1,6 +1,7 @@
+import { RegionId } from "@/src/data/regions";
 import { shellfishLocations } from "@/src/data/shellfish";
 import { ActivityType, WaterType } from "@/src/data/types";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion } from "@/src/data/waterbodies";
 import { Coordinates, distanceMiles } from "@/src/services/location";
 import { colors } from "@/src/theme";
 
@@ -24,6 +25,7 @@ export type SkunkedMapMarker = {
 };
 
 export type MarkerFilters = {
+  region?: RegionId;
   activity?: ActivityType | "all";
   waterType?: WaterType | "Beach" | "Marine Area" | "all";
   shoreOnly?: boolean;
@@ -34,7 +36,8 @@ export type MarkerFilters = {
 };
 
 export function getMapMarkers(filters: MarkerFilters = {}): SkunkedMapMarker[] {
-  const fishingMarkers: SkunkedMapMarker[] = waterbodies.map((water) => ({
+  const region = filters.region ?? "washington";
+  const fishingMarkers: SkunkedMapMarker[] = getWaterbodiesForRegion(region).map((water) => ({
     id: `fishing:${water.id}`,
     sourceId: water.id,
     kind: "fishing",
@@ -50,7 +53,8 @@ export function getMapMarkers(filters: MarkerFilters = {}): SkunkedMapMarker[] {
     subtitle: `${water.waterType} · ${water.county ?? "WA"} · ${water.beginnerDifficulty}`
   }));
 
-  const shellfishMarkers: SkunkedMapMarker[] = shellfishLocations.flatMap((location) =>
+  // Clamming/crabbing data is Washington-specific today; only surface it when Washington is selected.
+  const shellfishMarkers: SkunkedMapMarker[] = region !== "washington" ? [] : shellfishLocations.flatMap((location) =>
     location.activityTypes.map((kind) => ({
       id: `${kind}:${location.id}`,
       sourceId: location.id,

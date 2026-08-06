@@ -16,14 +16,16 @@ import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
-import { fishSpecies } from "@/src/data/fish";
+import { getSpeciesForRegion } from "@/src/data/fish";
 import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { ActivityType, WaterType } from "@/src/data/types";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion, waterbodies } from "@/src/data/waterbodies";
+import { getRegion } from "@/src/data/regions";
 import { useFavorites } from "@/src/hooks/useFavorites";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
 import { searchByFields } from "@/src/utils/search";
-import { regulationService } from "@/src/services/regulations";
+import { regionToRegulationState, regulationService } from "@/src/services/regulations";
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { Coordinates, defaultManualLocation, getNearbyWaterbodies, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
@@ -34,6 +36,7 @@ const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", 
 const activityFilters: Array<ActivityType | "all"> = ["all", "fishing", "clamming", "crabbing"];
 
 export default function MapScreen() {
+  const { region } = useSelectedRegion();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WaterType | "All">("All");
   const [activityFilter, setActivityFilter] = useState<ActivityType | "all">("all");
@@ -47,8 +50,11 @@ export default function MapScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const { isFavorite, toggle } = useFavorites();
 
+  const regionWaterbodies = useMemo(() => getWaterbodiesForRegion(region), [region]);
+  const regionSpecies = useMemo(() => getSpeciesForRegion(region), [region]);
+
   const filtered = useMemo(() => {
-    const nearby = getNearbyWaterbodies(coordinates, { waterType: filter });
+    const nearby = getNearbyWaterbodies(coordinates, { waterType: filter, pool: regionWaterbodies });
     return searchByFields(nearby, query, [
       (water) => water.name,
       (water) => water.region,
@@ -58,16 +64,17 @@ export default function MapScreen() {
       (water) => water.suggestedBait,
       (water) => water.recommendedRigs
     ]);
-  }, [coordinates, filter, query]);
+  }, [coordinates, filter, query, regionWaterbodies]);
 
   const markers = useMemo(() => getMapMarkers({
+    region,
     activity: activityFilter,
     waterType: filter === "All" ? "all" : filter,
     query,
     coordinates
-  }), [activityFilter, coordinates, filter, query]);
+  }), [activityFilter, coordinates, filter, query, region]);
 
-  const selected = filtered.find((water) => water.id === selectedId) ?? filtered[0] ?? waterbodies[0];
+  const selected = filtered.find((water) => water.id === selectedId) ?? filtered[0] ?? regionWaterbodies[0] ?? waterbodies[0];
   const selectedShellfishLocation = selectedShellfishId ? shellfishLocations.find((location) => location.id === selectedShellfishId) : null;
   const selectedShellfishTargets = selectedShellfishLocation
     ? shellfishSpecies.filter((speciesItem) => selectedShellfishLocation.activityTypes.includes(speciesItem.activityType))
@@ -79,9 +86,9 @@ export default function MapScreen() {
     longitudeDelta: 0.95
   };
   const species = selected.speciesIds
-    .map((id) => fishSpecies.find((fish) => fish.id === id)?.name)
+    .map((id) => regionSpecies.find((fish) => fish.id === id)?.name)
     .filter(Boolean);
-  const regulation = regulationService.getSummary({ state: "WA", waterbodyId: selected.id, date: new Date().toISOString() });
+  const regulation = regulationService.getSummary({ state: regionToRegulationState[region] ?? "WA", waterbodyId: selected.id, date: new Date().toISOString() });
   const currentRegulations = getCurrentRegulations({ waterbodyId: selected.id, date: new Date().toISOString() });
 
   function openDirections() {
@@ -129,7 +136,7 @@ export default function MapScreen() {
     <Screen>
       <View style={styles.hero}>
         <AppText variant="title">Explore Waters</AppText>
-        <AppText style={styles.heroText}>Search Washington lakes, rivers, parks, piers, and saltwater spots using local demo data.</AppText>
+        <AppText style={styles.heroText}>Search {getRegion(region).name} lakes, rivers, parks, piers, and saltwater spots using local demo data.</AppText>
       </View>
       <Disclaimer />
 

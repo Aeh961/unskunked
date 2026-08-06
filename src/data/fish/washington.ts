@@ -1,4 +1,4 @@
-import { FishSpecies } from "./types";
+import { FishSpecies } from "@/src/data/types";
 
 const troutRegulation = {
   status: "open" as const,
@@ -18,7 +18,7 @@ const warmwaterRegulation = {
   warning: "Confirm the specific waterbody rules before harvesting fish."
 };
 
-export const fishSpecies: FishSpecies[] = [
+const washingtonFishSpeciesRaw: Omit<FishSpecies, "regionId">[] = [
   {
     id: "rainbow-trout",
     name: "Rainbow Trout",
@@ -524,3 +524,5 @@ export const fishSpecies: FishSpecies[] = [
     youtubeSearches: ["Washington sturgeon regulations", "Sturgeon catch and release handling"]
   }
 ];
+
+export const washingtonFishSpecies: FishSpecies[] = washingtonFishSpeciesRaw.map((fish) => ({ ...fish, regionId: "washington" }));

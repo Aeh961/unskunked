@@ -1,7 +1,7 @@
 import { fishSpecies } from "@/src/data/fish";
 import { Waterbody } from "@/src/data/types";
 import { waterbodies } from "@/src/data/waterbodies";
-import { regulationService } from "@/src/services/regulations";
+import { regionToRegulationState, regulationService } from "@/src/services/regulations";
 
 export type RegulationBadgeTone = "good" | "caution" | "bad";
 
@@ -25,7 +25,8 @@ export function getCurrentRegulations(input: { waterbodyId: string; speciesId?: 
   const water = waterbodies.find((item) => item.id === input.waterbodyId);
   const speciesId = input.speciesId ?? water?.speciesIds[0];
   const fish = fishSpecies.find((item) => item.id === speciesId);
-  const summary = regulationService.getSummary({ state: "WA", waterbodyId: input.waterbodyId, speciesId, date: input.date });
+  const state = (water ? regionToRegulationState[water.regionId] : undefined) ?? "WA";
+  const summary = regulationService.getSummary({ state, waterbodyId: input.waterbodyId, speciesId, date: input.date });
   const baitRestrictions = inferBaitRestrictions(water, fish?.id);
   const catchLimit = fish?.regulation.dailyLimit ?? summary.dailyLimit;
   const status = summary.status;

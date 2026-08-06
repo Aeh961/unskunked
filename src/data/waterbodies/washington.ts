@@ -1,9 +1,9 @@
-import { Waterbody } from "./types";
-import { makeWdfwWaterbodyId, wdfwDataUpdated, wdfwSourceNames } from "./wdfwSources";
+import { Waterbody } from "@/src/data/types";
+import { makeWdfwWaterbodyId, wdfwDataUpdated, wdfwSourceNames } from "@/src/data/wdfwSources";
 
 const fishWashington = "https://wdfw.wa.gov/fishing/locations";
 
-export const waterbodies: Waterbody[] = [
+export const washingtonWaterbodies: Waterbody[] = [
   wa("lake-washington", "Lake Washington", "Seattle metro", "King", "Lake", 47.6215, -122.2559, ["yellow-perch", "smallmouth-bass", "largemouth-bass", "cutthroat-trout"], "open", "Easy", "Easy", "Urban launches, parks, and piers; parking varies by access point.", "Warmwater fishing is approachable, but trout/cutthroat rules and advisories must be verified.", ["worms", "drop shot worms", "small jigs"], ["Drop shot rig", "Split shot rig", "Jig"], "Summer perch; spring through fall bass; check trout/cutthroat notes.", "Target perch near docks with tiny worm pieces before trying bass around rocks."),
   wa("green-lake", "Green Lake", "Seattle", "King", "Park", 47.6801, -122.3289, ["rainbow-trout", "yellow-perch", "largemouth-bass", "bluegill"], "open", "Easy", "Easy", "City park lots and street parking can fill on sunny weekends.", "Stocked trout and warmwater options. Check city and WDFW notices.", ["PowerBait", "worms", "small spinners"], ["Bobber rig", "Trout PowerBait rig", "Spinner setup"], "Spring stockings and cool mornings; panfish in summer.", "Start with a bobber and worm around weed edges, then switch to PowerBait for trout."),
   wa("lake-sammamish", "Lake Sammamish", "Eastside", "King", "Lake", 47.5933, -122.0655, ["smallmouth-bass", "yellow-perch", "kokanee", "cutthroat-trout"], "restricted", "Moderate", "Moderate", "State park and boat launch access; summer parking can be tight.", "Bass and perch options; kokanee and trout rules require extra checking.", ["drop shot worms", "small jigs", "scented corn where legal"], ["Drop shot rig", "Jig", "Carolina rig"], "Spring through fall bass; kokanee rules vary.", "Use a drop shot on rocky points. Keep kokanee as a future boat/trolling goal."),
@@ -54,6 +54,7 @@ function wa(
     id,
     waterbodyId: makeWdfwWaterbodyId(id),
     name,
+    regionId: "washington",
     region,
     county,
     city: region,

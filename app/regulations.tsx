@@ -8,7 +8,7 @@ import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion } from "@/src/data/waterbodies";
 import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { getFreshnessState, getProviderById } from "@/src/services/dataTrust";
@@ -22,9 +22,9 @@ const simpleExplanations: Record<Status, string> = {
 };
 
 export default function RegulationsScreen() {
-  const { officialLinkProvider } = useSelectedRegion();
+  const { region, officialLinkProvider } = useSelectedRegion();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const featured = waterbodies.slice(0, 6).map((water) => ({ water, rules: getCurrentRegulations({ waterbodyId: water.id }) }));
+  const featured = getWaterbodiesForRegion(region).slice(0, 6).map((water) => ({ water, rules: getCurrentRegulations({ waterbodyId: water.id }) }));
   const source = getProviderById("wdfw-regulations");
   const freshness = source ? getFreshnessState(source.freshness) : null;
 

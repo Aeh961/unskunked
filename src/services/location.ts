@@ -36,8 +36,9 @@ export function distanceMiles(from: Coordinates, to: Coordinates) {
   return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function getNearbyWaterbodies(coordinates: Coordinates, options: { waterType?: WaterType | "All"; beginnerOnly?: boolean; limit?: number } = {}): NearbyWaterbody[] {
-  return waterbodies
+export function getNearbyWaterbodies(coordinates: Coordinates, options: { waterType?: WaterType | "All"; beginnerOnly?: boolean; limit?: number; pool?: Waterbody[] } = {}): NearbyWaterbody[] {
+  const pool = options.pool ?? waterbodies;
+  return pool
     .filter((water) => (options.waterType && options.waterType !== "All" ? water.waterType === options.waterType : true))
     .filter((water) => (options.beginnerOnly ? water.beginnerDifficulty === "Easy" || water.shoreAccessDifficulty === "Easy" : true))
     .map((water) => ({
@@ -45,11 +46,11 @@ export function getNearbyWaterbodies(coordinates: Coordinates, options: { waterT
       distanceMiles: Number(distanceMiles(coordinates, { latitude: water.latitude, longitude: water.longitude }).toFixed(1))
     }))
     .sort((a, b) => a.distanceMiles - b.distanceMiles)
-    .slice(0, options.limit ?? waterbodies.length);
+    .slice(0, options.limit ?? pool.length);
 }
 
-export function getNearestBeginnerWaterbody(coordinates: Coordinates) {
-  return getNearbyWaterbodies(coordinates, { beginnerOnly: true, limit: 1 })[0] ?? getNearbyWaterbodies(coordinates, { limit: 1 })[0];
+export function getNearestBeginnerWaterbody(coordinates: Coordinates, pool?: Waterbody[]) {
+  return getNearbyWaterbodies(coordinates, { beginnerOnly: true, limit: 1, pool })[0] ?? getNearbyWaterbodies(coordinates, { limit: 1, pool })[0];
 }
 
 export async function requestExpoLocation(): Promise<LocationState> {

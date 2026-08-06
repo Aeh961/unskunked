@@ -98,7 +98,7 @@ export default function DataSourcesScreen() {
           {regionalProviders.map((provider) => (
             <ListItem
               key={provider.region}
-              icon={provider.region === "washington" ? "shield-checkmark" : "construct"}
+              icon={provider.status === "complete-mock" ? "shield-checkmark" : "construct"}
               title={provider.name}
               subtitle={`${provider.status} · ${provider.sourceOrganization} · ${provider.supportedDomains.join(", ")}`}
             />

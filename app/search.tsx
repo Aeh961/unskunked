@@ -7,11 +7,12 @@ import { EmptyState } from "@/src/components/EmptyState";
 import { Screen } from "@/src/components/Screen";
 import { SearchInput } from "@/src/components/SearchInput";
 import { SectionHeader } from "@/src/components/SectionHeader";
-import { fishSpecies } from "@/src/data/fish";
+import { getSpeciesForRegion } from "@/src/data/fish";
 import { learningArticles } from "@/src/data/learning";
 import { rigsAndKnots } from "@/src/data/rigs";
 import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
-import { waterbodies } from "@/src/data/waterbodies";
+import { getWaterbodiesForRegion } from "@/src/data/waterbodies";
+import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { providerMetadata } from "@/src/services/dataTrust";
 import { colors, radii, spacing } from "@/src/theme";
 import { getDemoSearchHistory, getTrips, saveRecentSearch, trackBetaEvent, TripLog } from "@/src/utils/localStore";
@@ -20,6 +21,7 @@ import { searchByFields } from "@/src/utils/search";
 const filters = ["All", "Fish", "Shellfish", "Water", "Rigs", "Knots", "Learning", "Regulations", "Trips"] as const;
 
 export default function SearchScreen() {
+  const { region } = useSelectedRegion();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [recent, setRecent] = useState<string[]>([]);
@@ -33,13 +35,13 @@ export default function SearchScreen() {
   }, []);
 
   const results = useMemo(() => {
-    const fish = searchByFields(fishSpecies, query, [(item) => item.name, (item) => item.bestBait, (item) => item.rigs]).map((item) => ({
+    const fish = searchByFields(getSpeciesForRegion(region), query, [(item) => item.name, (item) => item.bestBait, (item) => item.rigs]).map((item) => ({
       type: "Fish",
       title: item.name,
       subtitle: `${item.difficulty} · ${item.bestSeason}`,
       href: `/fish/${item.id}` as Href
     }));
-    const waters = searchByFields(waterbodies, query, [
+    const waters = searchByFields(getWaterbodiesForRegion(region), query, [
       (item) => item.name,
       (item) => item.region,
       (item) => item.county ?? "",
@@ -97,7 +99,7 @@ export default function SearchScreen() {
     }));
     const all = [...fish, ...shellfish, ...waters, ...gear, ...learning, ...regulations, ...tripResults];
     return filter === "All" ? all : all.filter((item) => item.type === filter);
-  }, [filter, query, trips]);
+  }, [filter, query, region, trips]);
 
   async function submitSearch(value = query) {
     const next = await saveRecentSearch(value);
