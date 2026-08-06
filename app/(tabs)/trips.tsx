@@ -15,6 +15,7 @@ import { Scanlines } from "@/src/components/Scanlines";
 import { SearchInput } from "@/src/components/SearchInput";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { SkunkMascot } from "@/src/components/SkunkMascot";
 import { StatusBadge } from "@/src/components/StatusBadge";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { fishSpecies } from "@/src/data/fish";
@@ -364,7 +365,12 @@ export default function TripsScreen() {
         ) : null}
 
         {savedPlans.length === 0 && fieldNotes.length === 0 ? (
-          <EmptyState icon="flag" title="No missions yet" body="Type what you're going after above to build your first plan." />
+          <>
+            <EmptyState icon="flag" title="No missions yet" body="Type what you're going after above to build your first plan." />
+            <View style={styles.mascotRow}>
+              <SkunkMascot variant="empty" size={56} showBubble message="NO TRIPS YET" />
+            </View>
+          </>
         ) : null}
       </Screen>
     );
@@ -610,6 +616,9 @@ function Field({ label, ...props }: { label: string; value: string; placeholder:
 }
 
 const styles = StyleSheet.create({
+  mascotRow: {
+    alignItems: "flex-end"
+  },
   hero: {
     backgroundColor: colors.forest,
     borderColor: colors.line,

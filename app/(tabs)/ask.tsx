@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
 import { Autocomplete } from "@/src/components/Autocomplete";
+import { SkunkMascot } from "@/src/components/SkunkMascot";
 import { colors, radii, spacing } from "@/src/theme";
 import { getSuggestions } from "@/src/utils/autocomplete";
 import { getDemoSearchHistory, saveRecentSearch } from "@/src/utils/localStore";
@@ -140,7 +141,9 @@ export default function AskScreen() {
             </View>
           </View>
         ) : (
-          <View style={styles.flex} />
+          <View style={[styles.flex, styles.askEmpty]}>
+            <SkunkMascot variant="thinking" size={64} interactive showBubble message="READY TO CAST?" />
+          </View>
         )
       ) : (
         <FlatList
@@ -189,6 +192,10 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1
+  },
+  askEmpty: {
+    alignItems: "center",
+    justifyContent: "center"
   },
   header: {
     paddingBottom: spacing.sm,

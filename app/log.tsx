@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Href, Link } from "expo-router";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
@@ -7,6 +7,7 @@ import { Card } from "@/src/components/Card";
 import { EmptyState } from "@/src/components/EmptyState";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { SkunkMascot } from "@/src/components/SkunkMascot";
 import { ActivityType } from "@/src/data/types";
 import { TripLog, TripPlanRecord, TripResult, getTripPlans, getTrips, saveTrip } from "@/src/utils/localStore";
 import { colors, radii, spacing } from "@/src/theme";
@@ -32,6 +33,12 @@ export default function TripLogScreen() {
   const [trips, setTrips] = useState<TripLog[]>([]);
   const [plans, setPlans] = useState<TripPlanRecord[]>([]);
   const [form, setForm] = useState(blankTrip);
+  const [justSaved, setJustSaved] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => {
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+  }, []);
 
   useEffect(() => {
     Promise.all([getTrips(), getTripPlans()]).then(([savedTrips, savedPlans]) => {
@@ -69,6 +76,9 @@ export default function TripLogScreen() {
     const next = await saveTrip(trip);
     setTrips(next);
     setForm(blankTrip);
+    setJustSaved(true);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setJustSaved(false), 3200);
   }
 
   return (
@@ -116,6 +126,12 @@ export default function TripLogScreen() {
           <AppText>Save a plan from Plan My Fishing Trip to stage your next outing.</AppText>
         )}
       </Card>
+
+      {justSaved ? (
+        <View style={styles.savedRow}>
+          <SkunkMascot variant="success" size={48} showBubble message="MISSION SAVED" />
+        </View>
+      ) : null}
 
       <Card style={styles.form}>
         <SectionHeader title="Log a trip" eyebrow="Saved locally" />
@@ -222,6 +238,9 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  savedRow: {
+    alignItems: "flex-end"
+  },
   hero: {
     backgroundColor: colors.deepWater,
     borderRadius: radii.md,
