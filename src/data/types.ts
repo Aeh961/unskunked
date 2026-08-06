@@ -125,6 +125,12 @@ export type Waterbody = {
   notes: string;
   todayRecommendation: string;
   youtubeSearch: string;
+  /** Provenance for pipeline-imported records. Optional so hand-curated entries above stay valid. */
+  sourceUrl?: string;
+  sourceOrganization?: string;
+  verificationStatus?: "verified" | "imported" | "needs-verification";
+  accessType?: "Shore" | "Boat" | "Pier" | "Beach" | "Bank";
+  activities?: ActivityType[];
 };
 
 export type RigOrKnot = {

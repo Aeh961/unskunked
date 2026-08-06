@@ -90,6 +90,14 @@ export const washingtonWaterbodies: Waterbody[] = [
   wa("camano-island", "Camano Island", "Cama Beach", "Island", "Saltwater", 48.166, -122.4568, ["salmon", "flounder", "rockfish"], "restricted", "Moderate", "Moderate", "State park day-use area with beach access.", "Marine area rules apply; verify before keeping fish.", ["jigs", "herring where legal"], ["Jig", "Spinner setup"], "Tide and season dependent.", "Beach-fish from the state park while learning tide timing."),
 ];
 
+type ProvenanceOverrides = {
+  sourceUrl?: string;
+  sourceOrganization?: string;
+  verificationStatus?: NonNullable<Waterbody["verificationStatus"]>;
+  accessType?: NonNullable<Waterbody["accessType"]>;
+  activities?: Waterbody["activities"];
+};
+
 function wa(
   id: string,
   name: string,
@@ -107,7 +115,8 @@ function wa(
   suggestedBait: string[],
   recommendedRigs: string[],
   bestSeason: string,
-  todayRecommendation: string
+  todayRecommendation: string,
+  provenance: ProvenanceOverrides = {}
 ): Waterbody {
   return {
     id,
@@ -147,7 +156,12 @@ function wa(
     beginnerDifficulty,
     notes: `${parkingNote} ${regulationSummary}`,
     todayRecommendation,
-    youtubeSearch: `${name} fishing beginner ${recommendedRigs[0]}`
+    youtubeSearch: `${name} fishing beginner ${recommendedRigs[0]}`,
+    activities: provenance.activities ?? ["fishing"],
+    sourceUrl: provenance.sourceUrl,
+    sourceOrganization: provenance.sourceOrganization,
+    verificationStatus: provenance.verificationStatus,
+    accessType: provenance.accessType
   };
 }
 
