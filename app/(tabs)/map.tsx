@@ -1,6 +1,7 @@
 import { Href, Link } from "expo-router";
-import { useMemo, useState } from "react";
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { FlatList, Linking, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { AppText } from "@/src/components/AppText";
@@ -9,40 +10,49 @@ import { Card } from "@/src/components/Card";
 import { Disclaimer } from "@/src/components/Disclaimer";
 import { EmptyState } from "@/src/components/EmptyState";
 import { FavoriteButton } from "@/src/components/FavoriteButton";
+import { MapErrorBoundary } from "@/src/components/MapErrorBoundary";
 import { OfficialLinks } from "@/src/components/OfficialLinks";
 import { PixelMarker } from "@/src/components/PixelMarker";
+import { RegionSelector } from "@/src/components/RegionSelector";
 import { SearchInput } from "@/src/components/SearchInput";
-import { Screen, Stack } from "@/src/components/Screen";
+import { Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { StatusBadge } from "@/src/components/StatusBadge";
+import { WaterbodyListRow } from "@/src/components/WaterbodyListRow";
 import { YoutubeLink } from "@/src/components/YoutubeLink";
 import { getSpeciesForRegion } from "@/src/data/fish";
+import { RegionId } from "@/src/data/regions";
 import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
-import { ActivityType, WaterType } from "@/src/data/types";
+import { ActivityType, Status, WaterType } from "@/src/data/types";
 import { getWaterbodiesForRegion, waterbodies } from "@/src/data/waterbodies";
-import { getRegion } from "@/src/data/regions";
+import { useDebouncedValue } from "@/src/hooks/useDebouncedValue";
 import { useFavorites } from "@/src/hooks/useFavorites";
-import { useSelectedRegion } from "@/src/hooks/useSelectedRegion";
 import { colors, radii, spacing } from "@/src/theme";
-import { searchByFields } from "@/src/utils/search";
+import { Coordinates, defaultManualLocation, manualLocations, requestExpoLocation } from "@/src/services/location";
+import { getMapMarkers, getMarkerTint, SkunkedMapMarker } from "@/src/services/mapMarkers";
 import { regionToRegulationState, regulationService } from "@/src/services/regulations";
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
-import { Coordinates, defaultManualLocation, getNearbyWaterbodies, manualLocations, requestExpoLocation } from "@/src/services/location";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
-import { trackBetaEvent } from "@/src/utils/localStore";
-import { getMapMarkers, getMarkerTint } from "@/src/services/mapMarkers";
+import { getSelectedRegion, setSelectedRegion, trackBetaEvent } from "@/src/utils/localStore";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
 const activityFilters: Array<ActivityType | "all"> = ["all", "fishing", "clamming", "crabbing"];
 
+function activityLabelFor(kind: ActivityType) {
+  if (kind === "clamming") return "Clamming";
+  if (kind === "crabbing") return "Crabbing";
+  return "Fishing";
+}
+
 export default function MapScreen() {
-  const { region } = useSelectedRegion();
-  const [query, setQuery] = useState("");
+  const [region, setRegion] = useState<RegionId>("washington");
+  const [queryInput, setQueryInput] = useState("");
+  const query = useDebouncedValue(queryInput, 200);
   const [filter, setFilter] = useState<WaterType | "All">("All");
   const [activityFilter, setActivityFilter] = useState<ActivityType | "all">("all");
   const [selectedId, setSelectedId] = useState(waterbodies[0].id);
   const [selectedShellfishId, setSelectedShellfishId] = useState<string | null>(null);
-  const [recentIds, setRecentIds] = useState<string[]>([waterbodies[0].id]);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
   const [locationStatus, setLocationStatus] = useState<"idle" | "granted" | "denied" | "unavailable">("idle");
@@ -50,21 +60,27 @@ export default function MapScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const { isFavorite, toggle } = useFavorites();
 
+  useEffect(() => {
+    getSelectedRegion().then(setRegion);
+  }, []);
+
+  function changeRegion(next: RegionId) {
+    setRegion(next);
+    setSelectedRegion(next);
+    setSelectedShellfishId(null);
+  }
+
   const regionWaterbodies = useMemo(() => getWaterbodiesForRegion(region), [region]);
   const regionSpecies = useMemo(() => getSpeciesForRegion(region), [region]);
+  const statusById = useMemo(() => {
+    const map = new Map<string, Status>();
+    regionWaterbodies.forEach((water) => map.set(water.id, water.status));
+    return map;
+  }, [regionWaterbodies]);
 
-  const filtered = useMemo(() => {
-    const nearby = getNearbyWaterbodies(coordinates, { waterType: filter, pool: regionWaterbodies });
-    return searchByFields(nearby, query, [
-      (water) => water.name,
-      (water) => water.region,
-      (water) => water.county ?? "",
-      (water) => water.waterType,
-      (water) => water.notes,
-      (water) => water.suggestedBait,
-      (water) => water.recommendedRigs
-    ]);
-  }, [coordinates, filter, query, regionWaterbodies]);
+  useEffect(() => {
+    setSelectedId(regionWaterbodies[0]?.id ?? waterbodies[0].id);
+  }, [region, regionWaterbodies]);
 
   const markers = useMemo(() => getMapMarkers({
     region,
@@ -74,7 +90,7 @@ export default function MapScreen() {
     coordinates
   }), [activityFilter, coordinates, filter, query, region]);
 
-  const selected = filtered.find((water) => water.id === selectedId) ?? filtered[0] ?? regionWaterbodies[0] ?? waterbodies[0];
+  const selected = regionWaterbodies.find((water) => water.id === selectedId) ?? regionWaterbodies[0] ?? waterbodies[0];
   const selectedShellfishLocation = selectedShellfishId ? shellfishLocations.find((location) => location.id === selectedShellfishId) : null;
   const selectedShellfishTargets = selectedShellfishLocation
     ? shellfishSpecies.filter((speciesItem) => selectedShellfishLocation.activityTypes.includes(speciesItem.activityType))
@@ -90,6 +106,7 @@ export default function MapScreen() {
     .filter(Boolean);
   const regulation = regulationService.getSummary({ state: regionToRegulationState[region] ?? "WA", waterbodyId: selected.id, date: new Date().toISOString() });
   const currentRegulations = getCurrentRegulations({ waterbodyId: selected.id, date: new Date().toISOString() });
+  const recentMarkers = recentIds.map((id) => waterbodies.find((water) => water.id === id)).filter(Boolean) as typeof waterbodies;
 
   function openDirections() {
     const url = `https://maps.apple.com/?q=${encodeURIComponent(selected.name)}&ll=${selected.latitude},${selected.longitude}`;
@@ -108,11 +125,15 @@ export default function MapScreen() {
 
   function selectShellfish(id: string) {
     setSelectedShellfishId(id);
-    setRecentIds((current) => current.slice(0, 4));
     const location = shellfishLocations.find((item) => item.id === id);
     if (location) {
       trackBetaEvent("waterbody-view", `${location.name} shellfish`);
     }
+  }
+
+  function selectMarker(marker: SkunkedMapMarker) {
+    if (marker.kind === "fishing") selectWater(marker.sourceId);
+    else selectShellfish(marker.sourceId);
   }
 
   async function shareWaterbody() {
@@ -130,39 +151,33 @@ export default function MapScreen() {
     setCoordinates(location.coordinates);
     setLocationStatus("idle");
     setLocationMessage(`Using ${location.label} as your manual location.`);
+    setShowFilters(false);
   }
 
-  return (
-    <Screen>
-      <View style={styles.hero}>
-        <AppText variant="title">Explore Waters</AppText>
-        <AppText style={styles.heroText}>Search {getRegion(region).name} lakes, rivers, parks, piers, and saltwater spots using local demo data.</AppText>
+  const listHeader = (
+    <View style={styles.headerStack}>
+      <View style={styles.titleRow}>
+        <AppText variant="display">EXPLORE WATERS</AppText>
       </View>
       <Disclaimer />
 
-      <Card style={styles.locationCard}>
-        <SectionHeader title="Nearby fishing" eyebrow={locationStatus === "granted" ? "GPS enabled" : "Manual fallback"} />
-        <AppText>{locationMessage}</AppText>
-        {locationStatus === "denied" ? <AppText style={styles.warning}>Permission denied. You can still use manual locations and search all waterbodies.</AppText> : null}
-        {locationStatus === "unavailable" ? <AppText style={styles.warning}>Location unavailable or offline. Manual nearby search is active.</AppText> : null}
-        <View style={styles.actions}>
-          <Button icon="locate" style={styles.actionButton} onPress={useCurrentLocation}>Use my location</Button>
-          <Button icon="map" variant="secondary" style={styles.actionButton} onPress={() => useManualLocation(defaultManualLocation)}>Manual</Button>
-        </View>
-        <View style={styles.suggestionRow}>
-          {manualLocations.map((location) => (
-            <Pressable key={location.id} accessibilityRole="button" accessibilityLabel={`Use ${location.label} as manual map location`} onPress={() => useManualLocation(location)} style={styles.suggestion}>
-              <AppText variant="caption" style={styles.suggestionText}>{location.label}</AppText>
-            </Pressable>
-          ))}
-        </View>
-      </Card>
+      <RegionSelector region={region} onChange={changeRegion} />
+
+      <View style={styles.locationRow}>
+        <Ionicons name={locationStatus === "granted" ? "navigate" : "location-outline"} size={16} color={colors.amber} />
+        <AppText variant="caption" style={styles.locationText} numberOfLines={2}>{locationMessage}</AppText>
+        <Pressable accessibilityRole="button" accessibilityLabel="Use my location" onPress={useCurrentLocation} style={styles.locationAction}>
+          <AppText variant="caption" style={styles.locationActionText}>GPS</AppText>
+        </Pressable>
+      </View>
+      {locationStatus === "denied" ? <AppText style={styles.warning}>Permission denied. Manual locations and search still work.</AppText> : null}
+      {locationStatus === "unavailable" ? <AppText style={styles.warning}>Location unavailable or offline. Manual nearby search is active.</AppText> : null}
 
       <SearchInput
         accessibilityLabel="Search waterbodies, shellfish locations, bait, county, or water type"
-        value={query}
-        onChangeText={setQuery}
-        onClear={() => setQuery("")}
+        value={queryInput}
+        onChangeText={setQueryInput}
+        onClear={() => setQueryInput("")}
         placeholder="Search lakes, rivers, piers, parks, bait..."
       />
 
@@ -173,122 +188,72 @@ export default function MapScreen() {
         </AppText>
       </Pressable>
 
-      <Modal visible={showFilters} animationType="slide" transparent onRequestClose={() => setShowFilters(false)}>
-        <Pressable style={styles.modalBackdrop} accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)} />
-        <View style={styles.modalSheet}>
-          <View style={styles.sheetHandle} />
-          <SectionHeader title="Filters" action={
-            <Pressable accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={20} color={colors.muted} />
-            </Pressable>
-          } />
-          <AppText variant="subheading">Activity</AppText>
-          <View style={styles.filterRow}>
-            {activityFilters.map((item) => (
-              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item === "all" ? "all activities" : item}`} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
-                <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
-                  {item === "all" ? "All activity" : item}
-                </AppText>
-              </Pressable>
-            ))}
-          </View>
-          <AppText variant="subheading">Water type</AppText>
-          <View style={styles.filterRow}>
-            {filters.map((item) => (
-              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
-                <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
-                  {item}
-                </AppText>
-              </Pressable>
-            ))}
-          </View>
-          <Button icon="checkmark" onPress={() => setShowFilters(false)}>Apply</Button>
+      {Platform.OS === "web" ? (
+        <View style={styles.mapFallback}>
+          <Ionicons name="map-outline" size={20} color={colors.muted} />
+          <AppText variant="caption" style={styles.mapFallbackText}>Map unavailable — showing results as a list.</AppText>
         </View>
-      </Modal>
-
-      <View style={styles.mapCanvas}>
-        <MapView
-          style={StyleSheet.absoluteFill}
-          region={mapRegion}
-          showsUserLocation={locationStatus === "granted"}
-          showsMyLocationButton={false}
-          loadingEnabled
-        >
-          {markers.slice(0, 50).map((marker) => (
-            <Marker
-              key={marker.id}
-              coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-              title={marker.name}
-              description={marker.subtitle}
-              onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
-            >
-              <PixelMarker kind={marker.kind} tint={getMarkerTint(marker.kind)} />
-            </Marker>
-          ))}
-        </MapView>
-        <View style={styles.mapOverlay}>
-          <AppText variant="caption" style={styles.mapLabel}>
-            Live GPS map · {markers.length} markers
-          </AppText>
-          <AppText variant="caption" style={styles.mapSubLabel}>
-            Cyan fishing · amber clams · red crab
-          </AppText>
-        </View>
-      </View>
-
-      <SectionHeader title="Map results" eyebrow="Search fallback" />
-      <View style={styles.locationList}>
-        {markers.slice(0, 8).map((marker) => (
-          <Pressable
-            key={marker.id}
-            accessibilityRole="button"
-            accessibilityLabel={`Select ${marker.name}, ${marker.kind}, ${marker.waterType}`}
-            onPress={() => marker.kind === "fishing" ? selectWater(marker.sourceId) : selectShellfish(marker.sourceId)}
-            style={[styles.locationChip, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationChipActive]}
-          >
-            <AppText style={[styles.locationName, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationTextActive]}>{marker.name}</AppText>
-            <AppText variant="caption" style={[styles.locationMeta, (selectedShellfishId === marker.sourceId || selected.id === marker.sourceId) && styles.locationTextActive]}>
-              {marker.distanceMiles ? `${marker.distanceMiles} mi · ` : ""}{marker.kind} · {marker.waterType}
-            </AppText>
-          </Pressable>
-        ))}
-      </View>
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon="map"
-          title="No locations found"
-          body="Try lake, river, pier, park, saltwater, worms, bass, trout, or clear the water-type filter."
-        />
       ) : (
-        <>
-          <SectionHeader title="Nearby waterbodies" eyebrow={filtered.length > 20 ? `Showing 20 of ${filtered.length}, sorted by distance` : `${filtered.length} sorted by distance`} />
-          <View style={styles.locationList}>
-            {filtered.slice(0, 20).map((water) => (
-              <Pressable
-                key={water.id}
-                onPress={() => selectWater(water.id)}
-                style={[styles.locationChip, selected.id === water.id && styles.locationChipActive]}
-              >
-                <AppText style={[styles.locationName, selected.id === water.id && styles.locationTextActive]}>{water.name}</AppText>
-                <AppText variant="caption" style={[styles.locationMeta, selected.id === water.id && styles.locationTextActive]}>
-                  {water.distanceMiles} mi · {water.waterType} · {water.beginnerDifficulty}
-                </AppText>
-              </Pressable>
-            ))}
+        <MapErrorBoundary
+          fallback={
+            <View style={styles.mapFallback}>
+              <Ionicons name="map-outline" size={20} color={colors.muted} />
+              <AppText variant="caption" style={styles.mapFallbackText}>Map unavailable — showing results as a list.</AppText>
+            </View>
+          }
+        >
+          <View style={styles.mapCanvas}>
+            <MapView
+              style={StyleSheet.absoluteFill}
+              region={mapRegion}
+              showsUserLocation={locationStatus === "granted"}
+              showsMyLocationButton={false}
+              loadingEnabled
+            >
+              {markers.slice(0, 80).map((marker) => (
+                <Marker
+                  key={marker.id}
+                  coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                  title={marker.name}
+                  description={marker.subtitle}
+                  onPress={() => selectMarker(marker)}
+                >
+                  <PixelMarker kind={marker.kind} tint={getMarkerTint(marker.kind)} />
+                </Marker>
+              ))}
+            </MapView>
+            <View style={styles.mapOverlay}>
+              <AppText variant="caption" style={styles.mapLabel}>{markers.length} markers</AppText>
+              <AppText variant="caption" style={styles.mapSubLabel}>Cyan fishing · amber clams · red crab</AppText>
+            </View>
           </View>
-        </>
+        </MapErrorBoundary>
       )}
 
-      <SectionHeader title="Recently viewed" eyebrow="This session" />
-      <View style={styles.locationList}>
-        {recentIds.map((id) => waterbodies.find((water) => water.id === id)).filter(Boolean).map((water) => water ? (
-          <Pressable key={water.id} onPress={() => selectWater(water.id)} style={styles.recentChip}>
-            <AppText variant="caption" style={styles.recentText}>{water.name}</AppText>
-          </Pressable>
-        ) : null)}
-      </View>
+      <SectionHeader title="Results" eyebrow={`${markers.length} sorted by distance`} />
 
+      {recentMarkers.length > 0 ? (
+        <View style={styles.recentSection}>
+          <AppText variant="caption" style={styles.recentLabel}>RECENTLY VIEWED</AppText>
+          {recentMarkers.map((water) => (
+            <WaterbodyListRow
+              key={water.id}
+              name={water.name}
+              waterType={water.waterType}
+              county={water.county}
+              activityLabel="Fishing"
+              status={water.status}
+              selected={selected.id === water.id}
+              onPress={() => selectWater(water.id)}
+            />
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const listFooter = (
+    <View style={styles.footerStack}>
       <Card style={styles.sheet}>
         <View style={styles.sheetHandle} />
         <View style={styles.row}>
@@ -342,7 +307,6 @@ export default function MapScreen() {
             </View>
 
             <AppText>Best beginner setup: {selected.beginnerSetup}</AppText>
-            <AppText>Distance: {"distanceMiles" in selected ? `${selected.distanceMiles} miles from selected location` : "Set a location to calculate distance"}</AppText>
             <AppText>Shore access: {selected.shoreAccessDifficulty ?? selected.beginnerDifficulty}</AppText>
             <AppText>Boat launch: {selected.boatLaunch ? "Yes or nearby" : "Not highlighted"}</AppText>
             <AppText>Kayak friendly: {selected.kayakFriendly ? "Yes" : "Use caution"}</AppText>
@@ -393,6 +357,7 @@ export default function MapScreen() {
           </Button>
         </View>
       </Card>
+
       {selectedShellfishLocation ? (
         <Card style={styles.sheet}>
           <View style={styles.sheetHandle} />
@@ -447,24 +412,130 @@ export default function MapScreen() {
           </View>
         </Card>
       ) : null}
-      <OfficialLinks links={regulation.sourceLinks} compact />
-    </Screen>
+
+      <OfficialLinks links={regulation.sourceLinks} compact context={selectedShellfishLocation ? "shellfish" : "fishing"} />
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <FlatList
+        data={markers}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+        initialNumToRender={16}
+        windowSize={7}
+        removeClippedSubviews
+        renderItem={({ item }) => (
+          <WaterbodyListRow
+            name={item.name}
+            waterType={item.waterType}
+            county={item.county}
+            activityLabel={activityLabelFor(item.kind)}
+            distanceMiles={item.distanceMiles}
+            status={item.kind === "fishing" ? statusById.get(item.sourceId) : undefined}
+            selected={item.kind === "fishing" ? selected.id === item.sourceId : selectedShellfishId === item.sourceId}
+            onPress={() => selectMarker(item)}
+          />
+        )}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={listFooter}
+        ListEmptyComponent={
+          <EmptyState icon="map" title="No locations found" body="Try lake, river, pier, park, saltwater, worms, bass, trout, or clear the water-type filter." />
+        }
+      />
+
+      <Modal visible={showFilters} animationType="slide" transparent onRequestClose={() => setShowFilters(false)}>
+        <Pressable style={styles.modalBackdrop} accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)} />
+        <View style={styles.modalSheet}>
+          <View style={styles.sheetHandle} />
+          <SectionHeader title="Filters" action={
+            <Pressable accessibilityRole="button" accessibilityLabel="Close filters" onPress={() => setShowFilters(false)}>
+              <Ionicons name="close" size={20} color={colors.muted} />
+            </Pressable>
+          } />
+          <AppText variant="subheading">Activity</AppText>
+          <View style={styles.filterRow}>
+            {activityFilters.map((item) => (
+              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item === "all" ? "all activities" : item}`} onPress={() => setActivityFilter(item)} style={[styles.filter, activityFilter === item && styles.filterActive]}>
+                <AppText variant="caption" style={[styles.filterText, activityFilter === item && styles.filterTextActive]}>
+                  {item === "all" ? "All activity" : item}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+          <AppText variant="subheading">Water type</AppText>
+          <View style={styles.filterRow}>
+            {filters.map((item) => (
+              <Pressable key={item} accessibilityRole="button" accessibilityLabel={`Filter map by ${item}`} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
+                <AppText variant="caption" style={[styles.filterText, filter === item && styles.filterTextActive]}>
+                  {item}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+          <AppText variant="subheading">Manual location</AppText>
+          <View style={styles.filterRow}>
+            {manualLocations.map((location) => (
+              <Pressable key={location.id} accessibilityRole="button" accessibilityLabel={`Use ${location.label} as manual map location`} onPress={() => useManualLocation(location)} style={styles.filter}>
+                <AppText variant="caption" style={styles.filterText}>{location.label}</AppText>
+              </Pressable>
+            ))}
+          </View>
+          <Button icon="checkmark" onPress={() => setShowFilters(false)}>Apply</Button>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.forest,
+  safe: {
+    backgroundColor: colors.background,
+    flex: 1
+  },
+  content: {
+    paddingBottom: spacing.xl
+  },
+  headerStack: {
+    gap: spacing.md,
+    padding: spacing.md
+  },
+  footerStack: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.md
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  locationRow: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
     borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: "row",
     gap: spacing.sm,
-    padding: spacing.lg
+    minHeight: 44,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
   },
-  heroText: {
-    color: colors.mist,
-    fontWeight: "700"
+  locationText: {
+    flex: 1,
+    flexShrink: 1
   },
-  locationCard: {
-    gap: spacing.md
+  locationAction: {
+    backgroundColor: colors.pine,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  locationActionText: {
+    color: colors.ink,
+    fontWeight: "900"
   },
   filtersToggle: {
     alignItems: "center",
@@ -501,21 +572,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm
   },
-  suggestionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm
-  },
-  suggestion: {
-    backgroundColor: colors.mist,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  suggestionText: {
-    color: colors.forest,
-    fontWeight: "900"
-  },
   filter: {
     backgroundColor: colors.surfaceStrong,
     borderColor: colors.line,
@@ -540,8 +596,25 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radii.md,
     borderWidth: 1,
-    height: 250,
+    height: 220,
     overflow: "hidden"
+  },
+  mapFallback: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.line,
+    borderRadius: radii.md,
+    borderStyle: "dashed",
+    borderWidth: 2,
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "center",
+    minHeight: 56,
+    padding: spacing.md
+  },
+  mapFallbackText: {
+    color: colors.muted,
+    flexShrink: 1
   },
   mapOverlay: {
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -559,41 +632,13 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontWeight: "800"
   },
-  locationList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm
+  recentSection: {
+    gap: spacing.xs
   },
-  locationChip: {
-    backgroundColor: colors.surfaceStrong,
-    borderColor: colors.line,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    minWidth: "47%",
-    padding: spacing.md
-  },
-  locationChipActive: {
-    backgroundColor: colors.deepWater,
-    borderColor: colors.deepWater
-  },
-  locationName: {
-    fontWeight: "900"
-  },
-  locationMeta: {
-    color: colors.muted
-  },
-  locationTextActive: {
-    color: "#fff"
-  },
-  recentChip: {
-    backgroundColor: colors.mist,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  recentText: {
-    color: colors.forest,
-    fontWeight: "900"
+  recentLabel: {
+    color: colors.amber,
+    fontWeight: "900",
+    letterSpacing: 1
   },
   sheet: {
     gap: spacing.md

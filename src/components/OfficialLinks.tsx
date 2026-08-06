@@ -11,25 +11,42 @@ type Props = {
   links: OfficialSourceLinks;
   agencyAbbreviation?: string;
   compact?: boolean;
+  context?: "fishing" | "shellfish";
 };
 
-export function OfficialLinks({ links, agencyAbbreviation, compact = false }: Props) {
+export function OfficialLinks({ links, agencyAbbreviation, compact = false, context = "fishing" }: Props) {
   const [showMore, setShowMore] = useState(false);
 
   return (
     <Card style={styles.card}>
-      <SectionHeader title="Official verification" eyebrow="Rules can change" />
-      {!compact ? <AppText>Use Skunked to plan, then verify current official rules before keeping fish.</AppText> : null}
+      <SectionHeader title="Rules can change" eyebrow="Check before you go" />
+      {!compact ? <AppText>Verify current official rules and emergency updates before you go.</AppText> : null}
       <View style={styles.actions}>
-        <Button icon="open-outline" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
-          View official regulations
-        </Button>
-        <Button icon="warning-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.emergencyRules)}>
-          View emergency rules
-        </Button>
-        <Button icon="card-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.licenses)}>
-          Buy fishing license
-        </Button>
+        {context === "shellfish" ? (
+          <>
+            <Button icon="water-outline" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
+              Beach Status
+            </Button>
+            <Button icon="warning-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.emergencyRules)}>
+              Marine Toxins
+            </Button>
+            <Button icon="leaf-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.shellfishSeaweed)}>
+              Harvest Rules
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button icon="open-outline" style={styles.button} onPress={() => Linking.openURL(links.regulations)}>
+              Official Rules
+            </Button>
+            <Button icon="warning-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.emergencyRules)}>
+              Emergency Updates
+            </Button>
+            <Button icon="card-outline" variant="secondary" style={styles.button} onPress={() => Linking.openURL(links.licenses)}>
+              License Info
+            </Button>
+          </>
+        )}
       </View>
       {showMore ? (
         <View style={styles.actions}>
