@@ -33,7 +33,7 @@ import { getMapMarkers, getMarkerTint, SkunkedMapMarker } from "@/src/services/m
 import { regionToRegulationState, regulationService } from "@/src/services/regulations";
 import { getCurrentRegulations } from "@/src/services/regulationEngine";
 import { formatWaterbodyShare, shareText } from "@/src/utils/share";
-import { getSelectedRegion, setSelectedRegion, trackBetaEvent } from "@/src/utils/localStore";
+import { getRecentlyViewed, getSelectedRegion, RecentlyViewedEntry, recordRecentlyViewed, setSelectedRegion, trackBetaEvent } from "@/src/utils/localStore";
 
 const filters: Array<WaterType | "All"> = ["All", "Lake", "River", "Saltwater", "Park", "Pier"];
 const activityFilters: Array<ActivityType | "all"> = ["all", "fishing", "clamming", "crabbing"];
@@ -52,7 +52,7 @@ export default function MapScreen() {
   const [activityFilter, setActivityFilter] = useState<ActivityType | "all">("all");
   const [selectedId, setSelectedId] = useState(waterbodies[0].id);
   const [selectedShellfishId, setSelectedShellfishId] = useState<string | null>(null);
-  const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([]);
   const [coordinates, setCoordinates] = useState<Coordinates>(defaultManualLocation.coordinates);
   const [locationMessage, setLocationMessage] = useState("Using Seattle as the manual nearby fallback.");
   const [locationStatus, setLocationStatus] = useState<"idle" | "granted" | "denied" | "unavailable">("idle");
@@ -62,7 +62,12 @@ export default function MapScreen() {
 
   useEffect(() => {
     getSelectedRegion().then(setRegion);
+    getRecentlyViewed().then(setRecentlyViewed);
   }, []);
+
+  async function recordView(id: string, type: RecentlyViewedEntry["type"]) {
+    setRecentlyViewed(await recordRecentlyViewed(id, type));
+  }
 
   function changeRegion(next: RegionId) {
     setRegion(next);
@@ -106,7 +111,31 @@ export default function MapScreen() {
     .filter(Boolean);
   const regulation = regulationService.getSummary({ state: regionToRegulationState[region] ?? "WA", waterbodyId: selected.id, date: new Date().toISOString() });
   const currentRegulations = getCurrentRegulations({ waterbodyId: selected.id, date: new Date().toISOString() });
-  const recentMarkers = recentIds.map((id) => waterbodies.find((water) => water.id === id)).filter(Boolean) as typeof waterbodies;
+  const recentRows = useMemo(() => {
+    return recentlyViewed
+      .map((entry) => {
+        if (entry.type === "location") {
+          const water = waterbodies.find((item) => item.id === entry.id);
+          return water && water.regionId === region
+            ? { key: `location:${water.id}`, id: water.id, name: water.name, waterType: water.waterType as string, county: water.county, activityLabel: "Fishing", status: water.status as string | undefined, isShellfish: false }
+            : null;
+        }
+        const location = shellfishLocations.find((item) => item.id === entry.id);
+        return location && region === "washington"
+          ? {
+              key: `shellfish:${location.id}`,
+              id: location.id,
+              name: location.name,
+              waterType: location.waterType as string,
+              county: location.county,
+              activityLabel: location.activityTypes.includes("crabbing") ? "Crabbing" : "Clamming",
+              status: undefined as string | undefined,
+              isShellfish: true
+            }
+          : null;
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+  }, [recentlyViewed, region]);
 
   function openDirections() {
     const url = `https://maps.apple.com/?q=${encodeURIComponent(selected.name)}&ll=${selected.latitude},${selected.longitude}`;
@@ -116,7 +145,7 @@ export default function MapScreen() {
   function selectWater(id: string) {
     setSelectedId(id);
     setSelectedShellfishId(null);
-    setRecentIds((current) => [id, ...current.filter((item) => item !== id)].slice(0, 4));
+    recordView(id, "location");
     const water = waterbodies.find((item) => item.id === id);
     if (water) {
       trackBetaEvent("waterbody-view", water.name);
@@ -125,6 +154,7 @@ export default function MapScreen() {
 
   function selectShellfish(id: string) {
     setSelectedShellfishId(id);
+    recordView(id, "shellfish-location");
     const location = shellfishLocations.find((item) => item.id === id);
     if (location) {
       trackBetaEvent("waterbody-view", `${location.name} shellfish`);
@@ -232,19 +262,19 @@ export default function MapScreen() {
 
       <SectionHeader title="Results" eyebrow={`${markers.length} sorted by distance`} />
 
-      {recentMarkers.length > 0 ? (
+      {recentRows.length > 0 ? (
         <View style={styles.recentSection}>
           <AppText variant="caption" style={styles.recentLabel}>RECENTLY VIEWED</AppText>
-          {recentMarkers.map((water) => (
+          {recentRows.map((row) => (
             <WaterbodyListRow
-              key={water.id}
-              name={water.name}
-              waterType={water.waterType}
-              county={water.county}
-              activityLabel="Fishing"
-              status={water.status}
-              selected={selected.id === water.id}
-              onPress={() => selectWater(water.id)}
+              key={row.key}
+              name={row.name}
+              waterType={row.waterType}
+              county={row.county}
+              activityLabel={row.activityLabel}
+              status={row.status}
+              selected={row.isShellfish ? selectedShellfishId === row.id : selected.id === row.id}
+              onPress={() => (row.isShellfish ? selectShellfish(row.id) : selectWater(row.id))}
             />
           ))}
         </View>

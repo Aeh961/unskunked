@@ -108,6 +108,14 @@ const recommendationsKey = "skunked:demo-recommendations";
 const searchHistoryKey = "skunked:demo-search-history";
 const selectedRegionKey = "skunked:selected-region";
 const cachedConditionsKey = "skunked:cached-conditions";
+const recentlyViewedKey = "skunked:recently-viewed";
+
+export type RecentlyViewedType = "location" | "shellfish-location";
+export type RecentlyViewedEntry = {
+  id: string;
+  type: RecentlyViewedType;
+  viewedAt: string;
+};
 
 export type CachedConditionSnapshot = {
   id: string;
@@ -448,6 +456,21 @@ export async function getDemoRecommendations() {
 
 export async function getDemoSearchHistory() {
   return storage.readJson<string[]>(searchHistoryKey, []);
+}
+
+export async function getRecentlyViewed() {
+  return storage.readJson<RecentlyViewedEntry[]>(recentlyViewedKey, []);
+}
+
+/** Real, user-opened locations only - never seeded, capped at 10, most-recent-first. */
+export async function recordRecentlyViewed(id: string, type: RecentlyViewedType) {
+  const current = await getRecentlyViewed();
+  const next = [
+    { id, type, viewedAt: new Date().toISOString() },
+    ...current.filter((item) => !(item.id === id && item.type === type))
+  ].slice(0, 10);
+  await storage.writeJson(recentlyViewedKey, next);
+  return next;
 }
 
 export async function getCachedConditions() {
