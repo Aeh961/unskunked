@@ -9,29 +9,37 @@ const root = process.cwd();
 const delayMs = Number(process.env.SCREENSHOT_DELAY_MS ?? 1800);
 const adbPath = findAdb();
 
+// Deep-link-reachable static routes only. Interaction states the spec also wants
+// (autocomplete while typing, the Ask conversation, a generated trip summary) can't be
+// produced by this script - it only opens routes and screenshots them, it doesn't type
+// into inputs or tap buttons. Those need to be captured manually on a running simulator.
 const screens = [
   ["home", ""],
+  ["trips-empty-state", "trips"],
   ["nearby-waters", "map"],
   ["live-gps-map", "map"],
   ["gps-permission", "map"],
   ["nearby-waterbodies", "map"],
   ["waterbody-detail", "map"],
   ["shellfish-map", "map"],
-  ["clamming-planner", "plan"],
-  ["crabbing-planner", "plan"],
+  ["species", "species"],
   ["fish-detail", "fish/rainbow-trout"],
+  ["ask", "ask"],
+  ["more", "more"],
   ["regulations", "regulations"],
   ["weather", "weather"],
   ["tides", "weather"],
-  ["nearby-trip-planner", "plan"],
   ["offline-mode", "offline"],
   ["search", "search"],
   ["fishing-journal", "journal"],
   ["rig-builder", "rigs"],
-  ["trip-planner", "plan"],
   ["beta-insights", "insights"],
   ["settings", "settings"],
   ["data-sources", "data-sources"],
+  ["favorites", "favorites"],
+  ["fishing-stats", "stats"],
+  ["learning-center", "learn"],
+  ["start-here", "start"],
   ["about", "about"]
 ];
 

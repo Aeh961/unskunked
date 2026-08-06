@@ -6,6 +6,8 @@ Unskunked is a local-first Expo React Native fishing assistant for beginner angl
 
 The current app is a polished Phase 10 Washington-focused public-beta candidate with WDFW-sourced metadata scaffolding, a native GPS map, clamming/crabbing readiness, source confidence badges, data freshness warnings, current-regulation summaries, offline weather/tide/sun scoring, local storage, and native share/export flows.
 
+The interaction model is text-first: instead of tapping through preselected suggestion cards, users type what they're fishing, clamming, or crabbing for and get typed autocomplete plus a local (fully offline, no LLM/network dependency) natural-language parser that extracts activity/species/location/gear/date and asks one short follow-up question at a time. The visual identity is an original 1990s-arcade / military-field-terminal theme (dark charcoal-olive palette, a pixel-inspired display font reserved for short headings only, blockier bordered panels) - not a reproduction of any existing game's assets.
+
 ## Feature Overview
 
 - Demo Mode that preloads favorite waters, fish, rigs, knots, realistic trip history, profiles, notifications, recommendations, and search history
@@ -53,10 +55,13 @@ The current app is a polished Phase 10 Washington-focused public-beta candidate 
 ## Architecture
 
 - `app/`: Expo Router screens and routes
-- `app/(tabs)/`: primary tab experience
-- `src/components/`: reusable UI system
+- `app/(tabs)/`: five-tab experience - Home, Map, Trips, Ask, More
+- `app/species.tsx`, `app/rigs.tsx`, `app/learn.tsx`, etc.: secondary screens reachable from the More tab
+- `src/components/`: reusable UI system, including the arcade-theme text-first primitives (`SearchInput`, `Autocomplete`, `MissionCard`, `PixelMarker`, `Scanlines`)
 - `src/data/`: mock fish, waterbody, rig, learning, and region data
-- `src/hooks/`: reusable hooks such as favorites
+- `src/hooks/`: reusable hooks such as favorites and reduced-motion detection
+- `src/utils/autocomplete.ts`: ranked cross-catalog autocomplete for the typed search inputs
+- `src/utils/tripParser.ts`: local rule-based natural-language trip parsing (no network/LLM dependency)
 - `src/services/`: regulation providers, personalization engine, and trip analytics
 - `src/services/location.ts`: distance calculation, manual fallback locations, Expo location permission flow, and nearby sorting
 - `src/services/regulationEngine.ts`: current regulation badges and WDFW-ready summaries
@@ -218,78 +223,24 @@ EXPO_URL=exp://YOUR_LOCAL_IP:8081 npm run screenshots:android
 
 The script navigates to each route and captures:
 
-- Home with nearby recommendation
-- Nearby Waters
-- Live GPS Map
-- Waterbody Detail
-- Shellfish Map
+- Home (text-first search)
+- Trips (empty state)
+- Nearby Waters / Live GPS Map / Waterbody Detail / Shellfish Map
+- Species Reference
 - Fish Detail
-- Regulations
-- Weather
-- Tides
-- Nearby Trip Planner
-- Clamming Planner
-- Crabbing Planner
-- GPS Permission
+- Ask
+- More
+- Regulations, Weather, Tides
 - Offline Mode
 - Search
-- Fishing Journal
-- Beta Insights
-- Settings
-- Data Sources
-- About
+- Fishing Journal, Rig Builder, Beta Insights
+- Settings, Data Sources, Favorites, Fishing Stats, Learning Center, Start Here, About
+
+This only covers deep-link-reachable static routes. A few of the states the redesign introduces - autocomplete while typing, the Ask conversation, and a generated trip summary - require actually typing and tapping, which this script doesn't do; capture those manually on a running simulator/emulator.
 
 ## Screenshots
 
-Screenshots are tracked so GitHub visitors see the app flow immediately. Regenerate them with the screenshot script after launching the latest build in iOS Simulator or Android Emulator.
-
-### iOS
-
-![iOS Onboarding](screenshots/ios/ios-onboarding.png)
-![iOS Home](screenshots/ios/ios-home.png)
-![iOS Nearby Waters](screenshots/ios/ios-nearby-waters.png)
-![iOS Live GPS Map](screenshots/ios/ios-live-gps-map.png)
-![iOS Waterbody Detail](screenshots/ios/ios-waterbody-detail.png)
-![iOS Shellfish Map](screenshots/ios/ios-shellfish-map.png)
-![iOS Fish Detail](screenshots/ios/ios-fish-detail.png)
-![iOS Regulations](screenshots/ios/ios-regulations.png)
-![iOS Weather](screenshots/ios/ios-weather.png)
-![iOS Tides](screenshots/ios/ios-tides.png)
-![iOS Nearby Trip Planner](screenshots/ios/ios-nearby-trip-planner.png)
-![iOS Clamming Planner](screenshots/ios/ios-clamming-planner.png)
-![iOS Crabbing Planner](screenshots/ios/ios-crabbing-planner.png)
-![iOS GPS Permission](screenshots/ios/ios-gps-permission.png)
-![iOS Offline Mode](screenshots/ios/ios-offline-mode.png)
-![iOS Search](screenshots/ios/ios-search.png)
-![iOS Fishing Journal](screenshots/ios/ios-fishing-journal.png)
-![iOS Beta Insights](screenshots/ios/ios-beta-insights.png)
-![iOS Settings](screenshots/ios/ios-settings.png)
-![iOS Data Sources](screenshots/ios/ios-data-sources.png)
-![iOS About](screenshots/ios/ios-about.png)
-
-### Android
-
-![Android Onboarding](screenshots/android/android-onboarding.png)
-![Android Home](screenshots/android/android-home.png)
-![Android Nearby Waters](screenshots/android/android-nearby-waters.png)
-![Android Live GPS Map](screenshots/android/android-live-gps-map.png)
-![Android Waterbody Detail](screenshots/android/android-waterbody-detail.png)
-![Android Shellfish Map](screenshots/android/android-shellfish-map.png)
-![Android Fish Detail](screenshots/android/android-fish-detail.png)
-![Android Regulations](screenshots/android/android-regulations.png)
-![Android Weather](screenshots/android/android-weather.png)
-![Android Tides](screenshots/android/android-tides.png)
-![Android Nearby Trip Planner](screenshots/android/android-nearby-trip-planner.png)
-![Android Clamming Planner](screenshots/android/android-clamming-planner.png)
-![Android Crabbing Planner](screenshots/android/android-crabbing-planner.png)
-![Android GPS Permission](screenshots/android/android-gps-permission.png)
-![Android Offline Mode](screenshots/android/android-offline-mode.png)
-![Android Search](screenshots/android/android-search.png)
-![Android Fishing Journal](screenshots/android/android-fishing-journal.png)
-![Android Beta Insights](screenshots/android/android-beta-insights.png)
-![Android Settings](screenshots/android/android-settings.png)
-![Android Data Sources](screenshots/android/android-data-sources.png)
-![Android About](screenshots/android/android-about.png)
+The screenshots previously tracked here showed the pre-redesign light theme and have been removed as outdated. Regenerate them with the screenshot script above after launching the current build in iOS Simulator or Android Emulator, then re-add the `![...](screenshots/...)` references for the routes listed above.
 
 ## App Limitations
 

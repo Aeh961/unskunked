@@ -1,7 +1,7 @@
 import { fishSpecies } from "@/src/data/fish";
 import { shellfishLocations, shellfishSpecies } from "@/src/data/shellfish";
 import { waterbodies } from "@/src/data/waterbodies";
-import { scoreSearchItem } from "@/src/utils/search";
+import { normalizeSearch, scoreSearchItem } from "@/src/utils/search";
 
 export type Suggestion = {
   id: string;
@@ -44,7 +44,7 @@ const activitySuggestions: Array<Suggestion & { keywords: string[] }> = [
  * before the user has typed anything.
  */
 export function getSuggestions(query: string, { limit = 6 }: { limit?: number } = {}): Suggestion[] {
-  const trimmed = query.trim();
+  const trimmed = normalizeSearch(query);
   if (!trimmed) return [];
 
   const fishResults = fishSpecies

@@ -398,6 +398,20 @@ describe("trip analytics and personalization", () => {
   });
 });
 
+describe("reference vs. user data separation", () => {
+  it("never auto-seeds demo trips, favorites, or search history for a new user", async () => {
+    const { getTrips, getFavorites, getDemoSearchHistory, getTripPlans, isDemoModeEnabled } = await import("@/src/utils/localStore");
+    // A brand-new install has nothing written yet - every reader must fall back to empty,
+    // never to the demoTrips/demoFavorites/demoSearchHistory arrays, unless the user has
+    // explicitly opted into demo mode from Settings (seedDemoData is only ever called there).
+    expect(await getTrips()).toEqual([]);
+    expect(await getFavorites()).toEqual([]);
+    expect(await getTripPlans()).toEqual([]);
+    expect(await getDemoSearchHistory()).toEqual([]);
+    expect(await isDemoModeEnabled()).toBe(false);
+  });
+});
+
 describe("mock data validation", () => {
   it("has valid waterbody species references", () => {
     const speciesIds = new Set(fishSpecies.map((fish) => fish.id));
