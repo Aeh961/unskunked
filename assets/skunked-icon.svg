@@ -1,11 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200" role="img" aria-label="Skunked store graphic">
-  <rect width="1800" height="1200" fill="#14170f"/>
-  <path d="M0 900C260 800 520 840 800 900C1090 962 1360 900 1800 720V1200H0V900Z" fill="#1f6b73" opacity="0.55"/>
-  <text x="140" y="430" font-family="Arial, Helvetica, sans-serif" font-size="128" font-weight="900" fill="#f4f1e8">SKUNKED</text>
-  <text x="144" y="500" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#cbd9c0">Plan smarter fishing trips, anywhere.</text>
-  <rect x="140" y="600" width="700" height="92" rx="24" fill="#f4f1e8"/>
-  <text x="182" y="661" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" fill="#123B30">Nearby waters, rules, weather, trip logs</text>
-  <g transform="translate(817.11,196.53) scale(1.54270)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Skunked app icon">
+  <rect width="1024" height="1024" fill="#14170f"/>
+  <g transform="translate(-227.34,-123.21) scale(2.31405)">
 <!-- tail (behind body) -->
   <path d="M300 330
            C 250 270, 258 180, 336 138

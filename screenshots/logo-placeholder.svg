@@ -1,7 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Unskunked logo placeholder">
-  <rect width="1200" height="420" rx="32" fill="#123b30"/>
-  <path d="M0 286 C160 222 260 342 420 280 S700 224 850 292 1080 304 1200 236 V420 H0 Z" fill="#277f95"/>
-  <circle cx="980" cy="98" r="46" fill="#efb45a"/>
-  <text x="90" y="190" fill="#fffaf1" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800">Unskunked</text>
-  <text x="94" y="252" fill="#d9edf0" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Beginner fishing plans, rigs, and trip logs</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Skunked logo">
+  <rect width="1200" height="420" rx="32" fill="#14170f"/>
+  <g transform="translate(-85.45,-39.55) scale(0.90909)">
+<!-- tail (behind body) -->
+  <path d="M300 330
+           C 250 270, 258 180, 336 138
+           C 410 98, 470 128, 478 190
+           C 486 240, 452 264, 408 254
+           C 424 276, 412 304, 372 314
+           C 344 322, 316 326, 300 330 Z"
+        fill="#17231f" stroke="#f4f1e8" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M330 300
+           C 300 258, 306 200, 356 168
+           C 400 142, 438 158, 444 196
+           C 448 224, 426 238, 400 232
+           C 410 248, 400 266, 376 274
+           C 358 280, 340 290, 330 300 Z"
+        fill="#ffffff"/>
+
+  <!-- fishing line (behind body, in front of tail) -->
+  <path d="M420 140 C 400 240, 340 360, 300 430" stroke="#3a2418" stroke-width="3" fill="none"/>
+  <circle cx="298" cy="440" r="12" fill="#e8a33d" stroke="#3a2418" stroke-width="2"/>
+
+  <!-- back legs / feet -->
+  <ellipse cx="216" cy="404" rx="26" ry="18" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+  <ellipse cx="284" cy="408" rx="26" ry="18" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+
+  <!-- body -->
+  <ellipse cx="248" cy="320" rx="98" ry="88" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+
+  <!-- body white stripe -->
+  <path d="M248 236
+           C 226 260, 220 300, 236 340
+           C 244 360, 256 372, 268 380
+           C 284 344, 288 296, 272 258
+           C 264 244, 256 236, 248 236 Z"
+        fill="#ffffff"/>
+
+  <!-- rod -->
+  <line x1="165" y1="412" x2="420" y2="140" stroke="#d99a2b" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="230" cy="342" r="11" fill="#a9713a"/>
+
+  <!-- arm holding rod -->
+  <ellipse cx="230" cy="358" rx="26" ry="20" fill="#17231f" stroke="#f4f1e8" stroke-width="6" transform="rotate(-42 230 358)"/>
+  <circle cx="215" cy="372" r="19" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+
+  <!-- other arm resting on belly -->
+  <ellipse cx="285" cy="368" rx="18" ry="14" fill="#17231f" stroke="#f4f1e8" stroke-width="5" transform="rotate(20 285 368)"/>
+
+  <!-- head -->
+  <circle cx="230" cy="228" r="70" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+
+  <!-- head white blaze -->
+  <path d="M230 176
+           C 216 190, 210 214, 216 240
+           C 220 256, 228 268, 236 272
+           C 248 254, 250 220, 240 192
+           C 237 184, 233 178, 230 176 Z"
+        fill="#ffffff"/>
+
+  <!-- ears -->
+  <circle cx="184" cy="176" r="18" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+  <circle cx="266" cy="172" r="19" fill="#17231f" stroke="#f4f1e8" stroke-width="6"/>
+  <circle cx="186" cy="179" r="9" fill="#3a2418"/>
+  <circle cx="264" cy="175" r="9" fill="#3a2418"/>
+
+  <!-- cheeks -->
+  <ellipse cx="190" cy="240" rx="14" ry="10" fill="#e8a33d" opacity="0.6"/>
+  <ellipse cx="272" cy="236" rx="14" ry="10" fill="#e8a33d" opacity="0.6"/>
+
+  <!-- eyes -->
+  <ellipse cx="204" cy="222" rx="17" ry="20" fill="#ffffff"/>
+  <ellipse cx="262" cy="218" rx="17" ry="20" fill="#ffffff"/>
+  <circle cx="209" cy="228" r="9" fill="#17231f"/>
+  <circle cx="267" cy="224" r="9" fill="#17231f"/>
+  <circle cx="212" cy="224" r="3" fill="#ffffff"/>
+  <circle cx="270" cy="220" r="3" fill="#ffffff"/>
+
+  <!-- nose -->
+  <ellipse cx="236" cy="256" rx="10" ry="7" fill="#3a2418"/>
+  <circle cx="233" cy="253" r="2" fill="#5a3a26"/>
+
+  <!-- smile -->
+  <path d="M222 264 Q236 274 252 262" stroke="#3a2418" stroke-width="4" fill="none" stroke-linecap="round"/>
+</g>
+  <text x="420" y="212" fill="#fffaf1" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="900">SKUNKED</text>
+  <text x="424" y="270" fill="#cbd9c0" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Beginner fishing plans, rigs, and trip logs</text>
 </svg>
