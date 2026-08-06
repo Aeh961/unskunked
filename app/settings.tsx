@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm
   },
   actionButton: {
-    flexBasis: "31%"
+    flexBasis: "48%",
+    flexGrow: 1
   }
 });
