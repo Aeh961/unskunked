@@ -262,9 +262,9 @@ export default function MapScreen() {
         />
       ) : (
         <>
-          <SectionHeader title="Nearby waterbodies" eyebrow={`${filtered.length} sorted by distance`} />
+          <SectionHeader title="Nearby waterbodies" eyebrow={filtered.length > 20 ? `Showing 20 of ${filtered.length}, sorted by distance` : `${filtered.length} sorted by distance`} />
           <View style={styles.locationList}>
-            {filtered.map((water) => (
+            {filtered.slice(0, 20).map((water) => (
               <Pressable
                 key={water.id}
                 onPress={() => selectWater(water.id)}

@@ -141,9 +141,9 @@ export default function SearchScreen() {
           </View>
         </>
       ) : null}
-      <SectionHeader title="Results" eyebrow={`${results.length} matches`} />
+      <SectionHeader title="Results" eyebrow={results.length > 25 ? `Showing 25 of ${results.length} matches` : `${results.length} matches`} />
       {results.length ? (
-        results.map((item) => (
+        results.slice(0, 25).map((item) => (
           <Link key={`${item.type}-${item.title}`} href={item.href} asChild>
             <Card>
               <AppText variant="caption" style={styles.resultType}>{item.type}</AppText>
