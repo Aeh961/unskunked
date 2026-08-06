@@ -1,5 +1,6 @@
 const VALID_WATER_TYPES = new Set(["Lake", "River", "Saltwater", "Park", "Pier"]);
 const VALID_ACCESS_TYPES = new Set(["Shore", "Boat", "Pier", "Beach", "Bank"]);
+const VALID_ACTIVITY_TYPES = new Set(["fishing", "clamming", "crabbing"]);
 
 function slugify(name) {
   return name
@@ -38,7 +39,11 @@ export function normalizeImportRecord(raw, regionId) {
   }
 
   const accessType = VALID_ACCESS_TYPES.has(raw.accessType) ? raw.accessType : undefined;
-  const activities = Array.isArray(raw.activities) && raw.activities.length > 0 ? raw.activities : ["fishing"];
+  // The app's ActivityType is fishing/clamming/crabbing only - a source describing this as
+  // e.g. a general "boating" access point doesn't mean the app should invent an unsupported
+  // activity value, so anything outside the known set is dropped rather than passed through.
+  const rawActivities = Array.isArray(raw.activities) ? raw.activities.filter((item) => VALID_ACTIVITY_TYPES.has(item)) : [];
+  const activities = rawActivities.length > 0 ? rawActivities : ["fishing"];
   const verificationStatus = raw.verificationStatus === "verified" || raw.verificationStatus === "needs-verification"
     ? raw.verificationStatus
     : "imported";

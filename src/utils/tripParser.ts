@@ -58,6 +58,15 @@ function tokenize(text: string): string[] {
   return text.replace(/[^a-z0-9\s]/gi, " ").split(/\s+/).filter(Boolean);
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Word-boundary containment, not raw substring - so "have" never matches inside "Haven". */
+function includesWholeWord(haystack: string, needle: string): boolean {
+  return new RegExp(`\\b${escapeRegExp(needle)}\\b`, "i").test(haystack);
+}
+
 /** Longest n-grams (3, 2, 1 words) first, so a multi-word match wins over a single generic word. */
 function ngramsLongestFirst(tokens: string[], maxN = 3): string[] {
   const grams: string[] = [];
@@ -82,7 +91,7 @@ function findEntityInText<T extends { name: string }>(items: T[], text: string):
   for (const item of items) {
     const name = item.name.toLowerCase();
     if (!name) continue;
-    if (text.includes(name) || (name.length > 3 && text.includes(name.replace(/s$/, "")))) {
+    if (includesWholeWord(text, name) || (name.length > 3 && includesWholeWord(text, name.replace(/s$/, "")))) {
       const score = name.length;
       if (!best || score > best.score) best = { item, score };
     }
@@ -92,7 +101,7 @@ function findEntityInText<T extends { name: string }>(items: T[], text: string):
   for (const gram of ngramsLongestFirst(tokenize(text))) {
     if (gram.length < 4) continue;
     if (!gram.includes(" ") && stopWords.has(gram)) continue;
-    const match = items.find((item) => item.name.toLowerCase().includes(gram));
+    const match = items.find((item) => includesWholeWord(item.name.toLowerCase(), gram));
     if (match) return match;
   }
   return undefined;

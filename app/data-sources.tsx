@@ -5,14 +5,28 @@ import { ConfidenceBadge, ConfidenceRow } from "@/src/components/ConfidenceBadge
 import { ListItem } from "@/src/components/ListItem";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
+import { getRegion, RegionId } from "@/src/data/regions";
+import { getWaterbodiesForRegion } from "@/src/data/waterbodies";
 import { providerMetadata, getFreshnessState, verificationWorkflow } from "@/src/services/dataTrust";
 import { getImportReadinessReport } from "@/src/services/wdfwImportPipeline";
 import { getWashingtonTrustSummary, regionalProviders } from "@/src/services/regionalProviders";
 import { colors, radii, spacing } from "@/src/theme";
 
+const coverageRegionIds: RegionId[] = ["washington", "florida", "ronneby"];
+
+function regionCoverage(regionId: RegionId) {
+  const list = getWaterbodiesForRegion(regionId);
+  const verified = list.filter((water) => water.verificationStatus === "verified").length;
+  const imported = list.filter((water) => water.verificationStatus === "imported").length;
+  const needsVerification = list.filter((water) => water.verificationStatus === "needs-verification").length;
+  const unlabeled = list.length - verified - imported - needsVerification;
+  return { name: getRegion(regionId).name, count: list.length, verified, imported, needsVerification, unlabeled };
+}
+
 export default function DataSourcesScreen() {
   const importReport = getImportReadinessReport();
   const trustSummary = getWashingtonTrustSummary();
+  const coverage = coverageRegionIds.map(regionCoverage);
 
   return (
     <Screen>
@@ -45,6 +59,22 @@ export default function DataSourcesScreen() {
         <AppText>Shellfish locations: {importReport.shellfishLocationCount}</AppText>
         <AppText>Missing source metadata: {importReport.missingSourceWaterbodies.length ? importReport.missingSourceWaterbodies.join(", ") : "None"}</AppText>
       </Card>
+
+      <SectionHeader title="Regional coverage" eyebrow="Waterbody counts and verification status" />
+      {coverage.map((region) => (
+        <Card key={region.name} style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.flex}>
+              <AppText variant="subheading">{region.name}</AppText>
+              <AppText variant="caption">{region.count} waterbodies bundled</AppText>
+            </View>
+          </View>
+          <AppText variant="caption">
+            {region.verified} verified · {region.imported} imported · {region.needsVerification} needs verification{region.unlabeled ? ` · ${region.unlabeled} unlabeled (hand-curated, predates verification tracking)` : ""}
+          </AppText>
+          <AppText variant="caption" style={styles.warning}>Coverage is not claimed to be complete - it reflects what has been imported and sourced so far.</AppText>
+        </Card>
+      ))}
 
       <SectionHeader title="Providers" eyebrow="Trust metadata" />
       {providerMetadata.map((provider) => {

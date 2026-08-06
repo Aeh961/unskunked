@@ -10,14 +10,17 @@ function coordKey(latitude, longitude) {
 }
 
 /**
- * Drops records that duplicate an existing curated entry (by name) or duplicate each other
- * (by name or by rounded coordinates, ~110m). Keeps the first occurrence, which matters
- * when a batch has near-duplicate entries pulled from more than one source page.
+ * Drops records that duplicate an existing curated entry by name (a name collision against
+ * the hand-curated list is treated as the same real-world water, regardless of minor
+ * coordinate drift). Within the import batch itself, a record is only considered a
+ * duplicate of another when BOTH the name and the coordinates match (~110m) - matching by
+ * name alone would incorrectly merge genuinely distinct same-named waters in different
+ * counties (e.g. three different "Clear Lake"s), which is common enough in real WDFW/FWC
+ * data that it can't be treated as a dedupe signal on its own.
  */
 export function dedupeRecords(records, existingNames) {
   const existingNormalized = new Set(existingNames.map(normalizeName));
-  const seenNames = new Set();
-  const seenCoords = new Set();
+  const seenKeys = new Set();
   const kept = [];
   const droppedAgainstExisting = [];
   const droppedInternal = [];
@@ -25,17 +28,17 @@ export function dedupeRecords(records, existingNames) {
   for (const record of records) {
     const nameKey = normalizeName(record.name);
     const coordinateKey = coordKey(record.latitude, record.longitude);
+    const combinedKey = `${nameKey}|${coordinateKey}`;
 
     if (existingNormalized.has(nameKey)) {
       droppedAgainstExisting.push(record.name);
       continue;
     }
-    if (seenNames.has(nameKey) || seenCoords.has(coordinateKey)) {
+    if (seenKeys.has(combinedKey)) {
       droppedInternal.push(record.name);
       continue;
     }
-    seenNames.add(nameKey);
-    seenCoords.add(coordinateKey);
+    seenKeys.add(combinedKey);
     kept.push(record);
   }
 
