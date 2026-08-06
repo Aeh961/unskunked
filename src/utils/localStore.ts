@@ -413,12 +413,52 @@ export async function isDemoModeEnabled() {
   return storage.readJson<boolean>(demoEnabledKey, false);
 }
 
+const demoTripIds = new Set(demoTrips.map((trip) => trip.id));
+const demoFavoriteKeys = new Set(demoFavorites.map((favorite) => `${favorite.type}:${favorite.id}`));
+const demoTripPlanIds = new Set(demoTripPlans.map((plan) => plan.id));
+const demoCleanupMigrationKey = "skunked:demo-cleanup-v1";
+
+/**
+ * Strips exactly the known demo-seeded trips/favorites/plans, leaving any real user data
+ * untouched. Needed because seedDemoData() writes demo records directly into the real
+ * trips/favorites/trip-plans keys - without this, turning Demo Mode back off would leave
+ * demo trips mixed into a user's real trip log forever.
+ */
+export async function pruneDemoRecords() {
+  const [trips, favorites, plans] = await Promise.all([getTrips(), getFavorites(), getTripPlans()]);
+  const cleanTrips = trips.filter((trip) => !demoTripIds.has(trip.id));
+  const cleanFavorites = favorites.filter((favorite) => !demoFavoriteKeys.has(`${favorite.type}:${favorite.id}`));
+  const cleanPlans = plans.filter((plan) => !demoTripPlanIds.has(plan.id));
+  await Promise.all([
+    cleanTrips.length !== trips.length ? setTrips(cleanTrips) : null,
+    cleanFavorites.length !== favorites.length ? setFavorites(cleanFavorites) : null,
+    cleanPlans.length !== plans.length ? storage.writeJson(tripPlansKey, cleanPlans) : null
+  ]);
+  return (trips.length - cleanTrips.length) + (favorites.length - cleanFavorites.length) + (plans.length - cleanPlans.length);
+}
+
 export async function setDemoModeEnabled(enabled: boolean) {
   await storage.writeJson(demoEnabledKey, enabled);
   if (enabled) {
     await seedDemoData();
+  } else {
+    await pruneDemoRecords();
   }
   return enabled;
+}
+
+/**
+ * One-time cleanup for installs that ran before pruneDemoRecords existed: if Demo Mode is
+ * off but demo-seeded records are still sitting in real storage, strip them once and never
+ * check again.
+ */
+export async function runDemoCleanupMigrationOnce() {
+  const alreadyRan = await storage.readJson<boolean>(demoCleanupMigrationKey, false);
+  if (alreadyRan) return 0;
+  const demoEnabled = await isDemoModeEnabled();
+  const removed = demoEnabled ? 0 : await pruneDemoRecords();
+  await storage.writeJson(demoCleanupMigrationKey, true);
+  return removed;
 }
 
 export async function seedDemoData() {
@@ -442,16 +482,17 @@ export async function seedDemoData() {
   ]);
 }
 
+/** Defaults to empty, not the demo arrays - only seedDemoData() (explicit opt-in) ever writes real content here. */
 export async function getDemoProfiles() {
-  return storage.readJson<DemoProfile[]>(profilesKey, demoProfiles);
+  return storage.readJson<DemoProfile[]>(profilesKey, []);
 }
 
 export async function getDemoNotifications() {
-  return storage.readJson<DemoNotification[]>(notificationsKey, demoNotifications);
+  return storage.readJson<DemoNotification[]>(notificationsKey, []);
 }
 
 export async function getDemoRecommendations() {
-  return storage.readJson<DemoRecommendation[]>(recommendationsKey, demoRecommendations);
+  return storage.readJson<DemoRecommendation[]>(recommendationsKey, []);
 }
 
 export async function getDemoSearchHistory() {

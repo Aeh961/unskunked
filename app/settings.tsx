@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Switch, View } from "react-native";
 import { AppText } from "@/src/components/AppText";
 import { Button } from "@/src/components/Button";
 import { Card } from "@/src/components/Card";
+import { ExpandableSection } from "@/src/components/ExpandableSection";
 import { Screen, Stack } from "@/src/components/Screen";
 import { SectionHeader } from "@/src/components/SectionHeader";
 import { regions, RegionId } from "@/src/data/regions";
@@ -78,19 +79,8 @@ export default function SettingsScreen() {
     <Screen>
       <View style={styles.hero}>
         <AppText variant="title" style={styles.lightText}>Settings</AppText>
-        <AppText style={styles.heroText}>Demo controls for investor walkthroughs, screenshots, and early beta reviews.</AppText>
+        <AppText style={styles.heroText}>Region, preferences, and app controls.</AppText>
       </View>
-
-      <Card style={styles.card}>
-        <View style={styles.row}>
-          <View style={styles.flex}>
-            <SectionHeader title="Demo Mode" eyebrow={__DEV__ ? "Auto-enabled in development" : "Manual"} />
-            <AppText>Preload favorites, sample trips, beginner profiles, recommendations, notifications, and search history.</AppText>
-          </View>
-          <Switch value={enabled} onValueChange={toggleDemo} trackColor={{ true: colors.river, false: colors.line }} thumbColor={enabled ? colors.sun : colors.surfaceStrong} />
-        </View>
-        <Button icon="refresh" variant="secondary" onPress={reseed}>Reload demo data</Button>
-      </Card>
 
       <Card style={styles.card}>
         <SectionHeader title="More" eyebrow="Everything else" />
@@ -175,14 +165,23 @@ export default function SettingsScreen() {
         </Card>
       ) : null}
 
-      {enabled ? (
-        <>
-          <DemoSection title="Sample profiles" items={profiles} />
-          <DemoSection title="Sample notifications" items={notifications} />
-          <DemoSection title="Example recommendations" items={recommendations} />
-          <DemoSection title="Example search history" items={searchHistory} />
-        </>
-      ) : null}
+      <ExpandableSection title="Developer / Demo Mode" eyebrow={enabled ? "On" : "Off by default"}>
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <AppText>Preload favorites, sample trips, beginner profiles, recommendations, notifications, and search history for screenshots and walkthroughs. Off leaves your real data untouched.</AppText>
+          </View>
+          <Switch value={enabled} onValueChange={toggleDemo} trackColor={{ true: colors.river, false: colors.line }} thumbColor={enabled ? colors.sun : colors.surfaceStrong} />
+        </View>
+        {enabled ? (
+          <>
+            <Button icon="refresh" variant="secondary" onPress={reseed}>Reload demo data</Button>
+            <DemoSection title="Sample profiles" items={profiles} />
+            <DemoSection title="Sample notifications" items={notifications} />
+            <DemoSection title="Example recommendations" items={recommendations} />
+            <DemoSection title="Example search history" items={searchHistory} />
+          </>
+        ) : null}
+      </ExpandableSection>
     </Screen>
   );
 }

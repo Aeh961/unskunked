@@ -4,11 +4,16 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts, PressStart2P_400Regular } from "@expo-google-fonts/press-start-2p";
 import { colors } from "@/src/theme";
+import { runDemoCleanupMigrationOnce } from "@/src/utils/localStore";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+
+  useEffect(() => {
+    runDemoCleanupMigrationOnce().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {
